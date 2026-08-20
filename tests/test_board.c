@@ -11,6 +11,7 @@
 #include <string.h>
 #include "board.h"
 #include "modes.h"
+#include "palette.h"
 
 static int checks = 0, failures = 0;
 
@@ -353,6 +354,43 @@ static void test_modes(void) {
     }
 }
 
+static void test_palette(void) {
+    printf("palette\n");
+    const Palette *gb = palette_for(MODE_2BIT);
+    const Palette *mx = palette_for(MODE_GAUNTLET);
+    ok(gb != mx, "each mode has its own palette");
+
+    /* The ramp must actually spread across a mode's range, or a wide board
+       renders as one flat colour and the numbers carry all the meaning. */
+    u32 low  = palette_tile_color(gb, 1, 3);
+    u32 high = palette_tile_color(gb, 3, 3);
+    ok(low != high, "low and high tiles differ in a 2-bit mode");
+
+    const Palette *ps = palette_for(MODE_8BIT);
+    ok(palette_tile_color(ps, 1, 255) != palette_tile_color(ps, 255, 255),
+       "low and high tiles differ in an 8-bit mode");
+
+    /* Out-of-range must clamp, not index past the ramp. */
+    ok(palette_tile_color(gb, 999, 3) == palette_tile_color(gb, 3, 3),
+       "an over-range value clamps to the top of the ramp");
+    ok(palette_tile_color(gb, 0, 3) == gb->cell_bg, "0 is an empty cell");
+    ok(palette_tile_color(gb, GATE_XOR, 3) == gb->gate_bg, "a gate uses the gate colour");
+
+    /* Every step distinct, so adjacent values are told apart on a CRT. */
+    for (int m = 0; m < MODE_COUNT; m++) {
+        const Palette *p = palette_for((ModeId)m);
+        for (int i = 0; i < 5; i++) {
+            for (int j = i + 1; j < 5; j++) {
+                checks++;
+                if (p->ramp[i] == p->ramp[j]) {
+                    printf("  FAIL: mode %d ramp steps %d and %d are identical\n", m, i, j);
+                    failures++;
+                }
+            }
+        }
+    }
+}
+
 int main(void) {
     test_is_gate();
     test_gates();
@@ -367,6 +405,7 @@ int main(void) {
     test_game_over();
     test_spawn();
     test_modes();
+    test_palette();
 
     printf("\n%d checks, %d failures\n", checks, failures);
     return failures ? 1 : 0;

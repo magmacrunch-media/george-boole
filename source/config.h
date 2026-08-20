@@ -19,4 +19,13 @@
 #define AUTOSTART_GAMEPLAY      0   /* boot straight into a run */
 #define DEBUG_HEARTBEAT_FRAMES  0   /* print progress every N frames; 0 off */
 
+/* Debug-only: play the game by itself, one direction every N frames.
+   Synthesising D-pad input into an emulator window is unreliable -- Windows
+   ignores SetForegroundWindow from a background process, and DirectInput reads
+   device state rather than window messages -- so the dependable way to exercise
+   the board, the renderer, the scoring and the promotion path on a console is to
+   have the game supply its own moves. It is also a soak test: left running, it
+   will find anything that only breaks after a few hundred merges. */
+#define DEBUG_AUTOPLAY_FRAMES   0
+
 #endif

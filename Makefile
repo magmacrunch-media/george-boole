@@ -97,7 +97,7 @@ else
 # exactly like a rule that is right until someone plays far enough to notice.
 HOSTCC   ?= cc
 TESTSRC  ?= $(wildcard tests/*.c)
-TESTDEPS ?= source/board.c source/modes.c
+TESTDEPS ?= source/board.c source/modes.c source/palette.c
 
 test:
 	@mkdir -p $(BUILD)

@@ -53,6 +53,21 @@ music loop with `audio_play_music_fmt()`; keep short effects at 48kHz stereo.
 
 ## Testing without a controller
 
+Driving the D-pad into an emulator window is unreliable: Windows ignores
+`SetForegroundWindow` from a background process, and Dolphin reads the keyboard
+through DirectInput, which polls device state rather than window messages. A
+mouse click gets through; arrow keys do not. So the game drives itself instead:
+
+```c
+#define AUTOSTART_GAMEPLAY      1   /* boot straight into a run */
+#define DEBUG_AUTOPLAY_FRAMES   12  /* one move every 12 frames */
+```
+
+That plays continuously, restarting on game over, and exercises the board, the
+renderer, the scoring and the Gauntlet promotion path with no input at all. It
+doubles as a soak test.
+
+
 Reaching gameplay by hand needs button presses into an emulator window. Instead:
 
 ```c
