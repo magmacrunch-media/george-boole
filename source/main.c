@@ -9,6 +9,38 @@
 #include "modes.h"
 #include "palette.h"
 #include "render.h"
+#include "screens.h"
+#include "assets.h"
+
+/* SFX slots, in load order. Six of magnolia's eight, which leaves room without
+   inviting a seventh sound nobody asked for. */
+#define SFX_MOVE      0
+#define SFX_SPAWN     1
+#define SFX_MERGE     2
+#define SFX_GAMEOVER  3
+#define SFX_VICTORY   4
+#define SFX_HIGHSCORE 5
+
+/* The music is 24kHz mono. The source is nearly four minutes and would decode to
+   about 43MB at 48kHz stereo, against a console with 24MB -- see
+   tools/convert-audio.sh, which is where that decision lives. */
+#define MUSIC_RATE 24000
+
+#define PREF_MUSIC "music"
+#define PREF_SFX   "sfx"
+
+static int music_on = 1;
+static int sfx_on   = 1;
+
+static void sfx(int slot) {
+    if (sfx_on) audio_play_sfx(slot);
+}
+
+static void apply_music(void) {
+    /* Muting is engine-wide, so the sfx toggle is honoured in sfx() rather than
+       here -- otherwise turning the music off would silence the effects too. */
+    audio_set_muted(!music_on);
+}
 
 /* One leaderboard per mode. Registered up front so every table is loaded off the
    card once, rather than on each mode change. */
@@ -17,6 +49,24 @@ static int score_table[MODE_COUNT];
 static Board board;
 static ModeId mode = MODE_2BIT;
 static MenuGrid mode_menu;
+
+/* The title is a list rather than a single "press A": this game has rules that
+   need explaining before the first move makes sense, and a how-to nobody can
+   find is the same as not having one. A one-column MenuGrid is that list. */
+static MenuGrid title_menu;
+
+/* Screens reached from the title. They are overlays on GS_TITLE rather than
+   engine states: the shell owns the run, and none of these is part of one. */
+typedef enum {
+    OVERLAY_NONE,
+    OVERLAY_HOWTO,
+    OVERLAY_SETTINGS,
+    OVERLAY_CREDITS
+} Overlay;
+
+static Overlay overlay = OVERLAY_NONE;
+static int howto_page = 0;
+static int settings_cursor = 0;
 
 static void start_run(void) {
     board_init(&board, mode_start_bits(mode), mode_is_gauntlet(mode));
@@ -31,14 +81,68 @@ static void start_run(void) {
            mode_name(mode), board.bits, board.max_value);
 }
 
-static void draw_title(const Palette *p) {
-    renderer_draw_background();
-    ui_draw_border();
-    ui_draw_centered_text(120, "GEORGE BOOLE", 30, p->tile_text);
-    ui_draw_centered_text(164, "HAS ENTERED THE CHAT", 16, p->gate_bg);
-    ui_draw_centered_text(300, "A: choose a mode", 13, p->tile_text);
-    ui_draw_centered_text(330, "HOME: quit", 12, p->gate_bg);
-    renderer_finish();
+/* Returns 1 when the player chose PLAY and the shell should take over. */
+static int update_title(const Palette *p) {
+    if (overlay != OVERLAY_NONE) {
+        switch (overlay) {
+            case OVERLAY_HOWTO:    screens_draw_howto(p, howto_page); break;
+            case OVERLAY_SETTINGS: screens_draw_settings(p, settings_cursor,
+                                                         music_on, sfx_on); break;
+            case OVERLAY_CREDITS:  screens_draw_credits(p); break;
+            default: break;
+        }
+
+        if (input_back_pressed()) {
+            overlay = OVERLAY_NONE;
+            sfx(SFX_MOVE);
+            return 0;
+        }
+
+        if (overlay == OVERLAY_HOWTO) {
+            if (input_dir_repeat(INPUT_DIR_RIGHT) && howto_page < HOWTO_PAGES - 1) {
+                howto_page++;
+                sfx(SFX_MOVE);
+            }
+            if (input_dir_repeat(INPUT_DIR_LEFT) && howto_page > 0) {
+                howto_page--;
+                sfx(SFX_MOVE);
+            }
+        } else if (overlay == OVERLAY_SETTINGS) {
+            if (input_dir_repeat(INPUT_DIR_UP))   settings_cursor = SETTING_MUSIC;
+            if (input_dir_repeat(INPUT_DIR_DOWN)) settings_cursor = SETTING_SFX;
+
+            if (input_a_pressed()) {
+                if (settings_cursor == SETTING_MUSIC) {
+                    music_on = !music_on;
+                    prefs_set_int(PREF_MUSIC, music_on);
+                    apply_music();
+                } else {
+                    sfx_on = !sfx_on;
+                    prefs_set_int(PREF_SFX, sfx_on);
+                }
+                /* Played after the toggle, so turning effects on says so. */
+                sfx(SFX_MERGE);
+            }
+        }
+        return 0;
+    }
+
+    screens_draw_title(p, &title_menu);
+
+    if (input_dir_repeat(INPUT_DIR_UP) && menu_grid_move(&title_menu, 0, -1))   sfx(SFX_MOVE);
+    if (input_dir_repeat(INPUT_DIR_DOWN) && menu_grid_move(&title_menu, 0, +1)) sfx(SFX_MOVE);
+
+    if (input_a_pressed()) {
+        switch (title_menu.cursor) {
+            case TITLE_PLAY:     sfx(SFX_MERGE); return 1;
+            case TITLE_HOWTO:    overlay = OVERLAY_HOWTO; howto_page = 0; break;
+            case TITLE_SETTINGS: overlay = OVERLAY_SETTINGS; settings_cursor = 0; break;
+            case TITLE_CREDITS:  overlay = OVERLAY_CREDITS; break;
+            default: break;
+        }
+        sfx(SFX_MOVE);
+    }
+    return 0;
 }
 
 static void draw_mode_select(void) {
@@ -178,7 +282,14 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
         scoring_add(board.last_gained);
         board_spawn(&board, rand() % 10000);
 
+        /* One sound per move, chosen by what the move was worth: a merge is
+           more interesting than a slide, and an overflow more than either. */
+        if (board.last_overflow_bonus > 0) sfx(SFX_VICTORY);
+        else if (board.last_gained > 0)    sfx(SFX_MERGE);
+        else                               sfx(SFX_MOVE);
+
         if (board.last_upgraded) {
+            sfx(SFX_SPAWN);
             printf("gauntlet: promoted to %d-bit (max %d)\n",
                    board.bits, board.max_value);
         }
@@ -192,6 +303,7 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
         printf("run over: mode=%s score=%d bits=%d\n",
                mode_name(mode), scoring_get(), board.bits);
         gamestate_end_run(gs, scoring_get());
+        sfx(gs->is_high_score ? SFX_HIGHSCORE : SFX_GAMEOVER);
     }
 }
 
@@ -214,6 +326,13 @@ int main(int argc, char **argv) {
     input_init();
     audio_init();
 
+    audio_load_sfx_mem(SFX_MOVE,      move_pcm,      move_pcm_size);
+    audio_load_sfx_mem(SFX_SPAWN,     spawn_pcm,     spawn_pcm_size);
+    audio_load_sfx_mem(SFX_MERGE,     merge_pcm,     merge_pcm_size);
+    audio_load_sfx_mem(SFX_GAMEOVER,  gameover_pcm,  gameover_pcm_size);
+    audio_load_sfx_mem(SFX_VICTORY,   victory_pcm,   victory_pcm_size);
+    audio_load_sfx_mem(SFX_HIGHSCORE, highscore_pcm, highscore_pcm_size);
+
     for (int i = 0; i < MODE_COUNT; i++) {
         score_table[i] = scoring_add_table(mode_id((ModeId)i));
         if (score_table[i] < 0) score_table[i] = 0;
@@ -224,8 +343,16 @@ int main(int argc, char **argv) {
     mode = (ModeId)prefs_get_int("mode", MODE_2BIT);
     if (mode < 0 || mode >= MODE_COUNT) mode = MODE_2BIT;
 
+    music_on = prefs_get_int(PREF_MUSIC, 1) ? 1 : 0;
+    sfx_on   = prefs_get_int(PREF_SFX, 1) ? 1 : 0;
+    apply_music();
+    audio_play_music_mem_fmt(music_pcm, music_pcm_size, AUDIO_MONO_16, MUSIC_RATE);
+
     menu_grid_init(&mode_menu, MODE_COUNT, 4, 2);
     menu_grid_set_cursor(&mode_menu, mode);
+
+    /* One column: the same widget, used as a vertical list. */
+    menu_grid_init(&title_menu, TITLE_ITEM_COUNT, 1, TITLE_ITEM_COUNT);
 
     GameStateMachine gs;
     gamestate_init(&gs);
@@ -248,8 +375,15 @@ int main(int argc, char **argv) {
             continue;
         }
 
+        if (gamestate_current(&gs) == GS_TITLE) {
+            /* The title is the game's, so gamestate_update() is not called for
+               it: the engine would take A as "start", and here A means whichever
+               of four things is under the cursor. */
+            if (update_title(p)) gamestate_set(&gs, GS_MENU);
+            continue;
+        }
+
         switch (gamestate_current(&gs)) {
-            case GS_TITLE:       draw_title(p); break;
             case GS_MENU:        draw_mode_select(); break;
             case GS_GAME_OVER:
                 draw_game_over(p, &gs);
