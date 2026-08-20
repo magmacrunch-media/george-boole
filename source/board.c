@@ -9,6 +9,8 @@ int board_is_gate(int value) {
 
 void board_init(Board *b, int bits, int gauntlet) {
     memset(b, 0, sizeof(*b));
+    b->spawn_row = -1;
+    b->spawn_col = -1;
     b->bits      = bits;
     b->max_value = mode_max_value(bits);
     b->gauntlet  = gauntlet ? 1 : 0;
@@ -81,11 +83,35 @@ static void award_height(Board *b, int value) {
    NOT cancels NOT, NOT consumes a neighbouring number from either side, a gate
    between two numbers applies to both, and equal numbers merge to themselves
    (idempotence -- 1 OR 1 is 1, not 2). */
-static int advance_line(Board *b, int *line, int score_it) {
+/* Which packed elements produced each output slot. Only collected for real
+   moves; the game-over probe passes NULL and skips the bookkeeping. */
+typedef struct {
+    int src[BOARD_SIZE][3];
+    int n[BOARD_SIZE];
+} LineTrace;
+
+static void trace_emit(LineTrace *t, int slot, int a, int b2, int c) {
+    if (!t) return;
+    int k = 0;
+    if (a >= 0) t->src[slot][k++] = a;
+    if (b2 >= 0) t->src[slot][k++] = b2;
+    if (c >= 0) t->src[slot][k++] = c;
+    t->n[slot] = k;
+}
+
+static int advance_line(Board *b, int *line, int score_it, LineTrace *tr,
+                        int *pack_src) {
     int packed[BOARD_SIZE];
     int n = 0;
     for (int i = 0; i < BOARD_SIZE; i++) {
-        if (line[i] != TILE_EMPTY) packed[n++] = line[i];
+        if (line[i] != TILE_EMPTY) {
+            if (pack_src) pack_src[n] = i;
+            packed[n++] = line[i];
+        }
+    }
+
+    if (tr) {
+        for (int k = 0; k < BOARD_SIZE; k++) tr->n[k] = 0;
     }
 
     int out[BOARD_SIZE];
@@ -107,7 +133,11 @@ static int advance_line(Board *b, int *line, int score_it) {
         if (current == GATE_NOT && i + 1 < n && !board_is_gate(packed[i + 1])) {
             int r = score_it ? resolve_gate(b, GATE_NOT, packed[i + 1], 0)
                              : board_apply_gate(b, GATE_NOT, packed[i + 1], 0);
-            if (r != 0) { out[outn++] = r; if (score_it) award_height(b, r); }
+            if (r != 0) {
+                trace_emit(tr, outn, i, i + 1, -1);
+                out[outn++] = r;
+                if (score_it) award_height(b, r);
+            }
             i += 2;
             merged = 1;
             continue;
@@ -115,7 +145,11 @@ static int advance_line(Board *b, int *line, int score_it) {
         if (!board_is_gate(current) && i + 1 < n && packed[i + 1] == GATE_NOT) {
             int r = score_it ? resolve_gate(b, GATE_NOT, current, 0)
                              : board_apply_gate(b, GATE_NOT, current, 0);
-            if (r != 0) { out[outn++] = r; if (score_it) award_height(b, r); }
+            if (r != 0) {
+                trace_emit(tr, outn, i, i + 1, -1);
+                out[outn++] = r;
+                if (score_it) award_height(b, r);
+            }
             i += 2;
             merged = 1;
             continue;
@@ -127,6 +161,7 @@ static int advance_line(Board *b, int *line, int score_it) {
             !board_is_gate(packed[i + 2])) {
             int r = score_it ? resolve_gate(b, packed[i + 1], current, packed[i + 2])
                              : board_apply_gate(b, packed[i + 1], current, packed[i + 2]);
+            trace_emit(tr, outn, i, i + 1, i + 2);
             out[outn++] = r;
             if (score_it) {
                 b->score += r;
@@ -140,6 +175,7 @@ static int advance_line(Board *b, int *line, int score_it) {
 
         /* Idempotence: equal numbers consolidate to one of themselves. */
         if (i + 1 < n && current == packed[i + 1] && !board_is_gate(current)) {
+            trace_emit(tr, outn, i, i + 1, -1);
             out[outn++] = current;
             if (score_it) {
                 b->score += current;
@@ -151,6 +187,7 @@ static int advance_line(Board *b, int *line, int score_it) {
             continue;
         }
 
+        trace_emit(tr, outn, i, -1, -1);
         out[outn++] = current;
         i++;
     }
@@ -178,6 +215,18 @@ static void read_line(const Board *b, BoardDir dir, int index, int *line) {
     }
 }
 
+/* The cell a line position corresponds to -- the inverse of read_line(), needed
+   to turn line-space provenance back into board coordinates. */
+static void line_to_cell(BoardDir dir, int index, int k, int *row, int *col) {
+    switch (dir) {
+        case DIR_LEFT:  *row = index; *col = k; break;
+        case DIR_RIGHT: *row = index; *col = BOARD_SIZE - 1 - k; break;
+        case DIR_UP:    *row = k; *col = index; break;
+        case DIR_DOWN:  *row = BOARD_SIZE - 1 - k; *col = index; break;
+        default:        *row = 0; *col = 0; break;
+    }
+}
+
 static void write_line(Board *b, BoardDir dir, int index, const int *line) {
     for (int k = 0; k < BOARD_SIZE; k++) {
         switch (dir) {
@@ -194,6 +243,9 @@ int board_move(Board *b, BoardDir dir) {
     b->last_overflow_bonus = 0;
     b->last_height_bonus = 0;
     b->last_upgraded = 0;
+    b->move_count = 0;
+    b->spawn_row = -1;
+    b->spawn_col = -1;
 
     int changed = 0;
     for (int index = 0; index < BOARD_SIZE; index++) {
@@ -203,7 +255,26 @@ int board_move(Board *b, BoardDir dir) {
         int before[BOARD_SIZE];
         memcpy(before, line, sizeof(before));
 
-        advance_line(b, line, 1);
+        LineTrace tr;
+        int pack_src[BOARD_SIZE];
+        advance_line(b, line, 1, &tr, pack_src);
+
+        /* Provenance is recorded for every line, moved or not: a tile that
+           stayed put still has to be drawn while its neighbours slide. */
+        for (int slot = 0; slot < BOARD_SIZE; slot++) {
+            if (line[slot] == TILE_EMPTY) continue;
+            for (int c = 0; c < tr.n[slot]; c++) {
+                if (b->move_count >= BOARD_CELLS) break;
+                int origin = pack_src[tr.src[slot][c]];
+
+                TileMove *m = &b->moves[b->move_count++];
+                line_to_cell(dir, index, origin, &m->from_row, &m->from_col);
+                line_to_cell(dir, index, slot, &m->to_row, &m->to_col);
+                m->from_value = before[origin];
+                m->to_value   = line[slot];
+                m->merged     = (tr.n[slot] > 1);
+            }
+        }
 
         if (memcmp(before, line, sizeof(before)) != 0) {
             changed = 1;
@@ -234,7 +305,7 @@ int board_game_over(const Board *b) {
             int line[BOARD_SIZE], before[BOARD_SIZE];
             read_line(&copy, (BoardDir)d, index, line);
             memcpy(before, line, sizeof(before));
-            advance_line(&copy, line, 0);
+            advance_line(&copy, line, 0, NULL, NULL);
             if (memcmp(before, line, sizeof(before)) != 0) any = 1;
         }
         if (any) return 0;
@@ -275,5 +346,7 @@ int board_spawn(Board *b, int roll) {
     }
 
     b->cells[empty[slot][0]][empty[slot][1]] = value;
+    b->spawn_row = empty[slot][0];
+    b->spawn_col = empty[slot][1];
     return 1;
 }

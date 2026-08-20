@@ -28,6 +28,19 @@ typedef enum {
     DIR_DOWN
 } BoardDir;
 
+/* Where one tile went during a move, so the renderer can slide it there instead
+   of teleporting it. A merge produces several of these sharing a destination:
+   each source slides in carrying the value it had, and the result appears when
+   they arrive. Without this the board is correct and reads as though nothing
+   happened. */
+typedef struct {
+    int from_row, from_col;
+    int to_row, to_col;
+    int from_value;   /* what slides */
+    int to_value;     /* what it becomes on arrival */
+    int merged;       /* more than one tile landed here */
+} TileMove;
+
 typedef struct {
     int cells[BOARD_SIZE][BOARD_SIZE];
 
@@ -45,6 +58,16 @@ typedef struct {
     int last_overflow_bonus;
     int last_height_bonus;
     int last_upgraded;
+
+    /* Filled by the last board_move(). Every surviving tile is listed, including
+       ones that did not move, so the renderer can draw the whole board from this
+       alone while an animation is running. Tiles consumed without a result --
+       two NOTs cancelling -- are simply absent. */
+    TileMove moves[BOARD_CELLS];
+    int move_count;
+
+    /* Where board_spawn() last placed a tile, or -1. */
+    int spawn_row, spawn_col;
 } Board;
 
 int  board_is_gate(int value);

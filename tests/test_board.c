@@ -354,6 +354,105 @@ static void test_modes(void) {
     }
 }
 
+/* Finds the move landing on a cell, or NULL. */
+static const TileMove *move_to(const Board *b, int row, int col) {
+    for (int i = 0; i < b->move_count; i++) {
+        if (b->moves[i].to_row == row && b->moves[i].to_col == col) return &b->moves[i];
+    }
+    return NULL;
+}
+
+static int moves_to(const Board *b, int row, int col) {
+    int n = 0;
+    for (int i = 0; i < b->move_count; i++) {
+        if (b->moves[i].to_row == row && b->moves[i].to_col == col) n++;
+    }
+    return n;
+}
+
+static void test_move_tracking(void) {
+    printf("move tracking\n");
+    Board b;
+
+    /* A lone tile crossing the board: one move, from where it was to where it
+       ended, carrying its value. */
+    board_init(&b, 2, 0);
+    b.cells[0][3] = 2;
+    board_move(&b, DIR_LEFT);
+    eq(b.move_count, 1, "one surviving tile, one move");
+    const TileMove *m = move_to(&b, 0, 0);
+    ok(m != NULL, "a move lands on the destination");
+    if (m) {
+        eq(m->from_col, 3, "it started where the tile was");
+        eq(m->to_col, 0, "it ended at the left edge");
+        eq(m->from_value, 2, "it carries the value that slid");
+        eq(m->merged, 0, "a plain slide is not a merge");
+    }
+
+    /* A merge: both sources land on the same cell, each carrying its own value,
+       both flagged so the renderer can pop the result. */
+    board_init(&b, 2, 0);
+    b.cells[0][0] = 1;
+    b.cells[0][1] = 1;
+    board_move(&b, DIR_LEFT);
+    eq(moves_to(&b, 0, 0), 2, "both merged tiles slide to the same cell");
+    m = move_to(&b, 0, 0);
+    if (m) {
+        eq(m->to_value, 1, "idempotent merge resolves to the same value");
+        eq(m->merged, 1, "flagged as a merge");
+    }
+
+    /* A gate sandwich contributes three sources to one destination. */
+    board_init(&b, 2, 0);
+    b.cells[0][0] = 1;
+    b.cells[0][1] = GATE_OR;
+    b.cells[0][2] = 2;
+    board_move(&b, DIR_LEFT);
+    eq(moves_to(&b, 0, 0), 3, "number, gate and number all slide to one cell");
+    m = move_to(&b, 0, 0);
+    if (m) eq(m->to_value, 3, "1 OR 2 = 3 at the destination");
+
+    /* Tiles that did not move still have to be drawn while others slide. */
+    board_init(&b, 2, 0);
+    b.cells[0][0] = 1;
+    b.cells[0][3] = 2;
+    board_move(&b, DIR_LEFT);
+    eq(b.move_count, 2, "a stationary tile is still reported");
+    m = move_to(&b, 0, 0);
+    if (m) eq(m->from_col, 0, "the stationary tile moves from itself to itself");
+
+    /* Tiles consumed without a result simply vanish -- nothing to slide. */
+    board_init(&b, 2, 0);
+    b.cells[0][0] = GATE_NOT;
+    b.cells[0][1] = GATE_NOT;
+    board_move(&b, DIR_LEFT);
+    eq(b.move_count, 0, "cancelled NOTs leave nothing to draw");
+
+    /* Every destination a move claims must actually hold a tile, or the
+       renderer would draw a tile arriving at an empty cell. */
+    board_init(&b, 3, 0);
+    for (int r = 0; r < BOARD_SIZE; r++)
+        for (int c = 0; c < BOARD_SIZE; c++) b.cells[r][c] = ((r + c) % 3) + 1;
+    board_move(&b, DIR_UP);
+    for (int i = 0; i < b.move_count; i++) {
+        const TileMove *mv = &b.moves[i];
+        checks++;
+        if (board_get(&b, mv->to_row, mv->to_col) == TILE_EMPTY) {
+            printf("  FAIL: move lands on an empty cell (%d,%d)\n",
+                   mv->to_row, mv->to_col);
+            failures++;
+        }
+    }
+
+    /* Spawn location is reported so the new tile can be popped in. */
+    board_init(&b, 2, 0);
+    eq(b.spawn_row, -1, "nothing spawned yet");
+    board_spawn(&b, 1234);
+    ok(b.spawn_row >= 0 && b.spawn_col >= 0, "spawn reports where it landed");
+    ok(board_get(&b, b.spawn_row, b.spawn_col) != TILE_EMPTY,
+       "and there is a tile there");
+}
+
 static void test_palette(void) {
     printf("palette\n");
     const Palette *gb = palette_for(MODE_2BIT);
@@ -405,6 +504,7 @@ int main(void) {
     test_game_over();
     test_spawn();
     test_modes();
+    test_move_tracking();
     test_palette();
 
     printf("\n%d checks, %d failures\n", checks, failures);

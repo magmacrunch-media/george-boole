@@ -65,6 +65,10 @@ typedef enum {
 } Overlay;
 
 static Overlay overlay = OVERLAY_NONE;
+
+/* Progress of the current move's animation, 0..1. Starts at 1 so a fresh board
+   is simply drawn rather than animating in from nowhere. */
+static float anim_t = 1.0f;
 static int howto_page = 0;
 static int settings_cursor = 0;
 
@@ -76,6 +80,7 @@ static void start_run(void) {
     /* Two tiles to open with, or the first move has nothing to act on. */
     board_spawn(&board, rand() % 10000);
     board_spawn(&board, rand() % 10000);
+    anim_t = 1.0f;
 
     printf("run: mode=%s bits=%d max=%d\n",
            mode_name(mode), board.bits, board.max_value);
@@ -259,9 +264,21 @@ static void draw_high_scores(const Palette *p) {
 static void update_playing(GameStateMachine *gs, const Palette *p) {
     int moved = 0;
 
+    /* clock_dt() rather than a frame count: the animation should take the same
+       time on NTSC and PAL, and look the same if a frame is ever dropped. */
+    if (anim_t < 1.0f) {
+        anim_t += clock_dt() / RENDER_ANIM_SECONDS;
+        if (anim_t > 1.0f) anim_t = 1.0f;
+    }
+
+    /* Input is held off mid-slide. It lasts about a sixth of a second, and
+       accepting a second move part-way through would discard the provenance the
+       animation is drawing from and make tiles jump. */
+    int accepting = (anim_t >= 1.0f);
+
 #if DEBUG_AUTOPLAY_FRAMES
     static int autoframe = 0;
-    if (++autoframe % DEBUG_AUTOPLAY_FRAMES == 0) {
+    if (accepting && ++autoframe % DEBUG_AUTOPLAY_FRAMES == 0) {
         /* Tries each direction in turn rather than picking one at random: a
            random walk can sit for a long time repeating a move that does
            nothing, and the point is to keep the board changing. */
@@ -273,12 +290,15 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     }
 #endif
 
-    if (input_left_pressed())  moved = board_move(&board, DIR_LEFT);
-    else if (input_right_pressed()) moved = board_move(&board, DIR_RIGHT);
-    else if (input_up_pressed())    moved = board_move(&board, DIR_UP);
-    else if (input_down_pressed())  moved = board_move(&board, DIR_DOWN);
+    if (accepting) {
+        if (input_left_pressed())  moved = board_move(&board, DIR_LEFT);
+        else if (input_right_pressed()) moved = board_move(&board, DIR_RIGHT);
+        else if (input_up_pressed())    moved = board_move(&board, DIR_UP);
+        else if (input_down_pressed())  moved = board_move(&board, DIR_DOWN);
+    }
 
     if (moved) {
+        anim_t = 0.0f;
         scoring_add(board.last_gained);
         board_spawn(&board, rand() % 10000);
 
@@ -295,11 +315,13 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
         }
     }
 
-    render_board(&board, p);
+    render_board_animated(&board, p, anim_t);
     render_hud(&board, p, mode);
     renderer_finish();
 
-    if (board_game_over(&board)) {
+    /* Only once the board has settled: testing mid-slide would end the run on a
+       position the player has not been shown yet. */
+    if (anim_t >= 1.0f && board_game_over(&board)) {
         printf("run over: mode=%s score=%d bits=%d\n",
                mode_name(mode), scoring_get(), board.bits);
         gamestate_end_run(gs, scoring_get());
