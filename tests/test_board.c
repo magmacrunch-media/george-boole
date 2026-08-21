@@ -208,9 +208,13 @@ static void test_scoring(void) {
     board_move(&b, DIR_LEFT);
     eq(b.last_height_bonus, 0, "no height bonus below what was already earned");
 
-    eq(mode_height_bonus(3, 7), 14, "3-bit pays double for a high value");
-    eq(mode_height_bonus(3, 2), 0,  "3-bit pays nothing below its floor");
-    eq(mode_height_bonus(2, 3), 0,  "2-bit never pays a height bonus");
+    /* Double in every mode -- the web game has no per-width multiplier, and the
+       port paid single above 3-bit for four commits. */
+    eq(mode_height_bonus(3, 7),   14,  "3-bit pays double");
+    eq(mode_height_bonus(6, 40),  80,  "6-bit pays double too");
+    eq(mode_height_bonus(8, 200), 400, "and so does 8-bit");
+    eq(mode_height_bonus(3, 2),   0,   "3-bit pays nothing below its floor");
+    eq(mode_height_bonus(2, 3),   0,   "2-bit never pays a height bonus");
 }
 
 static void test_directions(void) {
@@ -320,6 +324,204 @@ static void test_spawn(void) {
             }
         }
     }
+}
+
+/* The gate mix is the difference between a 2-bit board full of operators and
+   one where there is nothing to do. It was flat at 18% for every width until
+   this test existed to say otherwise. */
+static void test_gate_rate(void) {
+    printf("gate rate\n");
+    eq(mode_gate_spawn_pct(2), 45, "2-bit is mostly gates");
+    eq(mode_gate_spawn_pct(3), 32, "3-bit tapers");
+    eq(mode_gate_spawn_pct(4), 24, "4-bit tapers further");
+    eq(mode_gate_spawn_pct(5), 20, "5-bit");
+    eq(mode_gate_spawn_pct(6), 20, "6-bit shares 5-bit's rate");
+    eq(mode_gate_spawn_pct(7), 18, "7-bit");
+    eq(mode_gate_spawn_pct(8), 18, "8-bit barely needs them");
+}
+
+/* Every band edge and every step inside it. A cumulative table is transcribed
+   by hand and a threshold off by one is invisible in play. */
+static void test_spawn_table(void) {
+    printf("spawn table\n");
+
+    /* 2-bit: 1 or 2, never the ceiling. */
+    eq(mode_spawn_value(2, 0, 0),  1, "2-bit low roll");
+    eq(mode_spawn_value(2, 2, 49), 1, "2-bit last roll of the 1s");
+    eq(mode_spawn_value(2, 2, 50), 2, "2-bit first roll of the 2s");
+    eq(mode_spawn_value(2, 2, 99), 2, "2-bit high roll");
+
+    /* 3-bit opens up once anything has been built. */
+    eq(mode_spawn_value(3, 3, 0),  1, "3-bit fifths: 1");
+    eq(mode_spawn_value(3, 3, 19), 1, "3-bit fifths: end of 1");
+    eq(mode_spawn_value(3, 3, 20), 2, "3-bit fifths: 2");
+    eq(mode_spawn_value(3, 3, 40), 3, "3-bit fifths: 3");
+    eq(mode_spawn_value(3, 3, 60), 4, "3-bit fifths: 4");
+    eq(mode_spawn_value(3, 3, 80), 5, "3-bit fifths: 5");
+    eq(mode_spawn_value(3, 3, 99), 5, "3-bit fifths: end of 5");
+    /* Below a 3 on the board it uses the ordinary progression. */
+    eq(mode_spawn_value(3, 2, 50), 2, "3-bit falls back before anything is built");
+
+    /* Opening board: 60/40. */
+    eq(mode_spawn_value(4, 1, 59), 1, "opening 1s");
+    eq(mode_spawn_value(4, 1, 60), 2, "opening 2s");
+
+    /* Highest 2..3: 50/50. */
+    eq(mode_spawn_value(4, 3, 49), 1, "early 1s");
+    eq(mode_spawn_value(4, 3, 50), 2, "early 2s");
+
+    /* Highest 4..7: 40/35/25. */
+    eq(mode_spawn_value(4, 7, 39), 1, "mid-early 1s");
+    eq(mode_spawn_value(4, 7, 40), 2, "mid-early 2s");
+    eq(mode_spawn_value(4, 7, 74), 2, "mid-early end of 2s");
+    eq(mode_spawn_value(4, 7, 75), 3, "mid-early 3s");
+
+    /* Highest 8..15: 40/30/20/10. */
+    eq(mode_spawn_value(4, 8, 39), 1, "mid 1s");
+    eq(mode_spawn_value(4, 8, 40), 2, "mid 2s");
+    eq(mode_spawn_value(4, 8, 70), 3, "mid 3s");
+    eq(mode_spawn_value(4, 8, 90), 4, "mid 4s");
+    eq(mode_spawn_value(4, 8, 99), 4, "mid end of 4s");
+
+    /* Highest 16..31: 1-6. */
+    eq(mode_spawn_value(5, 16, 29), 1, "late-mid 1s");
+    eq(mode_spawn_value(5, 16, 30), 2, "late-mid 2s");
+    eq(mode_spawn_value(5, 16, 50), 3, "late-mid 3s");
+    eq(mode_spawn_value(5, 16, 70), 4, "late-mid 4s");
+    eq(mode_spawn_value(5, 16, 85), 5, "late-mid 5s");
+    eq(mode_spawn_value(5, 16, 95), 6, "late-mid 6s");
+
+    /* Highest 32..63: 1-8. */
+    eq(mode_spawn_value(6, 32, 24), 1, "late 1s");
+    eq(mode_spawn_value(6, 32, 25), 2, "late 2s");
+    eq(mode_spawn_value(6, 32, 40), 3, "late 3s");
+    eq(mode_spawn_value(6, 32, 55), 4, "late 4s");
+    eq(mode_spawn_value(6, 32, 70), 5, "late 5s");
+    eq(mode_spawn_value(6, 32, 80), 6, "late 6s");
+    eq(mode_spawn_value(6, 32, 90), 7, "late 7s");
+    eq(mode_spawn_value(6, 32, 96), 8, "late 8s");
+
+    /* Highest 64+: the even ladder up to 12. */
+    eq(mode_spawn_value(8, 64, 19), 1,  "very late 1s");
+    eq(mode_spawn_value(8, 64, 20), 2,  "very late 2s");
+    eq(mode_spawn_value(8, 64, 35), 4,  "very late 4s");
+    eq(mode_spawn_value(8, 64, 50), 6,  "very late 6s");
+    eq(mode_spawn_value(8, 64, 65), 8,  "very late 8s");
+    eq(mode_spawn_value(8, 64, 78), 10, "very late 10s");
+    eq(mode_spawn_value(8, 64, 88), 12, "very late 12s");
+    eq(mode_spawn_value(8, 64, 99), 12, "very late end of 12s");
+
+    /* An out-of-range roll must land somewhere legal rather than off the end. */
+    eq(mode_spawn_value(4, 8, -1),  1, "a negative roll clamps low");
+    eq(mode_spawn_value(4, 8, 500), 4, "an oversized roll clamps high");
+
+    /* The board's highest is what the table reads, gates and empties ignored. */
+    Board b;
+    board_init(&b, 4, 0);
+    eq(board_highest_value(&b), 0, "an empty board has no highest");
+    b.cells[0][0] = GATE_NOT;
+    b.cells[1][1] = 9;
+    b.cells[2][2] = 4;
+    eq(board_highest_value(&b), 9, "gates and empties do not count");
+}
+
+/* The gate share coming out of board_spawn, not just out of the table: this is
+   the check that would have caught the flat 18%. */
+static void test_spawn_distribution(void) {
+    printf("spawn distribution\n");
+
+    static const int widths[] = { 2, 3, 4, 5, 6, 7, 8 };
+    const int samples = 6000;
+
+    for (unsigned int w = 0; w < sizeof(widths) / sizeof(widths[0]); w++) {
+        int bits = widths[w];
+        int gates = 0;
+
+        for (int roll = 0; roll < samples; roll++) {
+            Board t;
+            board_init(&t, bits, 0);
+            board_spawn(&t, (unsigned int)roll);
+            if (board_is_gate(t.cells[t.spawn_row][t.spawn_col])) gates++;
+        }
+
+        int pct = (gates * 100) / samples;
+        int want = mode_gate_spawn_pct(bits);
+        checks++;
+        if (pct < want - 4 || pct > want + 4) {
+            printf("  FAIL: %d-bit spawned %d%% gates, wanted about %d%%\n",
+                   bits, pct, want);
+            failures++;
+        }
+    }
+}
+
+/* Named for the reason it exists: the web game's "2-bit fix". With only three
+   values, a board that hands you the ceiling has handed you the mode. */
+static void test_two_bit_ceiling(void) {
+    printf("two-bit ceiling\n");
+    int seen_1 = 0, seen_2 = 0, seen_3 = 0;
+
+    for (int roll = 0; roll < 4000; roll++) {
+        Board t;
+        board_init(&t, 2, 0);
+        board_spawn(&t, (unsigned int)roll);
+        int v = t.cells[t.spawn_row][t.spawn_col];
+        if (v == 1) seen_1 = 1;
+        if (v == 2) seen_2 = 1;
+        if (v == 3) seen_3 = 1;
+    }
+
+    ok(seen_1, "2-bit spawns 1s");
+    ok(seen_2, "2-bit spawns 2s");
+    ok(!seen_3, "2-bit never spawns its ceiling");
+}
+
+static void test_height_thresholds(void) {
+    printf("height thresholds\n");
+    ok(mode_height_threshold(2) > mode_max_value(2), "2-bit's floor is unreachable");
+    eq(mode_height_threshold(3), 6,  "3-bit celebrates 6 and 7");
+    eq(mode_height_threshold(4), 5,  "4-bit celebrates 5 and up");
+    eq(mode_height_threshold(5), 15, "5-bit is half the ceiling");
+    eq(mode_height_threshold(6), 31, "6-bit is half the ceiling");
+    eq(mode_height_threshold(7), 42, "7-bit is a third of the ceiling");
+    eq(mode_height_threshold(8), 85, "8-bit is a third of the ceiling");
+}
+
+/* Both were found by replaying random positions through the browser game and
+   diffing the points, not by reading the code -- so they are pinned here. */
+static void test_scoring_parity(void) {
+    printf("scoring parity\n");
+    Board b;
+
+    /* A unary NOT is worth its result, exactly like a gate sandwich is. The
+       port awarded the height bonus for one but never the operation itself,
+       which cost the most in the wide modes where NOT results are large. */
+    board_init(&b, 8, 0);
+    b.highest_earned = 255;          /* height bonuses out of the way */
+    b.cells[0][0] = GATE_NOT;
+    b.cells[0][1] = 50;
+    board_move(&b, DIR_LEFT);
+    eq(b.cells[0][0], 205, "NOT 50 is 205 at 8-bit");
+    eq(b.score, 205, "and it is worth 205");
+
+    board_init(&b, 8, 0);
+    b.highest_earned = 255;
+    b.cells[0][0] = 50;
+    b.cells[0][1] = GATE_NOT;
+    board_move(&b, DIR_LEFT);
+    eq(b.score, 205, "worth the same from the other side");
+
+    /* A first-time height bonus pays once, to whichever line gets there first,
+       so which line is resolved first is a scoring rule. Collapsing up, the web
+       game takes the columns right to left. Here the right column builds 61 and
+       the left builds 32: going left to right would pay for both. */
+    board_init(&b, 6, 0);
+    b.cells[0][0] = 31; b.cells[1][0] = GATE_NOT;
+    b.cells[0][1] = 60; b.cells[1][1] = GATE_OR; b.cells[2][1] = 49;
+    board_move(&b, DIR_UP);
+    eq(b.cells[0][0], 32, "NOT 31 is 32 at 6-bit");
+    eq(b.cells[0][1], 61, "60 OR 49 is 61");
+    eq(b.score, 93 + 122, "the later, smaller value earns no second bonus");
 }
 
 static void test_modes(void) {
@@ -503,6 +705,12 @@ int main(void) {
     test_directions();
     test_game_over();
     test_spawn();
+    test_gate_rate();
+    test_spawn_table();
+    test_spawn_distribution();
+    test_two_bit_ceiling();
+    test_height_thresholds();
+    test_scoring_parity();
     test_modes();
     test_move_tracking();
     test_palette();

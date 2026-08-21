@@ -78,8 +78,8 @@ static void start_run(void) {
     scoring_select_table(score_table[mode]);
 
     /* Two tiles to open with, or the first move has nothing to act on. */
-    board_spawn(&board, rand() % 10000);
-    board_spawn(&board, rand() % 10000);
+    board_spawn(&board, (unsigned int)rand());
+    board_spawn(&board, (unsigned int)rand());
     anim_t = 1.0f;
 
     printf("run: mode=%s bits=%d max=%d\n",
@@ -300,7 +300,7 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     if (moved) {
         anim_t = 0.0f;
         scoring_add(board.last_gained);
-        board_spawn(&board, rand() % 10000);
+        board_spawn(&board, (unsigned int)rand());
 
         /* One sound per move, chosen by what the move was worth: a merge is
            more interesting than a slide, and an overflow more than either. */

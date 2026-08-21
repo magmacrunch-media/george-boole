@@ -83,8 +83,20 @@ void board_init(Board *b, int bits, int gauntlet);
 int  board_move(Board *b, BoardDir dir);
 
 /* Places a tile or gate in a random empty cell. Returns 0 when the board is
-   full. `roll` supplies randomness in 0..9999 so tests can be deterministic. */
-int  board_spawn(Board *b, int roll);
+   full.
+
+   `roll` is the only randomness that enters, so a test can pin a spawn exactly.
+   It is a whole word rather than a small number because three independent
+   choices come out of it -- which cell, gate or number, and which value -- and
+   a four-digit roll cannot carry three hundred-way decisions without them
+   correlating. */
+int  board_spawn(Board *b, unsigned int roll);
+
+/* Highest number on the board, ignoring gates and empty cells; 0 on an empty
+   board. This is what the spawn table scales against -- where the player is
+   now, not the best they have managed, so clearing the board eases the spawns
+   back down with it. */
+int  board_highest_value(const Board *b);
 
 /* No empty cell and no legal move left. */
 int  board_is_full(const Board *b);

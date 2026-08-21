@@ -136,7 +136,11 @@ static int advance_line(Board *b, int *line, int score_it, LineTrace *tr,
             if (r != 0) {
                 trace_emit(tr, outn, i, i + 1, -1);
                 out[outn++] = r;
-                if (score_it) award_height(b, r);
+                if (score_it) {
+                    b->score += r;
+                    b->last_gained += r;
+                    award_height(b, r);
+                }
             }
             i += 2;
             merged = 1;
@@ -148,7 +152,11 @@ static int advance_line(Board *b, int *line, int score_it, LineTrace *tr,
             if (r != 0) {
                 trace_emit(tr, outn, i, i + 1, -1);
                 out[outn++] = r;
-                if (score_it) award_height(b, r);
+                if (score_it) {
+                    b->score += r;
+                    b->last_gained += r;
+                    award_height(b, r);
+                }
             }
             i += 2;
             merged = 1;
@@ -227,6 +235,16 @@ static void line_to_cell(BoardDir dir, int index, int k, int *row, int *col) {
     }
 }
 
+/* Which line to resolve on step 0..3.
+   Lines are independent, so this cannot change where a tile lands -- but a
+   first-time height bonus pays once, to whichever line reaches the value first,
+   and the web game collapses by rotating the board and always taking rows in
+   order. That makes its right and up run through the lines backwards. Matching
+   the points means matching the order. */
+static int line_index(BoardDir dir, int step) {
+    return (dir == DIR_RIGHT || dir == DIR_UP) ? BOARD_SIZE - 1 - step : step;
+}
+
 static void write_line(Board *b, BoardDir dir, int index, const int *line) {
     for (int k = 0; k < BOARD_SIZE; k++) {
         switch (dir) {
@@ -248,7 +266,8 @@ int board_move(Board *b, BoardDir dir) {
     b->spawn_col = -1;
 
     int changed = 0;
-    for (int index = 0; index < BOARD_SIZE; index++) {
+    for (int step = 0; step < BOARD_SIZE; step++) {
+        int index = line_index(dir, step);
         int line[BOARD_SIZE];
         read_line(b, dir, index, line);
 
@@ -313,7 +332,18 @@ int board_game_over(const Board *b) {
     return 1;
 }
 
-int board_spawn(Board *b, int roll) {
+int board_highest_value(const Board *b) {
+    int max = 0;
+    for (int r = 0; r < BOARD_SIZE; r++) {
+        for (int c = 0; c < BOARD_SIZE; c++) {
+            int v = b->cells[r][c];
+            if (v > max) max = v;   /* gates are negative, empties are 0 */
+        }
+    }
+    return max;
+}
+
+int board_spawn(Board *b, unsigned int roll) {
     int empty[BOARD_CELLS][2];
     int n = 0;
     for (int r = 0; r < BOARD_SIZE; r++) {
@@ -327,22 +357,27 @@ int board_spawn(Board *b, int roll) {
     }
     if (n == 0) return 0;
 
-    if (roll < 0) roll = 0;
-    int slot = (roll / 7) % n;
-    int kind = roll % 100;
+    /* Three decisions, three streams. The roll is mixed before the first of
+       them because callers pass consecutive or evenly spaced numbers -- tests
+       always do -- and the low bits of those would otherwise walk the cell and
+       the value in lockstep. Stepping an LCG between the streams keeps them
+       independent of each other. */
+    unsigned int r0 = roll * 2654435761u + 0x9E3779B9u;
+    unsigned int r1 = r0 * 1103515245u + 12345u;
+    unsigned int r2 = r1 * 1103515245u + 12345u;
+
+    int slot       = (int)((r0 >> 16) % (unsigned int)n);
+    int gate_roll  = (int)((r1 >> 16) % 100u);
+    int value_roll = (int)((r2 >> 16) % 100u);
 
     int value;
-    if (kind < 18) {
-        /* A gate is useless without numbers to sit between, so they stay a
-           minority of spawns however wide the mode gets. */
+    if (gate_roll < mode_gate_spawn_pct(b->bits)) {
+        /* 100 divides by 4, so the value roll doubles as an unbiased pick of
+           which gate -- it has nothing else to do on a gate spawn. */
         static const int gates[] = { GATE_XOR, GATE_OR, GATE_AND, GATE_NOT };
-        value = gates[(roll / 3) % 4];
-    } else if (kind < 70) {
-        value = 1;
-    } else if (kind < 90) {
-        value = 2;
+        value = gates[value_roll % 4];
     } else {
-        value = (b->max_value >= 3) ? 3 : b->max_value;
+        value = mode_spawn_value(b->bits, board_highest_value(b), value_roll);
     }
 
     b->cells[empty[slot][0]][empty[slot][1]] = value;
