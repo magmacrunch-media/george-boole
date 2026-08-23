@@ -572,6 +572,51 @@ static int moves_to(const Board *b, int row, int col) {
     return n;
 }
 
+/* Chaining: a line is re-scanned after each resolution, so a result becomes an
+   operand for the next one. Every case here is a position where the port used to
+   disagree with the browser game, taken from a replay diff rather than invented. */
+static void test_chaining(void) {
+    printf("chaining\n");
+
+    /* The plainest case: a gate result meets a tile it can consolidate with. A
+       single pass would leave two 3s sitting next to each other. */
+    { const int in[4]={1,GATE_XOR,2,3}, w[4]={3,0,0,0};
+      eq_row(2, in, w, "1 XOR 2 makes a 3 that consolidates with the 3 beside it"); }
+
+    /* A NOT pair behind a number cancels, so the run resolves once rather than a
+       step at a time. Resolving stepwise reaches the same tile but bills three
+       operations for it and claims a height no tile ever rested on. */
+    { const int in[4]={114,GATE_NOT,GATE_NOT,GATE_NOT}, w[4]={13,0,0,0};
+      eq_row(7, in, w, "a run of NOTs behind a number resolves in one step"); }
+
+    Board b;
+    board_init(&b, 7, 0);
+    b.cells[0][0] = 114;
+    b.cells[0][1] = GATE_NOT;
+    b.cells[0][2] = GATE_NOT;
+    b.cells[0][3] = GATE_NOT;
+    board_move(&b, DIR_LEFT);
+    eq(b.score, 13, "and is paid for once, not once per NOT");
+
+    /* Overflow clears the tile and the gate beyond it is left alone. The browser
+       game used to treat the cleared cell as a 0 operand, so AND took the 4 with
+       it -- this is that case from the other side. */
+    { const int in[4]={7,GATE_NOT,GATE_AND,4}, w[4]={GATE_AND,4,0,0};
+      eq_row(3, in, w, "a cleared tile is not an operand for the next gate"); }
+
+    /* Provenance has to survive the chain: four tiles end in one cell, and the
+       renderer draws a tile arriving from each. Collapsing them into fewer
+       origins would show tiles vanishing instead of travelling. */
+    board_init(&b, 2, 0);
+    b.cells[0][0] = 1;
+    b.cells[0][1] = GATE_XOR;
+    b.cells[0][2] = 2;
+    b.cells[0][3] = 3;
+    board_move(&b, DIR_LEFT);
+    eq(b.cells[0][0], 3, "the chain lands on one tile");
+    eq(moves_to(&b, 0, 0), 4, "and all four tiles are drawn arriving there");
+}
+
 static void test_move_tracking(void) {
     printf("move tracking\n");
     Board b;
@@ -712,6 +757,7 @@ int main(void) {
     test_height_thresholds();
     test_scoring_parity();
     test_modes();
+    test_chaining();
     test_move_tracking();
     test_palette();
 

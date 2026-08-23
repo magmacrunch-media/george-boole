@@ -83,129 +83,168 @@ static void award_height(Board *b, int value) {
    NOT cancels NOT, NOT consumes a neighbouring number from either side, a gate
    between two numbers applies to both, and equal numbers merge to themselves
    (idempotence -- 1 OR 1 is 1, not 2). */
-/* Which packed elements produced each output slot. Only collected for real
-   moves; the game-over probe passes NULL and skips the bookkeeping. */
+/* Which original positions produced each surviving cell.
+ *
+ * A line is re-scanned after every resolution, so a result can become an operand
+ * for the next one -- which means a cell's provenance is the union of everything
+ * that fed it, and a whole line can end up arriving in one place. Hence a set per
+ * cell rather than the three slots one sandwich needs. Only collected for real
+ * moves; the game-over probe passes NULL and skips the bookkeeping. */
 typedef struct {
-    int src[BOARD_SIZE][3];
+    int src[BOARD_SIZE][BOARD_SIZE];
     int n[BOARD_SIZE];
 } LineTrace;
 
-static void trace_emit(LineTrace *t, int slot, int a, int b2, int c) {
-    if (!t) return;
-    int k = 0;
-    if (a >= 0) t->src[slot][k++] = a;
-    if (b2 >= 0) t->src[slot][k++] = b2;
-    if (c >= 0) t->src[slot][k++] = c;
-    t->n[slot] = k;
+/* Fold `count` cells at `at` into their result, closing the gap behind them.
+   `result` of TILE_EMPTY means the operation consumed its operands and produced
+   nothing -- two NOTs cancelling, or a gate landing on zero -- and their origins
+   go with them, which is what board.h promises. */
+static void collapse(int *cells, int org[][BOARD_SIZE], int *orgn, int *len,
+                     int at, int count, int result) {
+    int keep = (result != TILE_EMPTY);
+
+    if (keep) {
+        /* Union first, into a scratch set: the destination is one of the sources,
+           so writing it in place would drop its own origins. */
+        int fold[BOARD_SIZE];
+        int foldn = 0;
+        for (int c = at; c < at + count; c++) {
+            for (int k = 0; k < orgn[c] && foldn < BOARD_SIZE; k++) {
+                fold[foldn++] = org[c][k];
+            }
+        }
+        cells[at] = result;
+        orgn[at]  = foldn;
+        for (int k = 0; k < foldn; k++) org[at][k] = fold[k];
+    }
+
+    int to = keep ? at + 1 : at;
+    for (int c = at + count; c < *len; c++, to++) {
+        cells[to] = cells[c];
+        orgn[to]  = orgn[c];
+        for (int k = 0; k < orgn[c]; k++) org[to][k] = org[c][k];
+    }
+    *len -= count - (keep ? 1 : 0);
 }
 
+/* Resolve one gate and pay for it. Every gate is worth its result, so scoring
+   lives here rather than being repeated at each pattern; the overflow bonus is
+   inside resolve_gate(). A zero result is a cleared tile, worth nothing. */
+static int operate(Board *b, int gate, int lhs, int rhs, int score_it) {
+    int r = score_it ? resolve_gate(b, gate, lhs, rhs)
+                     : board_apply_gate(b, gate, lhs, rhs);
+    if (score_it && r != 0) {
+        b->score += r;
+        b->last_gained += r;
+        award_height(b, r);
+    }
+    return r;
+}
+
+/* Collapses one line toward index 0 and resolves it. Everything the game is
+   about happens here, and the order of the cases is the rule set.
+ *
+ * The line is re-scanned from the same position after each resolution rather
+ * than walked once, so a result can feed the next operation in the same move:
+ * 1 XOR 2 makes a 3, and a 3 already sitting beside it then consolidates with
+ * it. That is the web game's behaviour and this is a port of it -- the order of
+ * the cases below matters for the same reason, because an earlier pattern
+ * shadows a later one that would also have matched. */
 static int advance_line(Board *b, int *line, int score_it, LineTrace *tr,
                         int *pack_src) {
-    int packed[BOARD_SIZE];
-    int n = 0;
-    for (int i = 0; i < BOARD_SIZE; i++) {
-        if (line[i] != TILE_EMPTY) {
-            if (pack_src) pack_src[n] = i;
-            packed[n++] = line[i];
-        }
+    int cells[BOARD_SIZE];
+    int org[BOARD_SIZE][BOARD_SIZE];
+    int orgn[BOARD_SIZE];
+    int len = 0;
+
+    for (int k = 0; k < BOARD_SIZE; k++) {
+        if (line[k] == TILE_EMPTY) continue;
+        if (pack_src) pack_src[len] = k;
+        cells[len]  = line[k];
+        org[len][0] = len;
+        orgn[len]   = 1;
+        len++;
     }
 
-    if (tr) {
-        for (int k = 0; k < BOARD_SIZE; k++) tr->n[k] = 0;
-    }
-
-    int out[BOARD_SIZE];
-    int outn = 0;
     int merged = 0;
     int i = 0;
 
-    while (i < n) {
-        int current = packed[i];
-
+    while (i < len) {
         /* NOT + NOT: two inversions are no inversion, and both are consumed. */
-        if (current == GATE_NOT && i + 1 < n && packed[i + 1] == GATE_NOT) {
-            i += 2;
+        if (cells[i] == GATE_NOT && i + 1 < len && cells[i + 1] == GATE_NOT) {
+            collapse(cells, org, orgn, &len, i, 2, TILE_EMPTY);
             merged = 1;
             continue;
         }
 
-        /* NOT applied to the number on either side. */
-        if (current == GATE_NOT && i + 1 < n && !board_is_gate(packed[i + 1])) {
-            int r = score_it ? resolve_gate(b, GATE_NOT, packed[i + 1], 0)
-                             : board_apply_gate(b, GATE_NOT, packed[i + 1], 0);
-            if (r != 0) {
-                trace_emit(tr, outn, i, i + 1, -1);
-                out[outn++] = r;
-                if (score_it) {
-                    b->score += r;
-                    b->last_gained += r;
-                    award_height(b, r);
-                }
-            }
-            i += 2;
+        /* NOT applied to the number after it. */
+        if (cells[i] == GATE_NOT && i + 1 < len && !board_is_gate(cells[i + 1])) {
+            int r = operate(b, GATE_NOT, cells[i + 1], 0, score_it);
+            collapse(cells, org, orgn, &len, i, 2, r);
             merged = 1;
             continue;
         }
-        if (!board_is_gate(current) && i + 1 < n && packed[i + 1] == GATE_NOT) {
-            int r = score_it ? resolve_gate(b, GATE_NOT, current, 0)
-                             : board_apply_gate(b, GATE_NOT, current, 0);
-            if (r != 0) {
-                trace_emit(tr, outn, i, i + 1, -1);
-                out[outn++] = r;
-                if (score_it) {
-                    b->score += r;
-                    b->last_gained += r;
-                    award_height(b, r);
-                }
-            }
-            i += 2;
+
+        /* A NOT pair cancels behind a number too. Without this the next case
+           matches first and a run of NOTs resolves one at a time, scoring every
+           intermediate value and claiming heights no tile ever rested on. */
+        if (!board_is_gate(cells[i]) && i + 2 < len &&
+            cells[i + 1] == GATE_NOT && cells[i + 2] == GATE_NOT) {
+            collapse(cells, org, orgn, &len, i + 1, 2, TILE_EMPTY);
+            merged = 1;
+            continue;
+        }
+
+        /* NOT applied to the number before it. */
+        if (!board_is_gate(cells[i]) && i + 1 < len && cells[i + 1] == GATE_NOT) {
+            int r = operate(b, GATE_NOT, cells[i], 0, score_it);
+            collapse(cells, org, orgn, &len, i, 2, r);
             merged = 1;
             continue;
         }
 
         /* number gate number. NOT is excluded: it is unary and was handled. */
-        if (!board_is_gate(current) && i + 2 < n &&
-            board_is_gate(packed[i + 1]) && packed[i + 1] != GATE_NOT &&
-            !board_is_gate(packed[i + 2])) {
-            int r = score_it ? resolve_gate(b, packed[i + 1], current, packed[i + 2])
-                             : board_apply_gate(b, packed[i + 1], current, packed[i + 2]);
-            trace_emit(tr, outn, i, i + 1, i + 2);
-            out[outn++] = r;
-            if (score_it) {
-                b->score += r;
-                b->last_gained += r;
-                award_height(b, r);
-            }
-            i += 3;
+        if (!board_is_gate(cells[i]) && i + 2 < len &&
+            board_is_gate(cells[i + 1]) && cells[i + 1] != GATE_NOT &&
+            !board_is_gate(cells[i + 2])) {
+            int r = operate(b, cells[i + 1], cells[i], cells[i + 2], score_it);
+            collapse(cells, org, orgn, &len, i, 3, r);
             merged = 1;
             continue;
         }
 
-        /* Idempotence: equal numbers consolidate to one of themselves. */
-        if (i + 1 < n && current == packed[i + 1] && !board_is_gate(current)) {
-            trace_emit(tr, outn, i, i + 1, -1);
-            out[outn++] = current;
+        /* Idempotence: equal numbers consolidate to one of themselves. The only
+           case that advances -- a consolidated tile is settled, where a gate
+           result is not. */
+        if (i + 1 < len && !board_is_gate(cells[i]) && cells[i] == cells[i + 1]) {
+            int value = cells[i];
             if (score_it) {
-                b->score += current;
-                b->last_gained += current;
-                award_height(b, current);
+                b->score += value;
+                b->last_gained += value;
+                award_height(b, value);
             }
-            i += 2;
+            collapse(cells, org, orgn, &len, i, 2, value);
             merged = 1;
+            i++;
             continue;
         }
 
-        trace_emit(tr, outn, i, -1, -1);
-        out[outn++] = current;
         i++;
     }
 
-    while (outn < BOARD_SIZE) out[outn++] = TILE_EMPTY;
+    if (tr) {
+        for (int k = 0; k < BOARD_SIZE; k++) tr->n[k] = 0;
+        for (int c = 0; c < len; c++) {
+            tr->n[c] = orgn[c];
+            for (int k = 0; k < orgn[c]; k++) tr->src[c][k] = org[c][k];
+        }
+    }
 
     int changed = 0;
     for (int k = 0; k < BOARD_SIZE; k++) {
-        if (line[k] != out[k]) changed = 1;
-        line[k] = out[k];
+        int v = (k < len) ? cells[k] : TILE_EMPTY;
+        if (line[k] != v) changed = 1;
+        line[k] = v;
     }
     return changed || merged;
 }
@@ -280,10 +319,9 @@ int board_move(Board *b, BoardDir dir) {
 
         /* Provenance is recorded for every line, moved or not: a tile that
            stayed put still has to be drawn while its neighbours slide. */
-        for (int slot = 0; slot < BOARD_SIZE; slot++) {
+        for (int slot = 0; slot < BOARD_SIZE && b->move_count < BOARD_CELLS; slot++) {
             if (line[slot] == TILE_EMPTY) continue;
-            for (int c = 0; c < tr.n[slot]; c++) {
-                if (b->move_count >= BOARD_CELLS) break;
+            for (int c = 0; c < tr.n[slot] && b->move_count < BOARD_CELLS; c++) {
                 int origin = pack_src[tr.src[slot][c]];
 
                 TileMove *m = &b->moves[b->move_count++];
