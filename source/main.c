@@ -220,6 +220,30 @@ static void draw_game_over(const Palette *p, const GameStateMachine *gs) {
     renderer_finish();
 }
 
+static void draw_paused(const Palette *p) {
+    render_board(&board, p, binary_on);
+    ui_draw_dim_overlay(RGBA(0, 0, 0, 190));
+    ui_draw_centered_text(100, "PAUSED", 28, p->tile_text);
+
+    /* Compact gate reference -- the board has no side panel on a 4:3 TV, and
+       this is exactly when a player wants to look something up. */
+    int y = 170;
+    ui_draw_centered_text(y, "GATES", 14, p->tile_text);
+    y += 28;
+    ui_draw_centered_text(y, "XOR, OR, AND: binary operators", 10, p->gate_bg);
+    y += 20;
+    ui_draw_centered_text(y, "Slide between two numbers", 10, p->gate_bg);
+    y += 28;
+    ui_draw_centered_text(y, "NOT: unary operator", 10, p->gate_bg);
+    y += 20;
+    ui_draw_centered_text(y, "Slide into a single number", 10, p->gate_bg);
+    y += 20;
+    ui_draw_centered_text(y, "Two NOTs cancel each other", 10, p->gate_bg);
+
+    ui_draw_centered_text(400, "A: resume", 12, p->gate_bg);
+    renderer_finish();
+}
+
 static void draw_initials(const Palette *p, const GameStateMachine *gs) {
     renderer_draw_background();
     ui_draw_border();
@@ -419,7 +443,22 @@ int main(int argc, char **argv) {
         const Palette *p = palette_for(mode);
 
         if (gamestate_current(&gs) == GS_PLAYING) {
-            update_playing(&gs, p);
+            /* PLUS pauses: the board freezes and a gate reference appears.
+               HOME quits entirely (handled above). */
+            if (input_plus_pressed()) {
+                gamestate_pause(&gs);
+            } else {
+                update_playing(&gs, p);
+            }
+            continue;
+        }
+
+        if (gamestate_current(&gs) == GS_PAUSED) {
+            draw_paused(p);
+            if (input_a_pressed() || input_plus_pressed()) {
+                gamestate_resume(&gs);
+                sfx(SFX_MOVE);
+            }
             continue;
         }
 
