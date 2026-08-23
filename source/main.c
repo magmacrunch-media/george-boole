@@ -77,11 +77,13 @@ static Overlay overlay = OVERLAY_NONE;
 static float anim_t = 1.0f;
 static int howto_page = 0;
 static int settings_cursor = 0;
+static int total_moves = 0;
 
 static void start_run(void) {
     board_init(&board, mode_start_bits(mode), mode_is_gauntlet(mode));
     scoring_reset();
     scoring_select_table(score_table[mode]);
+    total_moves = 0;
 
     /* Two tiles to open with, or the first move has nothing to act on. */
     board_spawn(&board, (unsigned int)rand());
@@ -214,11 +216,13 @@ static void draw_game_over(const Palette *p, const GameStateMachine *gs) {
     ui_draw_centered_text(150, "GAME OVER", 28, p->tile_text);
 
     char buf[48];
-    snprintf(buf, sizeof(buf), "SCORE %d", scoring_get());
+    snprintf(buf, sizeof(buf), "%d points - Max Value: %d",
+             scoring_get(), board.highest_earned);
     ui_draw_centered_text(200, buf, 18, p->gate_bg);
 
     if (gs->is_high_score) {
-        snprintf(buf, sizeof(buf), "HIGH SCORE  RANK %d", gs->rank);
+        snprintf(buf, sizeof(buf), "HIGH SCORE  RANK %d  MOVES %d",
+                 gs->rank, total_moves);
         ui_draw_centered_text(240, buf, 14, p->tile_text);
     }
     ui_draw_centered_text(320, "A: continue", 12, p->gate_bg);
@@ -335,6 +339,7 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     if (moved) {
         anim_t = 0.0f;
         scoring_add(board.last_gained);
+        total_moves++;
 
         /* In Gauntlet, when a merge reaches the ceiling and promotes the width,
            mark the tile that earned it as rainbow so the renderer can cycle its
@@ -378,6 +383,8 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     if (anim_t >= 1.0f && board_game_over(&board)) {
         printf("run over: mode=%s score=%d bits=%d\n",
                mode_name(mode), scoring_get(), board.bits);
+        gs->moves = total_moves;
+        gs->highest_earned = board.highest_earned;
         gamestate_end_run(gs, scoring_get());
         sfx(gs->is_high_score ? SFX_HIGHSCORE : SFX_GAMEOVER);
     }
