@@ -112,3 +112,13 @@ False, which makes a working trace look like a dead one.
 
 Dolphin also reuses an already-running instance, so kill it between runs or you
 will read the previous run's log and debug a binary that is not running.
+
+## License
+
+Code under the [Apache License 2.0](LICENSE) — the board and gate rules, the
+tile animation, and the host tests are all reusable, and worth reusing.
+
+The audio, the game's name and the visual design are © 2026 MagmaCrunch Media,
+all rights reserved, and are **not** covered by that licence. They are in the
+repository because the game is built from them, not because they are on offer.
+See [NOTICE](NOTICE) for the exact boundary and the third-party components.

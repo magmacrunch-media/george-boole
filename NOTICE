@@ -1,0 +1,38 @@
+George Boole Has Entered The Chat -- Wii port
+Copyright 2026 MagmaCrunch Media
+
+
+WHAT THE APACHE LICENSE COVERS
+
+The source code in source/ and tests/, the Makefile, the CI workflow and the
+documentation, under the Apache License 2.0 in the LICENSE file beside this one.
+
+That is the part worth reusing: the board and gate rules, the tile animation,
+and the way the whole thing is tested off-console. Take it.
+
+
+WHAT IT DOES NOT COVER
+
+The audio in audio/ (7 files), the game's name, the George Boole Has Entered
+The Chat and MagmaCrunch names and marks, and the visual design of the board and
+its per-mode palettes.
+
+Those are Copyright 2026 MagmaCrunch Media, all rights reserved. They are in the
+repository because the game is built from them, not because they are offered for
+reuse. The Apache License does not grant rights to them, and section 6 of that
+licence does not grant trademark rights in any case.
+
+If you want to use any of it, ask.
+
+
+THIRD-PARTY COMPONENTS
+
+Press Start 2P, by CodeMan38, licensed under the SIL Open Font License 1.1. The
+font is embedded in the binary by way of magnolia rather than shipped here as a
+file.
+
+magnolia, the Wii engine this game is built on, Copyright 2026 magmacrunch
+Media, under the Apache License 2.0.
+
+GRRLIB and devkitPPC are used under their own terms and are not distributed
+here.
