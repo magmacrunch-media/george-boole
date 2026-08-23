@@ -306,6 +306,25 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     if (moved) {
         anim_t = 0.0f;
         scoring_add(board.last_gained);
+
+        /* In Gauntlet, when a merge reaches the ceiling and promotes the width,
+           mark the tile that earned it as rainbow so the renderer can cycle its
+           hue. The old ceiling is the value to look for: the tile still holds it
+           at this point, before the spawn overwrites an empty cell. */
+        if (board.last_upgraded) {
+            int old_max = mode_max_value(board.bits - 1);
+            for (int r = 0; r < BOARD_SIZE; r++) {
+                for (int c = 0; c < BOARD_SIZE; c++) {
+                    if (board.cells[r][c] == old_max) {
+                        board.rainbow_row = r;
+                        board.rainbow_col = c;
+                        goto found_rainbow;
+                    }
+                }
+            }
+        }
+        found_rainbow:
+
         board_spawn(&board, (unsigned int)rand());
 
         /* One sound per move, chosen by what the move was worth: a merge is

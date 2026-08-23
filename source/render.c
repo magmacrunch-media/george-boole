@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "magnolia.h"
 #include "render.h"
+#include "modes.h"
 
 /* The board is a square block of four cells with a gap between them, centred
    horizontally and sitting below the HUD. Sized so a 4x4 grid of three-digit
@@ -11,6 +12,9 @@
 #define BOARD_X  168
 #define BOARD_Y  128
 #define RADIUS     6
+
+/* Gold tile colour -- a distinct warm gold that reads as special on a CRT. */
+#define GOLD_COLOR PAL_RGB(0xffd700)
 
 const char *render_gate_label(int value) {
     switch (value) {
@@ -33,14 +37,45 @@ static unsigned int digit_size(int value) {
     return 24;
 }
 
+/* HSV hue (0..360) to packed RGB. Saturation and value are fixed at 1.0 for
+   maximum brightness on a CRT. */
+static u32 hue_to_rgb(float hue) {
+    float h = hue / 60.0f;
+    int sector = (int)h;
+    float f = h - sector;
+    unsigned int r, g, b;
+
+    switch (sector % 6) {
+        case 0: r = 255; g = (unsigned int)(255 * f); b = 0; break;
+        case 1: r = (unsigned int)(255 * (1 - f)); g = 255; b = 0; break;
+        case 2: r = 0; g = 255; b = (unsigned int)(255 * f); break;
+        case 3: r = 0; g = (unsigned int)(255 * (1 - f)); b = 255; break;
+        case 4: r = (unsigned int)(255 * f); g = 0; b = 255; break;
+        default: r = 255; g = 0; b = (unsigned int)(255 * (1 - f)); break;
+    }
+    return PAL_RGB((r << 16) | (g << 8) | b);
+}
+
 /* One tile, at an arbitrary position and size, so the same code draws a tile
    sitting still, sliding, and popping. When binary_on is set and the tile is a
    number, the decimal is drawn slightly above centre and the zero-padded binary
-   underneath it in a smaller font. */
+   underneath it in a smaller font. is_rainbow cycles the hue; is_gold uses a
+   fixed warm gold. */
 static void draw_tile(int x, int y, int size, int value,
                       const Palette *p, int max_value,
-                      int binary_on, int bits) {
-    u32 fill = palette_tile_color(p, value, max_value);
+                      int binary_on, int bits,
+                      int is_rainbow, int is_gold) {
+    u32 fill;
+    if (is_rainbow) {
+        static float hue_acc = 0.0f;
+        hue_acc += clock_dt() * 180.0f;  /* 180 degrees per second */
+        if (hue_acc >= 360.0f) hue_acc -= 360.0f;
+        fill = hue_to_rgb(hue_acc);
+    } else if (is_gold) {
+        fill = GOLD_COLOR;
+    } else {
+        fill = palette_tile_color(p, value, max_value);
+    }
     ui_draw_panel(x, y, size, size, fill, p->border, RADIUS);
 
     if (value == TILE_EMPTY) return;
@@ -76,8 +111,11 @@ static void draw_frame(const Board *b, const Palette *p, int with_cells,
     for (int r = 0; r < BOARD_SIZE; r++) {
         for (int c = 0; c < BOARD_SIZE; c++) {
             int value = with_cells ? board_get(b, r, c) : TILE_EMPTY;
+            int is_rainbow = (r == b->rainbow_row && c == b->rainbow_col);
+            int is_gold = (value == b->highest_earned && b->highest_earned > 0
+                           && mode_height_bonus(b->bits, b->highest_earned) > 0);
             draw_tile(cell_x(c), cell_y(r), CELL, value, p, b->max_value,
-                      binary_on, b->bits);
+                      binary_on, b->bits, is_rainbow, is_gold);
         }
     }
 }
@@ -109,8 +147,15 @@ void render_board_animated(const Board *b, const Palette *p, float t,
             int tx = cell_x(m->to_col),   ty = cell_y(m->to_row);
             int x = fx + (int)((float)(tx - fx) * e);
             int y = fy + (int)((float)(ty - fy) * e);
+            /* Rainbow follows the tile to its destination. Gold follows the
+               value -- a tile carrying highest_earned stays gold while sliding. */
+            int is_rainbow = (m->to_row == b->rainbow_row &&
+                              m->to_col == b->rainbow_col);
+            int is_gold = (m->from_value == b->highest_earned &&
+                           b->highest_earned > 0 &&
+                           mode_height_bonus(b->bits, b->highest_earned) > 0);
             draw_tile(x, y, CELL, m->from_value, p, b->max_value,
-                      binary_on, b->bits);
+                      binary_on, b->bits, is_rainbow, is_gold);
         }
         return;
     }
@@ -137,8 +182,11 @@ void render_board_animated(const Board *b, const Palette *p, float t,
 
             int size = CELL + (popping ? (int)((float)CELL * swell) : 0);
             int off  = (size - CELL) / 2;
+            int is_rainbow = (r == b->rainbow_row && c == b->rainbow_col);
+            int is_gold = (value == b->highest_earned && b->highest_earned > 0
+                           && mode_height_bonus(b->bits, b->highest_earned) > 0);
             draw_tile(cell_x(c) - off, cell_y(r) - off, size, value,
-                      p, b->max_value, binary_on, b->bits);
+                      p, b->max_value, binary_on, b->bits, is_rainbow, is_gold);
         }
     }
 }

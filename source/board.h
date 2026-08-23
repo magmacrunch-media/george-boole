@@ -68,6 +68,11 @@ typedef struct {
 
     /* Where board_spawn() last placed a tile, or -1. */
     int spawn_row, spawn_col;
+
+    /* Position of the rainbow tile (ceiling reached in Gauntlet), or -1.
+       Set after board_move() when last_upgraded is set, persists until the
+       next move. */
+    int rainbow_row, rainbow_col;
 } Board;
 
 int  board_is_gate(int value);

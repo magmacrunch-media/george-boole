@@ -9,11 +9,13 @@ int board_is_gate(int value) {
 
 void board_init(Board *b, int bits, int gauntlet) {
     memset(b, 0, sizeof(*b));
-    b->spawn_row = -1;
-    b->spawn_col = -1;
-    b->bits      = bits;
-    b->max_value = mode_max_value(bits);
-    b->gauntlet  = gauntlet ? 1 : 0;
+    b->spawn_row   = -1;
+    b->spawn_col   = -1;
+    b->rainbow_row = -1;
+    b->rainbow_col = -1;
+    b->bits        = bits;
+    b->max_value   = mode_max_value(bits);
+    b->gauntlet    = gauntlet ? 1 : 0;
 }
 
 int board_get(const Board *b, int row, int col) { return b->cells[row][col]; }
@@ -303,6 +305,8 @@ int board_move(Board *b, BoardDir dir) {
     b->move_count = 0;
     b->spawn_row = -1;
     b->spawn_col = -1;
+    b->rainbow_row = -1;
+    b->rainbow_col = -1;
 
     int changed = 0;
     for (int step = 0; step < BOARD_SIZE; step++) {
