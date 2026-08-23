@@ -1,0 +1,31 @@
+# The host tests need nothing but a C compiler, so they run on a GitHub-hosted
+# runner rather than the dev box. These are the tests that must still run when
+# that machine is off — tying them to it would undo the point of having them.
+#
+# One checkout, unlike Moonlight Drift's: this game's tests link only its own
+# sources, so the engine is not needed here.
+#
+# The devkitPPC build is not included, matching magnolia and Moonlight Drift:
+# it needs the self-hosted runner, and that job stays out until its label is
+# confirmed.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  host-tests:
+    name: host tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The board, the gate rules and the mode tables — ported from the web
+      # game and checked against the suite that came with it. The rules are what
+      # a port gets wrong, and they are wrong in ways that look like being right.
+      - name: make test
+        run: make test
