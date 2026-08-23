@@ -46,8 +46,9 @@ typedef struct {
     u32 tile_text;    /* numerals on a tile */
     u32 border;
     u32 ramp[5];      /* low value -> high value */
-    u32 gate_bg;      /* gates sit outside the ramp so they read as operators */
-    u32 gate_text;
+    u32 gate_bg;      /* UI accent colour (menus, HUD text) */
+    u32 gate_text;    /* UI accent text colour */
+    u32 gate_color[4]; /* per-gate tile background: XOR, OR, AND, NOT */
 } Palette;
 
 /* `bits` matters for Gauntlet, which climbs widths inside one mode. */

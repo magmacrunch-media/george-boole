@@ -720,7 +720,16 @@ static void test_palette(void) {
     ok(palette_tile_color(gb, 999, 3) == palette_tile_color(gb, 3, 3),
        "an over-range value clamps to the top of the ramp");
     ok(palette_tile_color(gb, 0, 3) == gb->cell_bg, "0 is an empty cell");
-    ok(palette_tile_color(gb, GATE_XOR, 3) == gb->gate_bg, "a gate uses the gate colour");
+
+    /* Each gate type must return its own per-gate colour. */
+    ok(palette_tile_color(gb, GATE_XOR, 3) == gb->gate_color[0],
+       "XOR uses gate_color[0]");
+    ok(palette_tile_color(gb, GATE_OR, 3) == gb->gate_color[1],
+       "OR uses gate_color[1]");
+    ok(palette_tile_color(gb, GATE_AND, 3) == gb->gate_color[2],
+       "AND uses gate_color[2]");
+    ok(palette_tile_color(gb, GATE_NOT, 3) == gb->gate_color[3],
+       "NOT uses gate_color[3]");
 
     /* Every step distinct, so adjacent values are told apart on a CRT. */
     for (int m = 0; m < MODE_COUNT; m++) {
@@ -730,6 +739,35 @@ static void test_palette(void) {
                 checks++;
                 if (p->ramp[i] == p->ramp[j]) {
                     printf("  FAIL: mode %d ramp steps %d and %d are identical\n", m, i, j);
+                    failures++;
+                }
+            }
+        }
+    }
+
+    /* All four gates must be distinct from each other per mode, and none may
+       collide with a ramp step -- the property gates.css was designed for. */
+    for (int m = 0; m < MODE_COUNT; m++) {
+        const Palette *p = palette_for((ModeId)m);
+        const int gates[] = { GATE_XOR, GATE_OR, GATE_AND, GATE_NOT };
+        for (int i = 0; i < 4; i++) {
+            for (int j = i + 1; j < 4; j++) {
+                checks++;
+                u32 ci = palette_tile_color(p, gates[i], 3);
+                u32 cj = palette_tile_color(p, gates[j], 3);
+                if (ci == cj) {
+                    printf("  FAIL: mode %d gates %d and %d are identical\n",
+                           m, gates[i], gates[j]);
+                    failures++;
+                }
+            }
+            /* Gate colour must not match any ramp step. */
+            u32 gc = palette_tile_color(p, gates[i], 3);
+            for (int r = 0; r < 5; r++) {
+                checks++;
+                if (gc == p->ramp[r]) {
+                    printf("  FAIL: mode %d gate %d collides with ramp step %d\n",
+                           m, gates[i], r);
                     failures++;
                 }
             }
