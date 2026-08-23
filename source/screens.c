@@ -101,15 +101,17 @@ void screens_draw_howto(const Palette *p, int page) {
     renderer_finish();
 }
 
-void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on) {
+void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on,
+                           int binary_on) {
     renderer_draw_background();
     ui_draw_border();
     ui_draw_centered_text(40, "SETTINGS", 20, p->tile_text);
 
-    const char *labels[SETTING_COUNT] = { "MUSIC", "SOUND EFFECTS" };
+    const char *labels[SETTING_COUNT] = { "MUSIC", "SOUND EFFECTS", "BINARY" };
     int values[SETTING_COUNT];
-    values[SETTING_MUSIC] = music_on;
-    values[SETTING_SFX]   = sfx_on;
+    values[SETTING_MUSIC]   = music_on;
+    values[SETTING_SFX]     = sfx_on;
+    values[SETTING_BINARY]  = binary_on;
 
     for (int i = 0; i < SETTING_COUNT; i++) {
         int y = 140 + i * 70;
@@ -124,8 +126,8 @@ void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_o
                                  values[i] ? p->tile_text : p->gate_bg);
     }
 
-    ui_draw_centered_text(330, "A: toggle   B: back", 10, p->gate_bg);
-    ui_draw_centered_text(360, "Settings are saved to the SD card.", 10, p->gate_bg);
+    ui_draw_centered_text(360, "A: toggle   B: back", 10, p->gate_bg);
+    ui_draw_centered_text(380, "Settings are saved to the SD card.", 10, p->gate_bg);
     renderer_finish();
 }
 

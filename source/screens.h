@@ -19,6 +19,7 @@ typedef enum {
 typedef enum {
     SETTING_MUSIC,
     SETTING_SFX,
+    SETTING_BINARY,
     SETTING_COUNT
 } SettingItem;
 
@@ -26,7 +27,8 @@ typedef enum {
 
 void screens_draw_title(const Palette *p, const MenuGrid *menu);
 void screens_draw_howto(const Palette *p, int page);
-void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on);
+void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on,
+                           int binary_on);
 void screens_draw_credits(const Palette *p);
 
 const char *screens_title_label(int item);

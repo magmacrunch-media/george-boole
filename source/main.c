@@ -26,11 +26,13 @@
    tools/convert-audio.sh, which is where that decision lives. */
 #define MUSIC_RATE 24000
 
-#define PREF_MUSIC "music"
-#define PREF_SFX   "sfx"
+#define PREF_MUSIC   "music"
+#define PREF_SFX     "sfx"
+#define PREF_BINARY  "binary"
 
-static int music_on = 1;
-static int sfx_on   = 1;
+static int music_on  = 1;
+static int sfx_on    = 1;
+static int binary_on = 0;
 
 static void sfx(int slot) {
     if (sfx_on) audio_play_sfx(slot);
@@ -92,7 +94,8 @@ static int update_title(const Palette *p) {
         switch (overlay) {
             case OVERLAY_HOWTO:    screens_draw_howto(p, howto_page); break;
             case OVERLAY_SETTINGS: screens_draw_settings(p, settings_cursor,
-                                                         music_on, sfx_on); break;
+                                                         music_on, sfx_on,
+                                                         binary_on); break;
             case OVERLAY_CREDITS:  screens_draw_credits(p); break;
             default: break;
         }
@@ -114,16 +117,19 @@ static int update_title(const Palette *p) {
             }
         } else if (overlay == OVERLAY_SETTINGS) {
             if (input_dir_repeat(INPUT_DIR_UP))   settings_cursor = SETTING_MUSIC;
-            if (input_dir_repeat(INPUT_DIR_DOWN)) settings_cursor = SETTING_SFX;
+            if (input_dir_repeat(INPUT_DIR_DOWN)) settings_cursor = SETTING_BINARY;
 
             if (input_a_pressed()) {
                 if (settings_cursor == SETTING_MUSIC) {
                     music_on = !music_on;
                     prefs_set_int(PREF_MUSIC, music_on);
                     apply_music();
-                } else {
+                } else if (settings_cursor == SETTING_SFX) {
                     sfx_on = !sfx_on;
                     prefs_set_int(PREF_SFX, sfx_on);
+                } else {
+                    binary_on = !binary_on;
+                    prefs_set_int(PREF_BINARY, binary_on);
                 }
                 /* Played after the toggle, so turning effects on says so. */
                 sfx(SFX_MERGE);
@@ -198,7 +204,7 @@ static void draw_mode_select(void) {
 }
 
 static void draw_game_over(const Palette *p, const GameStateMachine *gs) {
-    render_board(&board, p);
+    render_board(&board, p, binary_on);
     ui_draw_dim_overlay(RGBA(0, 0, 0, 190));
     ui_draw_centered_text(150, "GAME OVER", 28, p->tile_text);
 
@@ -315,7 +321,7 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
         }
     }
 
-    render_board_animated(&board, p, anim_t);
+    render_board_animated(&board, p, anim_t, binary_on);
     render_hud(&board, p, mode);
     renderer_finish();
 
@@ -365,8 +371,9 @@ int main(int argc, char **argv) {
     mode = (ModeId)prefs_get_int("mode", MODE_2BIT);
     if (mode < 0 || mode >= MODE_COUNT) mode = MODE_2BIT;
 
-    music_on = prefs_get_int(PREF_MUSIC, 1) ? 1 : 0;
-    sfx_on   = prefs_get_int(PREF_SFX, 1) ? 1 : 0;
+    music_on  = prefs_get_int(PREF_MUSIC, 1) ? 1 : 0;
+    sfx_on    = prefs_get_int(PREF_SFX, 1) ? 1 : 0;
+    binary_on = prefs_get_int(PREF_BINARY, 0) ? 1 : 0;
     apply_music();
     audio_play_music_mem_fmt(music_pcm, music_pcm_size, AUDIO_MONO_16, MUSIC_RATE);
 

@@ -34,9 +34,12 @@ static unsigned int digit_size(int value) {
 }
 
 /* One tile, at an arbitrary position and size, so the same code draws a tile
-   sitting still, sliding, and popping. */
+   sitting still, sliding, and popping. When binary_on is set and the tile is a
+   number, the decimal is drawn slightly above centre and the zero-padded binary
+   underneath it in a smaller font. */
 static void draw_tile(int x, int y, int size, int value,
-                      const Palette *p, int max_value) {
+                      const Palette *p, int max_value,
+                      int binary_on, int bits) {
     u32 fill = palette_tile_color(p, value, max_value);
     ui_draw_panel(x, y, size, size, fill, p->border, RADIUS);
 
@@ -45,6 +48,16 @@ static void draw_tile(int x, int y, int size, int value,
     if (board_is_gate(value)) {
         ui_draw_text_centered_in(x, y, size, size,
                                  render_gate_label(value), 16, p->gate_text);
+    } else if (binary_on) {
+        /* Decimal shifted up, binary below. The offsets are tuned for a 74px
+           cell: decimal at 16-24px depending on digit count, binary at 8px. */
+        char dec[8], bin[12];
+        snprintf(dec, sizeof(dec), "%d", value);
+        snprintf(bin, sizeof(bin), "%0*d", bits, value);
+        ui_draw_text_centered_in(x, y - 4, size, size, dec, digit_size(value),
+                                 p->tile_text);
+        ui_draw_text_centered_in(x, y + size / 2 + 2, size, size / 2,
+                                 bin, 8, p->gate_bg);
     } else {
         char buf[8];
         snprintf(buf, sizeof(buf), "%d", value);
@@ -53,7 +66,8 @@ static void draw_tile(int x, int y, int size, int value,
     }
 }
 
-static void draw_frame(const Board *b, const Palette *p, int with_cells) {
+static void draw_frame(const Board *b, const Palette *p, int with_cells,
+                       int binary_on) {
     int span = BOARD_SIZE * CELL + (BOARD_SIZE - 1) * GAP;
     ui_draw_panel(BOARD_X - GAP, BOARD_Y - GAP,
                   span + GAP * 2, span + GAP * 2,
@@ -62,7 +76,8 @@ static void draw_frame(const Board *b, const Palette *p, int with_cells) {
     for (int r = 0; r < BOARD_SIZE; r++) {
         for (int c = 0; c < BOARD_SIZE; c++) {
             int value = with_cells ? board_get(b, r, c) : TILE_EMPTY;
-            draw_tile(cell_x(c), cell_y(r), CELL, value, p, b->max_value);
+            draw_tile(cell_x(c), cell_y(r), CELL, value, p, b->max_value,
+                      binary_on, b->bits);
         }
     }
 }
@@ -70,10 +85,11 @@ static void draw_frame(const Board *b, const Palette *p, int with_cells) {
 /* Split of the animation between sliding and the pop that follows it. */
 #define SLIDE_FRACTION 0.66f
 
-void render_board_animated(const Board *b, const Palette *p, float t) {
+void render_board_animated(const Board *b, const Palette *p, float t,
+                           int binary_on) {
     if (t < 0.0f) t = 0.0f;
     if (t >= 1.0f) {
-        render_board(b, p);
+        render_board(b, p, binary_on);
         return;
     }
 
@@ -84,7 +100,7 @@ void render_board_animated(const Board *b, const Palette *p, float t) {
         /* Empty grid underneath: every surviving tile is in the move list, so
            drawing the board as well would show each tile twice -- once at its
            destination and once in flight. */
-        draw_frame(b, p, 0);
+        draw_frame(b, p, 0, binary_on);
 
         float e = ease_out_quad(slide);
         for (int i = 0; i < b->move_count; i++) {
@@ -93,7 +109,8 @@ void render_board_animated(const Board *b, const Palette *p, float t) {
             int tx = cell_x(m->to_col),   ty = cell_y(m->to_row);
             int x = fx + (int)((float)(tx - fx) * e);
             int y = fy + (int)((float)(ty - fy) * e);
-            draw_tile(x, y, CELL, m->from_value, p, b->max_value);
+            draw_tile(x, y, CELL, m->from_value, p, b->max_value,
+                      binary_on, b->bits);
         }
         return;
     }
@@ -105,7 +122,7 @@ void render_board_animated(const Board *b, const Palette *p, float t) {
     if (pop > 1.0f) pop = 1.0f;
     float swell = (1.0f - ease_out_quad(pop)) * 0.16f;
 
-    draw_frame(b, p, 0);
+    draw_frame(b, p, 0, binary_on);
 
     for (int r = 0; r < BOARD_SIZE; r++) {
         for (int c = 0; c < BOARD_SIZE; c++) {
@@ -121,13 +138,13 @@ void render_board_animated(const Board *b, const Palette *p, float t) {
             int size = CELL + (popping ? (int)((float)CELL * swell) : 0);
             int off  = (size - CELL) / 2;
             draw_tile(cell_x(c) - off, cell_y(r) - off, size, value,
-                      p, b->max_value);
+                      p, b->max_value, binary_on, b->bits);
         }
     }
 }
 
-void render_board(const Board *b, const Palette *p) {
-    draw_frame(b, p, 1);
+void render_board(const Board *b, const Palette *p, int binary_on) {
+    draw_frame(b, p, 1, binary_on);
 }
 
 void render_hud(const Board *b, const Palette *p, ModeId mode) {
