@@ -28,7 +28,7 @@ typedef enum {
 void screens_draw_title(const Palette *p, const MenuGrid *menu);
 void screens_draw_howto(const Palette *p, int page);
 void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on,
-                           int binary_on);
+                           int binary_on, int sd_mounted);
 void screens_draw_credits(const Palette *p);
 
 const char *screens_title_label(int item);

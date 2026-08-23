@@ -102,7 +102,7 @@ void screens_draw_howto(const Palette *p, int page) {
 }
 
 void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_on,
-                           int binary_on) {
+                           int binary_on, int sd_mounted) {
     renderer_draw_background();
     ui_draw_border();
     ui_draw_centered_text(40, "SETTINGS", 20, p->tile_text);
@@ -127,7 +127,11 @@ void screens_draw_settings(const Palette *p, int cursor, int music_on, int sfx_o
     }
 
     ui_draw_centered_text(360, "A: toggle   B: back", 10, p->gate_bg);
-    ui_draw_centered_text(380, "Settings are saved to the SD card.", 10, p->gate_bg);
+    if (sd_mounted) {
+        ui_draw_centered_text(380, "Settings are saved to the SD card.", 10, p->gate_bg);
+    } else {
+        ui_draw_centered_text(380, "No SD card -- settings are not saved.", 10, p->ramp[3]);
+    }
     renderer_finish();
 }
 

@@ -34,6 +34,10 @@ static int music_on  = 1;
 static int sfx_on    = 1;
 static int binary_on = 0;
 
+/* SD card status, checked once after init. Drives the settings screen message
+   and can be queried by the startup report. */
+static int sd_mounted = 0;
+
 static void sfx(int slot) {
     if (sfx_on) audio_play_sfx(slot);
 }
@@ -95,7 +99,8 @@ static int update_title(const Palette *p) {
             case OVERLAY_HOWTO:    screens_draw_howto(p, howto_page); break;
             case OVERLAY_SETTINGS: screens_draw_settings(p, settings_cursor,
                                                          music_on, sfx_on,
-                                                         binary_on); break;
+                                                         binary_on,
+                                                         sd_mounted); break;
             case OVERLAY_CREDITS:  screens_draw_credits(p); break;
             default: break;
         }
@@ -393,6 +398,7 @@ int main(int argc, char **argv) {
         .overscan_pct = OVERSCAN_PCT
     };
     if (magnolia_init(&cfg) == -2) return 1;
+    sd_mounted = magnolia_sd_mounted();
 
     input_init();
     audio_init();
