@@ -145,7 +145,7 @@ void screens_draw_credits(const Palette *p) {
 
     y += 46;
     y = ui_draw_text_wrapped(BODY_X, y, BODY_W,
-        "A MagmaCrunch game. Ported from the browser version in the MagmaCrunch "
+        "A magmacrunch game. Ported from the browser version in the magmacrunch "
         "arcade, and built on magnolia, a Wii homebrew engine.",
         BODY_SIZE, p->gate_bg, 20);
 

@@ -1,5 +1,5 @@
 George Boole Has Entered The Chat -- Wii port
-Copyright 2026 MagmaCrunch Media
+Copyright 2026 magmacrunch media
 
 
 WHAT THE APACHE LICENSE COVERS
@@ -14,10 +14,10 @@ and the way the whole thing is tested off-console. Take it.
 WHAT IT DOES NOT COVER
 
 The audio in audio/ (7 files), the game's name, the George Boole Has Entered
-The Chat and MagmaCrunch names and marks, and the visual design of the board and
+The Chat and magmacrunch names and marks, and the visual design of the board and
 its per-mode palettes.
 
-Those are Copyright 2026 MagmaCrunch Media, all rights reserved. They are in the
+Those are Copyright 2026 magmacrunch media, all rights reserved. They are in the
 repository because the game is built from them, not because they are offered for
 reuse. The Apache License does not grant rights to them, and section 6 of that
 licence does not grant trademark rights in any case.
