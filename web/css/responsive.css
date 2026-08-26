@@ -1,0 +1,424 @@
+@media (max-width: 600px) {
+    .container {
+        padding: 15px;
+        margin: 10px 12px;
+        width: calc(100% - 24px);
+        box-sizing: border-box;
+        /* Shrink the outer decorative shadow ring on mobile to prevent bleed */
+        box-shadow: 
+            0 0 0 2px #8a2be2,
+            0 0 0 4px #1a1a2e,
+            0 0 12px rgba(138, 43, 226, 0.8),
+            inset 0 0 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .game-board {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .tile {
+        min-width: 0;
+        min-height: 0;
+    }
+    
+    h1 { 
+        font-size: 16px;
+        letter-spacing: 1px;
+    }
+    
+    .subtitle {
+        font-size: 8px;
+    }
+    
+    .controls {
+        gap: 8px;
+    }
+    
+    .controls button {
+        padding: 10px 8px;
+        font-size: 8px;
+        letter-spacing: 0.5px;
+    }
+    
+    .difficulty-content h3 {
+        font-size: 14px;
+    }
+
+    .difficulty-content {
+        padding: 22px 16px;
+        width: 95%;
+    }
+
+    .difficulty-btn {
+        padding: 10px 16px;
+    }
+
+    .difficulty-buttons {
+        gap: 7px;
+    }
+
+    .difficulty-subtitle {
+        margin-bottom: 16px;
+    }
+
+    .lore-quick-actions {
+        margin-bottom: 14px;
+    }
+
+    .lore-action-btn {
+        font-size: 7px;
+        padding: 8px 10px;
+    }
+    
+    .diff-label {
+        font-size: 10px;
+    }
+    
+    .diff-subtitle {
+        font-size: 8px;
+        letter-spacing: 0.5px;
+    }
+    
+    .diff-value {
+        font-size: 8px;
+    }
+    
+    /* Title Screen Mobile */
+    .title-large {
+        font-size: 32px;
+        letter-spacing: 2px;
+    }
+    
+    .title-subtitle {
+        font-size: 14px;
+        letter-spacing: 2px;
+    }
+    
+    .start-button {
+        font-size: 11px;
+        padding: 15px 30px;
+        letter-spacing: 0.5px;
+    }
+    
+    .boolean-quote {
+        font-size: 8px;
+        margin-left: -15px;
+        margin-right: -15px;
+        padding: 15px;
+        width: calc(100% + 30px);
+    }
+    
+    .quote-author {
+        font-size: 7px;
+    }
+    
+    tile { 
+        font-size: 16px; 
+    }
+
+    /* 2-digit values */
+    .tile[data-value="10"],
+    .tile[data-value="11"],
+    .tile[data-value="12"],
+    .tile[data-value="13"],
+    .tile[data-value="14"],
+    .tile[data-value="15"],
+    .tile[data-value="16"],
+    .tile[data-value="32"],
+    .tile[data-value="64"] {
+        font-size: 14px;
+    }
+
+    /* 3-digit values: smaller to prevent grid expansion */
+    .tile[data-value="100"],
+    .tile[data-value="101"],
+    .tile[data-value="102"],
+    .tile[data-value="103"],
+    .tile[data-value="104"],
+    .tile[data-value="105"],
+    .tile[data-value="106"],
+    .tile[data-value="107"],
+    .tile[data-value="108"],
+    .tile[data-value="109"],
+    .tile[data-value="110"],
+    .tile[data-value="111"],
+    .tile[data-value="112"],
+    .tile[data-value="113"],
+    .tile[data-value="114"],
+    .tile[data-value="115"],
+    .tile[data-value="116"],
+    .tile[data-value="117"],
+    .tile[data-value="118"],
+    .tile[data-value="119"],
+    .tile[data-value="120"],
+    .tile[data-value="121"],
+    .tile[data-value="122"],
+    .tile[data-value="123"],
+    .tile[data-value="124"],
+    .tile[data-value="125"],
+    .tile[data-value="126"],
+    .tile[data-value="127"],
+    .tile[data-value="128"],
+    .tile[data-value="256"],
+    .tile[data-value="512"] { 
+        font-size: 13px; 
+    }
+    
+    .tile[data-value="1024"],
+    .tile[data-value="2048"] { 
+        font-size: 12px; 
+    }
+    
+    .game-board {
+        gap: 8px;
+        padding: 8px;
+    }
+    
+    .score-columns {
+        flex-direction: column;
+    }
+    
+    .score-column {
+        max-width: 100%;
+    }
+    
+    .score-label {
+        font-size: 8px;
+    }
+    
+    .score {
+        font-size: 14px;
+    }
+    
+    .scoreboard-content h3,
+    .instructions-content h3 {
+        font-size: 12px;
+    }
+    
+    .dropdown-selected {
+        font-size: 9px;
+        padding: 10px 15px;
+    }
+    
+    .dropdown-option {
+        font-size: 9px;
+        padding: 10px 15px;
+    }
+    
+    .dropdown-arrow {
+        font-size: 8px;
+    }
+    
+    .mode-label {
+        font-size: 9px;
+    }
+    
+    .instructions-content {
+        max-width: 95% !important;
+        padding: 20px !important;
+    }
+    
+    .instructions-content h4 {
+        font-size: 11px !important;
+    }
+    
+    .instructions-content p {
+        font-size: 9px !important;
+    }
+    
+    .instructions-content ul {
+        font-size: 9px !important;
+    }
+    
+    .gates-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .gate-card {
+        padding: 8px !important;
+    }
+    
+    .gate-card div {
+        font-size: 9px !important;
+    }
+    
+    .game-over h2 {
+        font-size: 18px;
+    }
+    
+    .game-over p {
+        font-size: 11px;
+    }
+
+    /* Lore Screen Mobile */
+    .lore-content {
+        padding: 25px 18px;
+    }
+
+    .lore-quote {
+        font-size: 8px;
+    }
+
+    .lore-attribution {
+        font-size: 7px;
+    }
+
+    .lore-rule-text {
+        font-size: 8px;
+    }
+
+    .lore-rule-highlight {
+        font-size: 9px;
+    }
+
+    .lore-rule-gates {
+        font-size: 11px;
+    }
+
+    .lore-continue-btn {
+        font-size: 10px;
+        padding: 14px 24px;
+    }
+}
+
+@media (max-width: 400px) {
+    h1 {
+        font-size: 14px;
+        letter-spacing: 0.5px;
+    }
+    
+    .subtitle {
+        font-size: 7px;
+    }
+    
+    .score-container {
+        padding: 8px 12px;
+    }
+    
+    .score {
+        font-size: 12px;
+    }
+    
+    .score-label {
+        font-size: 7px;
+    }
+    
+    .controls {
+        gap: 6px;
+    }
+    
+    .controls button {
+        padding: 8px 6px;
+        font-size: 7px;
+    }
+    
+    .difficulty-content h3 {
+        font-size: 12px;
+    }
+    
+    .diff-label {
+        font-size: 9px;
+    }
+    
+    .diff-subtitle {
+        font-size: 7px;
+        letter-spacing: 0px;
+    }
+    
+    .diff-value {
+        font-size: 7px;
+    }
+    
+    .tile {
+        font-size: 14px;
+    }
+    
+    .tile[data-value="128"],
+    .tile[data-value="256"],
+    .tile[data-value="512"] {
+        font-size: 12px;
+    }
+    
+    .tile[data-value="1024"],
+    .tile[data-value="2048"] {
+        font-size: 10px;
+    }
+    
+    /* Title Screen Small Mobile */
+    .title-large {
+        font-size: 24px;
+        letter-spacing: 1px;
+    }
+    
+    .title-subtitle {
+        font-size: 11px;
+        letter-spacing: 1px;
+    }
+    
+    .start-button {
+        font-size: 9px;
+        padding: 12px 25px;
+        letter-spacing: 0.5px;
+    }
+    
+    .boolean-quote {
+        font-size: 7px;
+        padding: 15px;
+        margin-left: -10px;
+        margin-right: -10px;
+        width: calc(100% + 20px);
+    }
+    
+    .quote-author {
+        font-size: 6px;
+    }
+    
+    .dropdown-selected {
+        font-size: 8px;
+        padding: 8px 12px;
+    }
+    
+    .dropdown-option {
+        font-size: 8px;
+        padding: 8px 12px;
+    }
+    
+    .dropdown-arrow {
+        font-size: 7px;
+    }
+    
+    .mode-label {
+        font-size: 8px;
+    }
+
+    /* Lore Screen Small Mobile */
+    .lore-content {
+        padding: 20px 14px;
+    }
+
+    .lore-quote {
+        font-size: 7px;
+    }
+
+    .lore-attribution {
+        font-size: 6px;
+    }
+
+    .lore-rule-text {
+        font-size: 7px;
+    }
+
+    .lore-rule-highlight {
+        font-size: 8px;
+    }
+
+    .lore-rule-gates {
+        font-size: 10px;
+    }
+
+    .lore-continue-btn {
+        font-size: 9px;
+        padding: 12px 20px;
+    }
+}

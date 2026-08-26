@@ -1,0 +1,742 @@
+/* Theme System for Different Bit Modes */
+
+/* ============================================
+   2-BIT MODE - GAME BOY GREEN MONOCHROME
+   ============================================ */
+body[data-theme="gameboy"] {
+    background: linear-gradient(180deg, #0f380f 0%, #306230 50%, #0f380f 100%);
+}
+
+body[data-theme="gameboy"] .container {
+    background: linear-gradient(135deg, #0f380f 0%, #306230 100%);
+    border-color: #9bbc0f;
+    box-shadow: 
+        0 0 0 4px #306230,
+        0 0 0 8px #0f380f,
+        0 0 20px rgba(155, 188, 15, 0.6);
+}
+
+body[data-theme="gameboy"] h1,
+body[data-theme="gameboy"] .subtitle {
+    color: #9bbc0f;
+    text-shadow: 
+        3px 3px 0px #0f380f,
+        0 0 15px rgba(155, 188, 15, 0.8);
+}
+
+body[data-theme="gameboy"] .score-container {
+    background: linear-gradient(135deg, #306230 0%, #0f380f 100%);
+    border-color: #9bbc0f;
+    box-shadow: 0 0 0 3px #9bbc0f;
+}
+
+body[data-theme="gameboy"] .score-label,
+body[data-theme="gameboy"] .score {
+    color: #9bbc0f;
+    text-shadow: 2px 2px 0px #0f380f;
+}
+
+body[data-theme="gameboy"] button {
+    background: linear-gradient(180deg, #306230 0%, #0f380f 100%);
+    border-color: #9bbc0f;
+    color: #9bbc0f;
+    box-shadow: 
+        0 6px 0 #0f380f,
+        0 0 15px rgba(155, 188, 15, 0.4);
+}
+
+body[data-theme="gameboy"] button:hover {
+    background: linear-gradient(180deg, #476247 0%, #306230 100%);
+    box-shadow: 
+        0 6px 0 #0f380f,
+        0 0 25px rgba(155, 188, 15, 0.7);
+}
+
+body[data-theme="gameboy"] .game-board {
+    background: #0f380f;
+    border-color: #306230;
+    box-shadow: 
+        inset 0 0 0 4px #306230,
+        inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+body[data-theme="gameboy"] .tile {
+    background: #0f380f;
+    border-color: #0f380f;
+    color: #9bbc0f;
+}
+
+body[data-theme="gameboy"] .tile[data-value="2"] { background: #306230; }
+body[data-theme="gameboy"] .tile[data-value="4"] { background: #8bac0f; color: #0f380f; }
+
+/* ============================================
+   4-BIT MODE - NES CLASSIC PALETTE
+   ============================================ */
+body[data-theme="nes"] {
+    background: linear-gradient(180deg, #2a2a4a 0%, #1a1a3a 50%, #0a0a2a 100%);
+}
+
+body[data-theme="nes"] .container {
+    background: linear-gradient(135deg, #1a1a3a 0%, #2a2a4a 100%);
+    border-color: #ff6347;
+    box-shadow: 
+        0 0 0 4px #4169e1,
+        0 0 0 8px #1a1a3a,
+        0 0 20px rgba(255, 99, 71, 0.6);
+}
+
+body[data-theme="nes"] h1 {
+    color: #ff6347;
+    text-shadow: 
+        4px 4px 0px #8b0000,
+        0 0 20px rgba(255, 99, 71, 0.8);
+}
+
+body[data-theme="nes"] .subtitle {
+    color: #ffd700;
+    text-shadow: 
+        2px 2px 0px #8b6914,
+        0 0 15px rgba(255, 215, 0, 0.7);
+}
+
+body[data-theme="nes"] .score-container {
+    background: linear-gradient(135deg, #4169e1 0%, #1e3a8a 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 0 3px #ffd700;
+}
+
+body[data-theme="nes"] .score-label {
+    color: #ffffff;
+}
+
+body[data-theme="nes"] .score {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #8b6914;
+}
+
+body[data-theme="nes"] button {
+    background: linear-gradient(180deg, #ff6347 0%, #8b0000 100%);
+    border-color: #ffd700;
+    color: #ffffff;
+}
+
+body[data-theme="nes"] .game-board {
+    background: #0a0a2a;
+    border-color: #1a1a3a;
+}
+
+body[data-theme="nes"] .tile { background: #1a1a3a; color: #ffffff; border-color: #0a0a2a; }
+body[data-theme="nes"] .tile[data-value="2"] { background: #4169e1; }
+body[data-theme="nes"] .tile[data-value="4"] { background: #6495ed; }
+body[data-theme="nes"] .tile[data-value="8"] { background: #ff6347; }
+body[data-theme="nes"] .tile[data-value="16"] { background: #ff4500; }
+
+/* ============================================
+   8-BIT MODE - SNES (CURRENT DEFAULT)
+   ============================================ */
+body[data-theme="snes"] .game-board {
+    background: #0f0f1e;
+    border-color: #1a1a2e;
+    box-shadow: 
+        inset 0 0 0 4px #8a2be2,
+        inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+/* ============================================
+   10-BIT MODE - SEGA GENESIS DARK BLUE/GOLD
+   ============================================ */
+body[data-theme="genesis"] {
+    background: linear-gradient(180deg, #001a33 0%, #003366 50%, #001a33 100%);
+}
+
+body[data-theme="genesis"] .container {
+    background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 0 4px #4169e1,
+        0 0 0 8px #001a33,
+        0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+body[data-theme="genesis"] h1 {
+    color: #ffd700;
+    text-shadow: 
+        4px 4px 0px #8b6914,
+        0 0 20px rgba(255, 215, 0, 0.9);
+}
+
+body[data-theme="genesis"] .subtitle {
+    color: #4169e1;
+    text-shadow: 
+        2px 2px 0px #001a33,
+        0 0 15px rgba(65, 105, 225, 0.8);
+}
+
+body[data-theme="genesis"] .score-container {
+    background: linear-gradient(135deg, #4169e1 0%, #1e3a8a 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 0 3px #ffd700;
+}
+
+body[data-theme="genesis"] .score-label {
+    color: #00e5ff;
+    text-shadow: 1px 1px 0px #001a33;
+}
+
+body[data-theme="genesis"] .score {
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #1e3a8a;
+}
+
+body[data-theme="genesis"] button {
+    background: linear-gradient(180deg, #4169e1 0%, #1e3a8a 100%);
+    border-color: #ffd700;
+    color: #ffffff;
+}
+
+body[data-theme="genesis"] .game-board {
+    background: #001a33;
+    border-color: #003366;
+}
+
+body[data-theme="genesis"] .tile { background: #003366; color: #ffd700; border-color: #001a33; }
+body[data-theme="genesis"] .tile[data-value="2"] { background: #4169e1; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="4"] { background: #6495ed; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="8"] { background: #1e90ff; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="16"] { background: #00bfff; color: #001a33; }
+body[data-theme="genesis"] .tile[data-value="32"] { background: #ffd700; color: #001a33; }
+body[data-theme="genesis"] .tile[data-value="64"] { background: #ff8c00; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="128"] { background: #dc143c; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="256"] { background: #b22222; color: #ffffff; }
+body[data-theme="genesis"] .tile[data-value="512"] { background: #8b0000; color: #ffd700; }
+body[data-theme="genesis"] .tile[data-value="1024"] { background: #000000; color: #ffd700; border-color: #ffd700; }
+
+/* ============================================
+   6-BIT MODE - ARCADE CABINET (GOLD/RED)
+   ============================================ */
+body[data-theme="arcade"] {
+    background: linear-gradient(180deg, #1a0800 0%, #2d1000 50%, #1a0800 100%);
+}
+
+body[data-theme="arcade"] .container {
+    background: linear-gradient(135deg, #2d1000 0%, #1a0800 100%);
+    border-color: #ffa500;
+    box-shadow: 
+        0 0 0 4px #cc2200,
+        0 0 0 8px #1a0800,
+        0 0 20px rgba(255, 165, 0, 0.7);
+}
+
+body[data-theme="arcade"] h1 {
+    color: #ffa500;
+    text-shadow: 
+        4px 4px 0px #7a3000,
+        0 0 20px rgba(255, 165, 0, 0.8);
+}
+
+body[data-theme="arcade"] .subtitle {
+    color: #cc2200;
+    text-shadow: 
+        2px 2px 0px #660000,
+        0 0 10px rgba(204, 34, 0, 0.7);
+}
+
+body[data-theme="arcade"] .score-container {
+    background: linear-gradient(135deg, #cc2200 0%, #880000 100%);
+    border-color: #ffa500;
+    box-shadow: 0 0 0 3px #ffa500;
+}
+
+body[data-theme="arcade"] .score-label {
+    color: #ffd080;
+    text-shadow: 1px 1px 0px #7a3000;
+}
+
+body[data-theme="arcade"] .score {
+    color: #ffa500;
+    text-shadow: 
+        2px 2px 0px #7a3000,
+        0 0 10px rgba(255, 165, 0, 0.8);
+}
+
+body[data-theme="arcade"] button {
+    background: linear-gradient(180deg, #cc2200 0%, #880000 100%);
+    border-color: #ffa500;
+    color: #ffd080;
+    box-shadow: 
+        0 6px 0 #1a0800,
+        0 0 15px rgba(204, 34, 0, 0.5);
+}
+
+body[data-theme="arcade"] button:hover {
+    background: linear-gradient(180deg, #dd3300 0%, #aa1100 100%);
+    box-shadow: 
+        0 6px 0 #1a0800,
+        0 0 25px rgba(255, 165, 0, 0.7);
+}
+
+body[data-theme="arcade"] .game-board {
+    background: #0f0500;
+    border-color: #2d1000;
+    box-shadow: 
+        inset 0 0 0 4px #cc2200,
+        inset 0 0 20px rgba(0, 0, 0, 0.9);
+}
+
+body[data-theme="arcade"] .tile { background: #2d1000; color: #ffa500; border-color: #1a0800; }
+body[data-theme="arcade"] .tile[data-value="1"] { background: #3d1800; color: #ffd080; }
+body[data-theme="arcade"] .tile[data-value="2"] { background: #5a2200; color: #ffd080; }
+body[data-theme="arcade"] .tile[data-value="3"] { background: #7a3000; color: #ffd080; }
+body[data-theme="arcade"] .tile[data-value="4"] { background: #aa4400; color: #ffffff; }
+body[data-theme="arcade"] .tile[data-value="8"] { background: #cc2200; color: #ffd080; }
+body[data-theme="arcade"] .tile[data-value="16"] { background: #dd4400; color: #ffffff; }
+body[data-theme="arcade"] .tile[data-value="32"] { background: #ffa500; color: #1a0800; }
+body[data-theme="arcade"] .tile[data-value="63"] { 
+    background: linear-gradient(135deg, #ffd700 0%, #ffa500 100%); 
+    color: #1a0800;
+    border-color: #cc8800;
+}
+
+/* ============================================
+   12-BIT MODE - NEO GEO BRIGHT SATURATED
+   ============================================ */
+body[data-theme="neogeo"] {
+    background: linear-gradient(180deg, #ff1493 0%, #9400d3 50%, #4b0082 100%);
+}
+
+body[data-theme="neogeo"] .container {
+    background: linear-gradient(135deg, #4b0082 0%, #9400d3 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 0 0 4px #ff1493,
+        0 0 0 8px #4b0082,
+        0 0 30px rgba(0, 255, 255, 1);
+}
+
+body[data-theme="neogeo"] h1 {
+    color: #00ffff;
+    text-shadow: 
+        4px 4px 0px #ff1493,
+        0 0 30px rgba(0, 255, 255, 1);
+}
+
+body[data-theme="neogeo"] .subtitle {
+    color: #ff1493;
+    text-shadow: 
+        2px 2px 0px #4b0082,
+        0 0 20px rgba(255, 20, 147, 0.9);
+}
+
+body[data-theme="neogeo"] .score-container {
+    background: linear-gradient(135deg, #ff1493 0%, #ff69b4 100%);
+    border-color: #00ffff;
+    box-shadow: 0 0 0 3px #00ffff;
+}
+
+body[data-theme="neogeo"] .score-label,
+body[data-theme="neogeo"] .score {
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #8b008b;
+}
+
+body[data-theme="neogeo"] button {
+    background: linear-gradient(180deg, #ff1493 0%, #c71585 100%);
+    border-color: #00ffff;
+    color: #ffffff;
+}
+
+body[data-theme="neogeo"] .game-board {
+    background: #2d0052;
+    border-color: #4b0082;
+}
+
+body[data-theme="neogeo"] .tile { background: #4b0082; color: #00ffff; border-color: #2d0052; }
+body[data-theme="neogeo"] .tile[data-value="2"] { background: #ff1493; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="4"] { background: #ff69b4; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="8"] { background: #ff00ff; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="16"] { background: #da70d6; color: #000000; }
+body[data-theme="neogeo"] .tile[data-value="32"] { background: #00ffff; color: #4b0082; }
+body[data-theme="neogeo"] .tile[data-value="64"] { background: #00ced1; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="128"] { background: #00bfff; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="256"] { background: #1e90ff; color: #ffffff; }
+body[data-theme="neogeo"] .tile[data-value="512"] { background: #32cd32; color: #000000; }
+body[data-theme="neogeo"] .tile[data-value="1024"] { background: #7fff00; color: #000000; }
+body[data-theme="neogeo"] .tile[data-value="2048"] { background: #ffff00; color: #ff1493; }
+body[data-theme="neogeo"] .tile[data-value="4096"] { background: #ffd700; color: #ff1493; }
+
+/* ============================================
+   16-BIT MODE - PS1 METALLIC GRADIENTS
+   ============================================ */
+body[data-theme="ps1"] {
+    background: linear-gradient(180deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%);
+}
+
+body[data-theme="ps1"] .container {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 0 0 4px #c0c0c0,
+        0 0 0 8px #1a1a1a,
+        0 0 30px rgba(255, 215, 0, 0.9);
+}
+
+body[data-theme="ps1"] h1 {
+    color: #ffd700;
+    text-shadow: 
+        4px 4px 0px #8b6914,
+        0 0 30px rgba(255, 215, 0, 1);
+}
+
+body[data-theme="ps1"] .subtitle {
+    color: #c0c0c0;
+    text-shadow: 
+        2px 2px 0px #696969,
+        0 0 20px rgba(192, 192, 192, 0.8);
+}
+
+body[data-theme="ps1"] .score-container {
+    background: linear-gradient(135deg, #808080 0%, #505050 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 0 3px #ffd700;
+}
+
+body[data-theme="ps1"] .score-label,
+body[data-theme="ps1"] .score {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+body[data-theme="ps1"] button {
+    background: linear-gradient(180deg, #808080 0%, #505050 100%);
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+body[data-theme="ps1"] .game-board {
+    background: #0a0a0a;
+    border-color: #1a1a1a;
+}
+
+body[data-theme="ps1"] .tile { background: #1a1a1a; color: #ffd700; border-color: #0a0a0a; }
+body[data-theme="ps1"] .tile[data-value="2"] { background: linear-gradient(135deg, #4a4a4a 0%, #2a2a2a 100%); color: #ffd700; }
+body[data-theme="ps1"] .tile[data-value="4"] { background: linear-gradient(135deg, #6a6a6a 0%, #4a4a4a 100%); color: #ffd700; }
+body[data-theme="ps1"] .tile[data-value="8"] { background: linear-gradient(135deg, #8a8a8a 0%, #6a6a6a 100%); color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-value="16"] { background: linear-gradient(135deg, #a0a0a0 0%, #808080 100%); color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-value="32"] { background: linear-gradient(135deg, #c0c0c0 0%, #a0a0a0 100%); color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-value="64"] { background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%); color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-value="128"] { background: linear-gradient(135deg, #ffd700 0%, #daa520 100%); color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-value="256"] { background: linear-gradient(135deg, #ff8c00 0%, #ff6347 100%); }
+body[data-theme="ps1"] .tile[data-value="512"] { background: linear-gradient(135deg, #ff4500 0%, #dc143c 100%); }
+body[data-theme="ps1"] .tile[data-value="1024"] { background: linear-gradient(135deg, #ff1493 0%, #c71585 100%); }
+body[data-theme="ps1"] .tile[data-value="2048"] { background: linear-gradient(135deg, #9400d3 0%, #8b008b 100%); }
+body[data-theme="ps1"] .tile[data-value="4096"] { background: linear-gradient(135deg, #4b0082 0%, #483d8b 100%); }
+body[data-theme="ps1"] .tile[data-value="8192"] { background: linear-gradient(135deg, #0000cd 0%, #00008b 100%); }
+body[data-theme="ps1"] .tile[data-value="16384"] { background: linear-gradient(135deg, #1e90ff 0%, #4169e1 100%); }
+body[data-theme="ps1"] .tile[data-value="32768"] { background: linear-gradient(135deg, #00ced1 0%, #00bfff 100%); }
+body[data-theme="ps1"] .tile[data-value="65536"] { 
+    background: linear-gradient(135deg, #ffd700 0%, #ffff00 100%); 
+    color: #000000;
+    box-shadow: 0 0 40px rgba(255, 215, 0, 1);
+    animation: retropulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   ENDLESS MODE - MATRIX GREEN ON BLACK
+   ============================================ */
+body[data-theme="matrix"] {
+    background: linear-gradient(180deg, #000000 0%, #001a00 50%, #000000 100%);
+}
+
+body[data-theme="matrix"] .container {
+    background: linear-gradient(135deg, #001a00 0%, #000000 100%);
+    border-color: #00ff00;
+    box-shadow: 
+        0 0 0 4px #003300,
+        0 0 0 8px #000000,
+        0 0 30px rgba(0, 255, 0, 0.8);
+}
+
+body[data-theme="matrix"] h1 {
+    color: #00ff00;
+    text-shadow: 
+        4px 4px 0px #003300,
+        0 0 30px rgba(0, 255, 0, 1);
+}
+
+body[data-theme="matrix"] .subtitle {
+    color: #00ff00;
+    text-shadow: 
+        2px 2px 0px #003300,
+        0 0 20px rgba(0, 255, 0, 0.8);
+}
+
+body[data-theme="matrix"] .score-container {
+    background: linear-gradient(135deg, #003300 0%, #001a00 100%);
+    border-color: #00ff00;
+    box-shadow: 0 0 0 3px #00ff00;
+}
+
+body[data-theme="matrix"] .score-label,
+body[data-theme="matrix"] .score {
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+body[data-theme="matrix"] button {
+    background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+    border-color: #00ff00;
+    color: #00ff00;
+}
+
+body[data-theme="matrix"] .game-board {
+    background: #000000;
+    border-color: #001a00;
+}
+
+body[data-theme="matrix"] .tile { background: #001a00; color: #00ff00; border-color: #000000; }
+body[data-theme="matrix"] .tile[data-value="2"] { background: #003300; }
+body[data-theme="matrix"] .tile[data-value="4"] { background: #004d00; }
+body[data-theme="matrix"] .tile[data-value="8"] { background: #006600; }
+body[data-theme="matrix"] .tile[data-value="16"] { background: #008000; }
+body[data-theme="matrix"] .tile[data-value="32"] { background: #009900; }
+body[data-theme="matrix"] .tile[data-value="64"] { background: #00b300; }
+body[data-theme="matrix"] .tile[data-value="128"] { background: #00cc00; }
+body[data-theme="matrix"] .tile[data-value="256"] { background: #00e600; }
+body[data-theme="matrix"] .tile[data-value="512"] { background: #00ff00; color: #000000; }
+body[data-theme="matrix"] .tile[data-value="1024"] { background: #33ff33; color: #000000; }
+body[data-theme="matrix"] .tile[data-value="2048"] { background: #66ff66; color: #000000; }
+body[data-theme="matrix"] .tile[data-value="4096"] { background: #99ff99; color: #000000; }
+body[data-theme="matrix"] .tile[data-value="8192"] { background: #ccffcc; color: #000000; }
+
+/* ============================================================
+   MAX-VALUE TILE SPECIAL STYLING (per mode)
+   The rainbow/achievement treatment is ONLY for the exact
+   max value in each mode. Defined per theme so it's always
+   the right value for the current mode.
+   ============================================================ */
+
+@keyframes rainbow-shift {
+    0%   { filter: hue-rotate(0deg) brightness(1.1); }
+    25%  { filter: hue-rotate(90deg) brightness(1.2); }
+    50%  { filter: hue-rotate(180deg) brightness(1.1); }
+    75%  { filter: hue-rotate(270deg) brightness(1.2); }
+    100% { filter: hue-rotate(360deg) brightness(1.1); }
+}
+
+/* 2-bit max = 3 */
+body[data-theme="gameboy"] .tile[data-value="3"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 3-bit max = 7 */
+body[data-theme="nes"] .tile[data-value="7"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 4-bit max = 15 */
+body[data-theme="snes"] .tile[data-value="15"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 5-bit max = 31 */
+body[data-theme="genesis"] .tile[data-value="31"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 6-bit max = 63 */
+body[data-theme="arcade"] .tile[data-value="63"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 7-bit max = 127 */
+body[data-theme="neogeo"] .tile[data-value="127"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* 8-bit max = 255 */
+body[data-theme="ps1"] .tile[data-value="255"] {
+    background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+    color: #000000;
+    border-color: #ffaa00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* Gauntlet mode: current max tile gets the treatment too.
+   Since the theme cycles, each mode's max tile is already covered above.
+   matrix theme shows 255 as max in the final stage. */
+body[data-theme="matrix"] .tile[data-value="255"] {
+    background: linear-gradient(135deg, #00ff00 0%, #ffd700 50%, #00ff00 100%);
+    color: #000000;
+    border-color: #00cc00;
+    animation: rainbow-shift 2s linear infinite;
+    font-weight: bold;
+}
+
+/* ============================================================
+   INTENSITY BANDS — non-power-of-2, non-max tiles
+   data-intensity="1" (lowest) → "5" (just below max)
+   Each theme shifts its tile background toward its "hot" color.
+   Font color is NOT set here — inherits from the theme's base
+   .tile rule so text always stays consistent and readable.
+   ============================================================ */
+
+/* GAME BOY: dark mud-green → bright Game Boy lime */
+body[data-theme="gameboy"] .tile[data-intensity="1"] { background: #1a3a10; }
+body[data-theme="gameboy"] .tile[data-intensity="2"] { background: #244d16; }
+body[data-theme="gameboy"] .tile[data-intensity="3"] { background: #2e620d; }
+body[data-theme="gameboy"] .tile[data-intensity="4"] { background: #507a10; }
+body[data-theme="gameboy"] .tile[data-intensity="5"] { background: #729010; }
+
+/* NES: dark navy → tomato red → bright orange-red */
+body[data-theme="nes"] .tile[data-intensity="1"] { background: #22224a; }
+body[data-theme="nes"] .tile[data-intensity="2"] { background: #6b2020; }
+body[data-theme="nes"] .tile[data-intensity="3"] { background: #8b2500; }
+body[data-theme="nes"] .tile[data-intensity="4"] { background: #bb3a00; }
+body[data-theme="nes"] .tile[data-intensity="5"] { background: #dd4f10; }
+
+/* SNES: dark indigo → violet → bright purple */
+body[data-theme="snes"] .tile[data-intensity="1"] { background: #1a1040; }
+body[data-theme="snes"] .tile[data-intensity="2"] { background: #2e1870; }
+body[data-theme="snes"] .tile[data-intensity="3"] { background: #4a1ea0; }
+body[data-theme="snes"] .tile[data-intensity="4"] { background: #6a22c8; }
+body[data-theme="snes"] .tile[data-intensity="5"] { background: #8a2be2; }
+
+/* GENESIS: dark navy → royal blue → bright gold */
+body[data-theme="genesis"] .tile[data-intensity="1"] { background: #012244; }
+body[data-theme="genesis"] .tile[data-intensity="2"] { background: #1a3a7a; }
+body[data-theme="genesis"] .tile[data-intensity="3"] { background: #1060b0; }
+body[data-theme="genesis"] .tile[data-intensity="4"] { background: #aa7700; }
+body[data-theme="genesis"] .tile[data-intensity="5"] { background: #cc9900; }
+
+/* ARCADE: deep brown → dark red → orange → near-gold */
+body[data-theme="arcade"] .tile[data-intensity="1"] { background: #3a1500; }
+body[data-theme="arcade"] .tile[data-intensity="2"] { background: #6a1a00; }
+body[data-theme="arcade"] .tile[data-intensity="3"] { background: #991a00; }
+body[data-theme="arcade"] .tile[data-intensity="4"] { background: #cc3300; }
+body[data-theme="arcade"] .tile[data-intensity="5"] { background: #dd6600; }
+
+/* NEO GEO: deep purple → hot pink → magenta → bright cyan */
+body[data-theme="neogeo"] .tile[data-intensity="1"] { background: #3a0066; }
+body[data-theme="neogeo"] .tile[data-intensity="2"] { background: #880040; }
+body[data-theme="neogeo"] .tile[data-intensity="3"] { background: #bb0066; }
+body[data-theme="neogeo"] .tile[data-intensity="4"] { background: #0088aa; }
+body[data-theme="neogeo"] .tile[data-intensity="5"] { background: #00aacc; }
+
+/* PS1: very dark grey → charcoal → silver → near-white; gold text on dark, dark text on light */
+body[data-theme="ps1"] .tile[data-intensity="1"] { background: #252525; color: #ffd700; }
+body[data-theme="ps1"] .tile[data-intensity="2"] { background: #404040; color: #ffd700; }
+body[data-theme="ps1"] .tile[data-intensity="3"] { background: #606060; color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-intensity="4"] { background: #888888; color: #1a1a1a; }
+body[data-theme="ps1"] .tile[data-intensity="5"] { background: linear-gradient(135deg, #b0b0b0 0%, #888888 100%); color: #1a1a1a; }
+
+/* MATRIX (Gauntlet): very dim green → medium green (stops before power-of-2 brights) */
+body[data-theme="matrix"] .tile[data-intensity="1"] { background: #001800; }
+body[data-theme="matrix"] .tile[data-intensity="2"] { background: #002a00; }
+body[data-theme="matrix"] .tile[data-intensity="3"] { background: #004000; }
+body[data-theme="matrix"] .tile[data-intensity="4"] { background: #005c00; }
+body[data-theme="matrix"] .tile[data-intensity="5"] { background: #007a00; }
+
+/* ============================================================
+   PERSONAL BEST TILE — gold-plated design
+   Applied via data-personal-best="true" on the ONE specific
+   tile instance that set the session high. Looks like a solid
+   metallic gold coating, similar in feel to the rainbow tile.
+   Shimmers gently between darker and lighter gold tones.
+   ============================================================ */
+
+@keyframes pb-shimmer {
+    0%   { background-position: 0% 50%;   }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0% 50%;   }
+}
+
+.tile[data-personal-best="true"] {
+    background: linear-gradient(
+        135deg,
+        #8b6914 0%,
+        #ffd700 30%,
+        #ffe87c 50%,
+        #ffd700 70%,
+        #8b6914 100%
+    ) !important;
+    background-size: 300% 300% !important;
+    color: #3a2000 !important;
+    border: 2px solid #ffe066 !important;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.25) !important;
+    animation: pb-shimmer 2.5s ease-in-out infinite !important;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* ============================================================
+   THEME-COLORED BACK LINK (.mc-back)
+   Each mode tints the "← magmacrunch arcade" link to match.
+   ============================================================ */
+
+body[data-theme="gameboy"] {
+    --mc-back-color: rgba(155, 188, 15, 0.55);
+    --mc-back-glow: 0 0 8px rgba(155, 188, 15, 0.95);
+}
+
+body[data-theme="nes"] {
+    --mc-back-color: rgba(255, 215, 0, 0.55);
+    --mc-back-glow: 0 0 8px rgba(255, 99, 71, 0.95);
+}
+
+body[data-theme="snes"] {
+    --mc-back-color: rgba(138, 43, 226, 0.6);
+    --mc-back-glow: 0 0 8px rgba(0, 255, 255, 0.95);
+}
+
+body[data-theme="genesis"] {
+    --mc-back-color: rgba(255, 215, 0, 0.55);
+    --mc-back-glow: 0 0 8px rgba(65, 105, 225, 0.95);
+}
+
+body[data-theme="arcade"] {
+    --mc-back-color: rgba(255, 165, 0, 0.55);
+    --mc-back-glow: 0 0 8px rgba(255, 165, 0, 0.95);
+}
+
+body[data-theme="neogeo"] {
+    --mc-back-color: rgba(0, 255, 255, 0.55);
+    --mc-back-glow: 0 0 8px rgba(255, 20, 147, 0.95);
+}
+
+body[data-theme="ps1"] {
+    --mc-back-color: rgba(255, 215, 0, 0.55);
+    --mc-back-glow: 0 0 8px rgba(192, 192, 192, 0.95);
+}
+
+body[data-theme="matrix"] {
+    --mc-back-color: rgba(0, 255, 0, 0.45);
+    --mc-back-glow: 0 0 8px rgba(0, 255, 0, 0.95);
+}
+

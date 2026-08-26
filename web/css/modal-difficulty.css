@@ -1,0 +1,385 @@
+/* =============================================
+   DIFFICULTY SELECTOR MODAL
+   ============================================= */
+
+.difficulty-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.difficulty-modal.active {
+    display: flex;
+}
+
+.difficulty-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+    padding: 40px 30px;
+    border-radius: 0;
+    box-shadow: 
+        0 0 0 4px #8a2be2,
+        0 0 0 8px #00ffff,
+        0 0 50px rgba(138, 43, 226, 1);
+    border: 4px solid #0f0f1e;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    max-height: 90vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.difficulty-content h3 {
+    color: #ffff00;
+    margin-bottom: 10px;
+    font-size: 18px;
+    font-weight: normal;
+    text-shadow: 
+        3px 3px 0px #999900,
+        0 0 20px rgba(255, 255, 0, 0.8);
+    letter-spacing: 2px;
+}
+
+.difficulty-subtitle {
+    color: #00ffff;
+    font-size: 10px;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 0px #006699;
+    letter-spacing: 1px;
+}
+
+.difficulty-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.diff-label {
+    font-size: 13px;
+    letter-spacing: 2px;
+}
+
+.diff-subtitle {
+    font-size: 9px;
+    opacity: 0.85;
+    letter-spacing: 1px;
+    margin-top: 4px;
+    text-transform: lowercase;
+}
+
+.difficulty-btn:hover .diff-subtitle {
+    opacity: 1;
+}
+
+.difficulty-btn {
+    background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%);
+    border: 3px solid #8a2be2;
+    padding: 14px 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 15px rgba(138, 43, 226, 0.5);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    position: relative;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.difficulty-btn:hover {
+    background: linear-gradient(180deg, #3d3d54 0%, #2a2a3e 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 25px rgba(0, 255, 255, 0.8);
+    transform: translateY(-2px);
+}
+
+.difficulty-btn:active {
+    transform: translateY(2px);
+    box-shadow: 
+        0 2px 0 #0f0f1e,
+        0 0 10px rgba(138, 43, 226, 0.5);
+}
+
+.difficulty-btn.highlighted {
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(0, 255, 255, 0.9);
+}
+
+/* --- Per-theme difficulty button variants --- */
+
+/* 2-BIT - Game Boy Green */
+.difficulty-btn[data-theme="gameboy"] {
+    background: linear-gradient(180deg, #306230 0%, #0f380f 100%);
+    border-color: #9bbc0f;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(155, 188, 15, 0.7);
+}
+
+.difficulty-btn[data-theme="gameboy"]:hover {
+    background: linear-gradient(180deg, #476247 0%, #306230 100%);
+    border-color: #9bbc0f;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(155, 188, 15, 0.9);
+}
+
+.difficulty-btn[data-theme="gameboy"] .diff-subtitle {
+    color: #9bbc0f;
+}
+
+.difficulty-btn[data-theme="gameboy"] .diff-label,
+.difficulty-btn[data-theme="gameboy"] .diff-value {
+    color: #9bbc0f;
+    text-shadow: 2px 2px 0px #0f380f;
+}
+
+/* 4-BIT - NES Red/Blue */
+.difficulty-btn[data-theme="nes"] {
+    background: linear-gradient(180deg, #ff6347 0%, #1e3a8a 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(255, 99, 71, 0.7);
+}
+
+.difficulty-btn[data-theme="nes"]:hover {
+    background: linear-gradient(180deg, #ff7f57 0%, #2e4a9a 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(255, 215, 0, 0.9);
+}
+
+.difficulty-btn[data-theme="nes"] .diff-label {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #8b6914;
+}
+
+.difficulty-btn[data-theme="nes"] .diff-value {
+    color: #ffffff;
+    text-shadow: 2px 2px 0px #8b0000;
+}
+
+/* 8-BIT - SNES Purple/Cyan (default style) */
+.difficulty-btn[data-theme="snes"] {
+    background: linear-gradient(180deg, #8a2be2 0%, #4b0082 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(138, 43, 226, 0.7);
+}
+
+.difficulty-btn[data-theme="snes"]:hover {
+    background: linear-gradient(180deg, #9d3bff 0%, #5b0099 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(0, 255, 255, 0.9);
+}
+
+/* 10-BIT - Genesis Blue/Gold */
+.difficulty-btn[data-theme="genesis"] {
+    background: linear-gradient(180deg, #4169e1 0%, #1e3a8a 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(65, 105, 225, 0.7);
+}
+
+.difficulty-btn[data-theme="genesis"]:hover {
+    background: linear-gradient(180deg, #5179f1 0%, #2e4a9a 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(255, 215, 0, 0.9);
+}
+
+.difficulty-btn[data-theme="genesis"] .diff-subtitle {
+    color: #7ab0ff;
+}
+
+.difficulty-btn[data-theme="genesis"] .diff-label,
+.difficulty-btn[data-theme="genesis"] .diff-value {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #1e3a8a;
+}
+
+/* 6-BIT - Arcade Cabinet (gold/red) */
+.difficulty-btn[data-theme="arcade"] {
+    background: linear-gradient(180deg, #cc2200 0%, #7a1500 100%);
+    border-color: #ffa500;
+    color: #ffd080;
+    box-shadow: 
+        0 4px 0 #1a0800,
+        0 0 20px rgba(204, 34, 0, 0.8);
+}
+
+.difficulty-btn[data-theme="arcade"]:hover {
+    background: linear-gradient(180deg, #dd3300 0%, #aa1100 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #1a0800,
+        0 0 30px rgba(255, 165, 0, 0.9);
+}
+
+.difficulty-btn[data-theme="arcade"] .diff-label {
+    color: #ffa500;
+}
+
+.difficulty-btn[data-theme="arcade"] .diff-subtitle {
+    color: #ffd080;
+}
+
+/* 12-BIT - Neo Geo Hot Pink/Cyan */
+.difficulty-btn[data-theme="neogeo"] {
+    background: linear-gradient(180deg, #ff1493 0%, #4b0082 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(255, 20, 147, 0.8);
+}
+
+.difficulty-btn[data-theme="neogeo"]:hover {
+    background: linear-gradient(180deg, #ff2fa3 0%, #5b0099 100%);
+    border-color: #00ffff;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(0, 255, 255, 1);
+}
+
+.difficulty-btn[data-theme="neogeo"] .diff-label {
+    color: #00ffff;
+    text-shadow: 2px 2px 0px #4b0082;
+}
+
+.difficulty-btn[data-theme="neogeo"] .diff-value {
+    color: #ff1493;
+    text-shadow: 2px 2px 0px #4b0082;
+}
+
+/* 16-BIT - PS1 Metallic Gold/Silver */
+.difficulty-btn[data-theme="ps1"] {
+    background: linear-gradient(180deg, #c0c0c0 0%, #505050 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+.difficulty-btn[data-theme="ps1"]:hover {
+    background: linear-gradient(180deg, #d0d0d0 0%, #606060 100%);
+    border-color: #ffd700;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(255, 215, 0, 1);
+}
+
+.difficulty-btn[data-theme="ps1"] .diff-subtitle {
+    color: #333333;
+    opacity: 1;
+}
+
+.difficulty-btn[data-theme="ps1"] .diff-label,
+.difficulty-btn[data-theme="ps1"] .diff-value {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+/* ENDLESS - Matrix Green */
+.difficulty-btn[data-theme="matrix"] {
+    background: linear-gradient(180deg, #003300 0%, #001a00 100%);
+    border-color: #00ff00;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 20px rgba(0, 255, 0, 0.8);
+}
+
+.difficulty-btn[data-theme="matrix"]:hover {
+    background: linear-gradient(180deg, #004400 0%, #002a00 100%);
+    border-color: #00ff00;
+    box-shadow: 
+        0 4px 0 #0f0f1e,
+        0 0 30px rgba(0, 255, 0, 1);
+}
+
+.difficulty-btn[data-theme="matrix"] .diff-subtitle {
+    color: #00dd00;
+}
+
+.difficulty-btn[data-theme="matrix"] .diff-label,
+.difficulty-btn[data-theme="matrix"] .diff-value {
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #000000;
+}
+
+.difficulty-btn.joke-mode {
+    /* Inherits from gameboy theme */
+}
+
+.difficulty-btn.legendary {
+    /* Inherits from ps1 theme */
+}
+
+.difficulty-btn.endless {
+    /* Inherits from matrix theme */
+}
+
+.diff-label {
+    font-size: 12px;
+    color: #00ffff;
+    text-shadow: 2px 2px 0px #006699;
+    letter-spacing: 1px;
+}
+
+.diff-value {
+    font-size: 10px;
+    color: #ffff00;
+    text-shadow: 1px 1px 0px #999900;
+    letter-spacing: 1px;
+}
+
+.classic-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 6px;
+    color: #00ff00;
+    background: rgba(0, 100, 0, 0.5);
+    padding: 3px 6px;
+    border: 1px solid #00ff00;
+    text-shadow: 1px 1px 0px #006600;
+}
+
+.mode-badge {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 6px;
+    color: #ffff00;
+    background: rgba(100, 100, 0, 0.5);
+    padding: 3px 6px;
+    border: 1px solid #ffff00;
+    text-shadow: 1px 1px 0px #999900;
+}
+
+.legendary-badge {
+    color: #ffd700;
+    background: rgba(139, 69, 19, 0.5);
+    border: 1px solid #ffd700;
+    text-shadow: 1px 1px 0px #8b4513;
+}

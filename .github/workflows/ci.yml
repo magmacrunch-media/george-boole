@@ -28,4 +28,5 @@ jobs:
       # game and checked against the suite that came with it. The rules are what
       # a port gets wrong, and they are wrong in ways that look like being right.
       - name: make test
+        working-directory: wii
         run: make test

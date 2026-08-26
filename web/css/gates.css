@@ -1,0 +1,527 @@
+/* ========================================
+   LOGIC GATES CSS - PERFORMANCE OPTIMIZED ⚡
+   
+   REMOVED for better performance:
+   ❌ Constant pulse animation (was running on ALL gates)
+   ❌ CSS gradients (solid colors instead)
+   ❌ Box-shadow glows (GPU intensive)
+   
+   KEPT for visual appeal:
+   ✅ Spawn animation (only plays once per tile)
+   ✅ Theme-specific colors
+   ✅ Distinct gate types
+
+   COLOR DESIGN PHILOSOPHY
+   -----------------------
+   Each gate has a consistent *role identity* across all themes:
+     XOR  — electric teal/aqua  (tension, difference)
+     OR   — warm amber/gold     (inclusive, additive)
+     AND  — cool steel blue     (restrictive, filtering)
+     NOT  — inverted dark bg    (flipped, opposite)
+
+   Within each theme the exact hues are shifted to avoid
+   collisions with that theme's number tile color ramp.
+   ======================================== */
+
+/* Gate Tiles - Base Styling */
+.gate-tile {
+    color: #fff !important;
+    font-size: 30px !important;
+    font-weight: bold;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+}
+
+/* ============================================
+   GAME BOY THEME (2-BIT)
+   Tile ramp: dark mud-green → bright GB lime (#9bbc0f)
+   intensity bands cover #1a3a10 → #729010
+   value=1: #0f380f  value=2: #306230  value=4(max): #8bac0f
+
+   Gate choices: step outside the green family entirely.
+   XOR  — teal-grey  (no green component, reads as foreign)
+   OR   — warm buff/tan (not yellow-green, closer to cream)
+   AND  — slate blue  (completely out of palette)
+   NOT  — near-black with lime text (inverted GB feel)
+   ============================================ */
+body[data-theme="gameboy"] .gate-tile[data-gate="xor"] {
+    background: #4a7a6a !important;   /* muted teal — no green-lime overlap */
+    color: #e8f8e8 !important;
+}
+body[data-theme="gameboy"] .gate-tile[data-gate="or"] {
+    background: #a09050 !important;   /* warm ochre — not a GB green */
+    color: #0f380f !important;
+}
+body[data-theme="gameboy"] .gate-tile[data-gate="and"] {
+    background: #3a4a6a !important;   /* slate blue — far from any green */
+    color: #c8d8c8 !important;
+}
+body[data-theme="gameboy"] .gate-tile[data-gate="not"] {
+    background: #080f08 !important;   /* near-black */
+    color: #9bbc0f !important;        /* GB lime text — inverted feel */
+}
+
+/* ============================================
+   NES THEME (3-BIT)
+   Tile ramp: dark navy (#1a1a3a) → tomato red → orange-red
+   value=1: #1a1a3a  value=2: #4169e1 (blue)  value=4: #6495ed
+   value=8: #ff6347  value=16: #ff4500
+
+   intensity: #22224a → #dd4f10 (navy to red-orange)
+
+   Collisions to avoid: blue family (4169e1, 6495ed),
+   red/orange family (ff6347, ff4500, dd4f10)
+
+   XOR  — vivid teal (not used anywhere in NES ramp)
+   OR   — vivid violet (absent from NES blues/reds, distinct from XOR teal, avoids gold personal-best clash)
+   AND  — deep magenta (not blue, not red)
+   NOT  — near-black with gold text
+   ============================================ */
+body[data-theme="nes"] .gate-tile[data-gate="xor"] {
+    background: #00b8a0 !important;   /* vivid teal — no NES tile uses this */
+    color: #001a16 !important;
+}
+body[data-theme="nes"] .gate-tile[data-gate="or"] {
+    background: #7b2fbe !important;   /* vivid violet — absent from NES blues/reds, distinct from XOR teal */
+    color: #f0d8ff !important;
+}
+body[data-theme="nes"] .gate-tile[data-gate="and"] {
+    background: #901870 !important;   /* deep magenta — not in NES palette */
+    color: #ffd0f0 !important;
+}
+body[data-theme="nes"] .gate-tile[data-gate="not"] {
+    background: #0a0a18 !important;   /* near-black navy */
+    color: #ffd700 !important;        /* bright gold text */
+}
+
+/* ============================================
+   SNES THEME (4-BIT)
+   Tile ramp (game.css generic):
+     1–3:   grey  4–7: tan/brown  8: orange-gold
+     9–15:  orange  16: orange-red  32: red
+     64: hot-pink/magenta (#ff0080)
+     65–127: hot-pink → purple (#8a2be2)
+     128: purple (#8a2be2)  129–255: purple → cyan-blue (#00bfff)
+     256: cyan-blue  512: green (#00ff00)
+     1024: yellow  2048: magenta (#ff00ff)
+
+   Collisions to avoid: purple (#8a2be2), cyan (#00bfff),
+   green (#00ff00), magenta (#ff00ff), yellow (#ffff00),
+   orange/red band, hot-pink band.
+
+   XOR  — vivid electric teal (between cyan and green but distinct)
+   OR   — deep warm coral-amber (not orange-red, more earthy)
+   AND  — steel indigo (darker/cooler than the purple ramp)
+   NOT  — very dark purple with bright text (inverted SNES)
+   ============================================ */
+body[data-theme="snes"] .gate-tile[data-gate="xor"] {
+    background: #00d4aa !important;   /* electric teal — not cyan, not green */
+    color: #001a14 !important;
+}
+body[data-theme="snes"] .gate-tile[data-gate="or"] {
+    background: #c86820 !important;   /* burnt amber — not in orange/red/pink band */
+    color: #fff0e0 !important;
+}
+body[data-theme="snes"] .gate-tile[data-gate="and"] {
+    background: #2a2070 !important;   /* dark cool indigo — below the purple ramp */
+    color: #c0b8ff !important;
+}
+body[data-theme="snes"] .gate-tile[data-gate="not"] {
+    background: #100820 !important;   /* near-black deep purple */
+    color: #e0d0ff !important;        /* pale lavender text */
+}
+
+/* ============================================
+   GENESIS THEME (5-BIT)
+   Tile ramp:
+     1: #003366  2: #4169e1  4: #6495ed  8: #1e90ff
+     16: #00bfff  32: #ffd700  64: #ff8c00  128: #dc143c
+     256: #b22222  512: #8b0000
+
+   intensity: navy → royal-blue → bright gold (#cc9900)
+
+   Collisions to avoid: blues (#4169e1, #1e90ff, #00bfff),
+   gold (#ffd700, #cc9900), orange (#ff8c00),
+   crimson/red (#dc143c, #b22222, #8b0000)
+
+   XOR  — vivid spring green (no greens anywhere in Genesis)
+   OR   — warm rose/salmon (not the reds, lighter and pinker)
+   AND  — deep charcoal teal (not the blues, much darker)
+   NOT  — near-black with gold text
+   ============================================ */
+body[data-theme="genesis"] .gate-tile[data-gate="xor"] {
+    background: #00c864 !important;   /* spring green — zero conflict with blues/golds */
+    color: #001a0e !important;
+}
+body[data-theme="genesis"] .gate-tile[data-gate="or"] {
+    background: #e05878 !important;   /* rose-pink — lighter/pinker than crimson reds */
+    color: #200010 !important;
+}
+body[data-theme="genesis"] .gate-tile[data-gate="and"] {
+    background: #183848 !important;   /* dark teal-charcoal — much darker than any blue */
+    color: #90d0e0 !important;
+}
+body[data-theme="genesis"] .gate-tile[data-gate="not"] {
+    background: #060c14 !important;   /* near-black navy */
+    color: #ffd700 !important;        /* gold text — strong contrast */
+}
+
+/* ============================================
+   ARCADE THEME (6-BIT)
+   Tile ramp:
+     base: #2d1000  1: #3d1800  2: #5a2200  3: #7a3000
+     4: #aa4400  8: #cc2200  16: #dd4400  32: #ffa500
+     63(max): gold gradient
+
+   intensity: #3a1500 → #dd6600 (deep brown → orange)
+
+   Collisions to avoid: entire brown→red→orange family
+   (#cc2200, #dd4400, #ffa500, #7a3000, #aa4400)
+   and gold tones (#ffd700, #ffa500)
+
+   XOR  — electric cyan-teal (zero overlap with warm arcade palette)
+   OR   — violet/purple (completely alien to this theme)
+   AND  — deep forest green (not in any arcade tile)
+   NOT  — near-black with amber text (feels like unlit arcade button)
+   ============================================ */
+body[data-theme="arcade"] .gate-tile[data-gate="xor"] {
+    background: #00c8d4 !important;   /* cyan-teal — polar opposite of warm arcade */
+    color: #001a1c !important;
+}
+body[data-theme="arcade"] .gate-tile[data-gate="or"] {
+    background: #7030c0 !important;   /* vivid violet — no purple in arcade tiles */
+    color: #f0d8ff !important;
+}
+body[data-theme="arcade"] .gate-tile[data-gate="and"] {
+    background: #1a5020 !important;   /* deep forest green — not in arcade palette */
+    color: #a0e8a8 !important;
+}
+body[data-theme="arcade"] .gate-tile[data-gate="not"] {
+    background: #0a0400 !important;   /* near-black */
+    color: #ffd080 !important;        /* warm amber text — arcade feel */
+}
+
+/* ============================================
+   NEO GEO THEME (7-BIT)
+   Tile ramp:
+     base: #4b0082  2: #ff1493  4: #ff69b4  8: #ff00ff
+     16: #da70d6   32: #00ffff  64: #00ced1  128: #00bfff
+     256: #1e90ff  512: #32cd32  1024: #7fff00  2048: #ffff00
+
+   intensity: #3a0066 → #00aacc (purple → hot-pink → cyan)
+
+   Collisions to avoid: magenta/pink (#ff1493, #ff00ff, #ff69b4),
+   cyan (#00ffff, #00ced1, #00bfff), blue (#1e90ff),
+   purple (#4b0082), green (#32cd32), yellow (#ffff00)
+
+   This is the hardest theme — almost every hue is used!
+   Need to find safe spots: orange/amber and warm red are unused.
+
+   XOR  — vivid orange (no orange anywhere in Neo Geo tiles)
+   OR   — warm coral-red (not the pinks, more orange-red)
+   AND  — deep olive green (darker/warmer than the bright greens)
+   NOT  — near-black with cyan text (feels like screen inversion)
+   ============================================ */
+body[data-theme="neogeo"] .gate-tile[data-gate="xor"] {
+    background: #ff7800 !important;   /* vivid orange — completely absent from Neo Geo */
+    color: #1a0800 !important;
+}
+body[data-theme="neogeo"] .gate-tile[data-gate="or"] {
+    background: #e03020 !important;   /* warm red-coral — distinct from hot-pink family */
+    color: #ffe8e0 !important;
+}
+body[data-theme="neogeo"] .gate-tile[data-gate="and"] {
+    background: #506010 !important;   /* dark olive — warmer/darker than bright greens */
+    color: #d0e890 !important;
+}
+body[data-theme="neogeo"] .gate-tile[data-gate="not"] {
+    background: #080410 !important;   /* near-black */
+    color: #00ffff !important;        /* cyan text — Neo Geo signature on dark */
+}
+
+/* ============================================
+   PS1 THEME (8-BIT)
+   Tile ramp (metallic grey → colour burst):
+     2: dark grey  4: mid grey  8: #8a8a8a  16: #a0a0a0
+     32: #c0c0c0 (silver)  64: #e0e0e0 (near-white)
+     128: gold #ffd700  256: #ff8c00  512: #ff4500
+     1024: #ff1493  2048: #9400d3  4096: #4b0082
+     8192: #0000cd  16384: #1e90ff  32768: #00ced1
+
+   intensity: #252525 → silver gradient
+
+   Collisions to avoid: grey family (all darks to silver),
+   gold (#ffd700), orange (#ff8c00), red (#ff4500),
+   pink (#ff1493), purple (#9400d3, #4b0082),
+   blues (#0000cd, #1e90ff), teal (#00ced1)
+
+   Safe zone: greens and warm teals are completely unused.
+
+   XOR  — vivid emerald green (zero greens in PS1 ramp)
+   OR   — warm lime-yellow (not the gold, more yellow-green)
+   AND  — deep cool teal (distinct from the cyan at 32768)
+   NOT  — near-black with silver text (matches PS1 boot screen)
+   ============================================ */
+body[data-theme="ps1"] .gate-tile[data-gate="xor"] {
+    background: #00b848 !important;   /* emerald green — totally absent from PS1 */
+    color: #001808 !important;
+}
+body[data-theme="ps1"] .gate-tile[data-gate="or"] {
+    background: #a8c800 !important;   /* lime-yellow — not gold, not orange */
+    color: #141800 !important;
+}
+body[data-theme="ps1"] .gate-tile[data-gate="and"] {
+    background: #006878 !important;   /* deep teal — darker than 32768 cyan */
+    color: #c0f0f8 !important;
+}
+body[data-theme="ps1"] .gate-tile[data-gate="not"] {
+    background: #080808 !important;   /* near-black */
+    color: #c0c0c0 !important;        /* silver text — PS1 boot screen feel */
+}
+
+/* ============================================
+   MATRIX THEME (GAUNTLET)
+   Tile ramp: entire green family
+     2: #003300  4: #004d00  8: #006600  16: #008000
+     32: #009900  64: #00b300  128: #00cc00  256: #00e600
+     512: #00ff00 (peak bright)  1024+: #33ff33, #66ff66 etc
+
+   intensity: #001800 → #007a00 (very dim → mid greens)
+
+   Collisions to avoid: THE ENTIRE GREEN SPECTRUM.
+   Every shade of green from near-black to bright lime is used.
+
+   Safe zones: anything non-green. Since this is a monochrome
+   theme, gates should feel like they're "from outside the Matrix."
+
+   XOR  — vivid magenta (maximum contrast with green-on-black)
+   OR   — electric blue (completely outside the green world)
+   AND  — warm amber (the opposite end of the spectrum)
+   NOT  — near-white/off-white on black (pure inversion of matrix)
+   ============================================ */
+body[data-theme="matrix"] .gate-tile[data-gate="xor"] {
+    background: #c800c8 !important;   /* vivid magenta — maximum contrast to green */
+    color: #ffe0ff !important;
+}
+body[data-theme="matrix"] .gate-tile[data-gate="or"] {
+    background: #0060d0 !important;   /* electric blue — out of the Matrix entirely */
+    color: #d0e8ff !important;
+}
+body[data-theme="matrix"] .gate-tile[data-gate="and"] {
+    background: #a06000 !important;   /* warm amber — opposite of green */
+    color: #fff0c0 !important;
+}
+body[data-theme="matrix"] .gate-tile[data-gate="not"] {
+    background: #d8ffd8 !important;   /* inverted: near-white green-tint */
+    color: #000000 !important;        /* black text — total inversion of matrix */
+}
+
+/* ============================================
+   BINARY DISPLAY MODE
+   ============================================ */
+.tile-decimal {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 2px;
+    line-height: 1;
+}
+
+.tile-binary {
+    font-size: 11px;
+    opacity: 0.85;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+    line-height: 1;
+}
+
+.tile:has(.tile-binary) {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6px;
+}
+
+/* Grey SNES-default tiles (values 1-4) have low-contrast white text;
+   give the binary a bright accent color so it stands out */
+.tile[data-value="1"] .tile-binary,
+.tile[data-value="2"] .tile-binary,
+.tile[data-value="3"] .tile-binary,
+.tile[data-value="4"] .tile-binary {
+    color: #ffdd44;
+    opacity: 0.9;
+}
+
+/* Large-number decimal size adjustments in binary mode —
+   prevents 3- and 4-digit decimals from overflowing the tile
+   on smaller screens where tiles are already compact. */
+.tile[data-value="100"] .tile-decimal,
+.tile[data-value="101"] .tile-decimal,
+.tile[data-value="102"] .tile-decimal,
+.tile[data-value="103"] .tile-decimal,
+.tile[data-value="104"] .tile-decimal,
+.tile[data-value="105"] .tile-decimal,
+.tile[data-value="106"] .tile-decimal,
+.tile[data-value="107"] .tile-decimal,
+.tile[data-value="108"] .tile-decimal,
+.tile[data-value="109"] .tile-decimal,
+.tile[data-value="110"] .tile-decimal,
+.tile[data-value="111"] .tile-decimal,
+.tile[data-value="112"] .tile-decimal,
+.tile[data-value="113"] .tile-decimal,
+.tile[data-value="114"] .tile-decimal,
+.tile[data-value="115"] .tile-decimal,
+.tile[data-value="116"] .tile-decimal,
+.tile[data-value="117"] .tile-decimal,
+.tile[data-value="118"] .tile-decimal,
+.tile[data-value="119"] .tile-decimal,
+.tile[data-value="120"] .tile-decimal,
+.tile[data-value="121"] .tile-decimal,
+.tile[data-value="122"] .tile-decimal,
+.tile[data-value="123"] .tile-decimal,
+.tile[data-value="124"] .tile-decimal,
+.tile[data-value="125"] .tile-decimal,
+.tile[data-value="126"] .tile-decimal,
+.tile[data-value="127"] .tile-decimal,
+.tile[data-value="128"] .tile-decimal,
+.tile[data-value="256"] .tile-decimal,
+.tile[data-value="512"] .tile-decimal {
+    font-size: 18px;
+}
+
+.tile[data-value="1024"] .tile-decimal,
+.tile[data-value="2048"] .tile-decimal,
+.tile[data-value="4096"] .tile-decimal {
+    font-size: 13px;
+}
+
+@media (max-width: 768px) {
+    .tile[data-value="100"] .tile-decimal,
+    .tile[data-value="101"] .tile-decimal,
+    .tile[data-value="102"] .tile-decimal,
+    .tile[data-value="103"] .tile-decimal,
+    .tile[data-value="104"] .tile-decimal,
+    .tile[data-value="105"] .tile-decimal,
+    .tile[data-value="106"] .tile-decimal,
+    .tile[data-value="107"] .tile-decimal,
+    .tile[data-value="108"] .tile-decimal,
+    .tile[data-value="109"] .tile-decimal,
+    .tile[data-value="110"] .tile-decimal,
+    .tile[data-value="111"] .tile-decimal,
+    .tile[data-value="112"] .tile-decimal,
+    .tile[data-value="113"] .tile-decimal,
+    .tile[data-value="114"] .tile-decimal,
+    .tile[data-value="115"] .tile-decimal,
+    .tile[data-value="116"] .tile-decimal,
+    .tile[data-value="117"] .tile-decimal,
+    .tile[data-value="118"] .tile-decimal,
+    .tile[data-value="119"] .tile-decimal,
+    .tile[data-value="120"] .tile-decimal,
+    .tile[data-value="121"] .tile-decimal,
+    .tile[data-value="122"] .tile-decimal,
+    .tile[data-value="123"] .tile-decimal,
+    .tile[data-value="124"] .tile-decimal,
+    .tile[data-value="125"] .tile-decimal,
+    .tile[data-value="126"] .tile-decimal,
+    .tile[data-value="127"] .tile-decimal,
+    .tile[data-value="128"] .tile-decimal,
+    .tile[data-value="256"] .tile-decimal,
+    .tile[data-value="512"] .tile-decimal {
+        font-size: 14px;
+    }
+    .tile[data-value="1024"] .tile-decimal,
+    .tile[data-value="2048"] .tile-decimal,
+    .tile[data-value="4096"] .tile-decimal {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .tile[data-value="100"] .tile-decimal,
+    .tile[data-value="101"] .tile-decimal,
+    .tile[data-value="102"] .tile-decimal,
+    .tile[data-value="103"] .tile-decimal,
+    .tile[data-value="104"] .tile-decimal,
+    .tile[data-value="105"] .tile-decimal,
+    .tile[data-value="106"] .tile-decimal,
+    .tile[data-value="107"] .tile-decimal,
+    .tile[data-value="108"] .tile-decimal,
+    .tile[data-value="109"] .tile-decimal,
+    .tile[data-value="110"] .tile-decimal,
+    .tile[data-value="111"] .tile-decimal,
+    .tile[data-value="112"] .tile-decimal,
+    .tile[data-value="113"] .tile-decimal,
+    .tile[data-value="114"] .tile-decimal,
+    .tile[data-value="115"] .tile-decimal,
+    .tile[data-value="116"] .tile-decimal,
+    .tile[data-value="117"] .tile-decimal,
+    .tile[data-value="118"] .tile-decimal,
+    .tile[data-value="119"] .tile-decimal,
+    .tile[data-value="120"] .tile-decimal,
+    .tile[data-value="121"] .tile-decimal,
+    .tile[data-value="122"] .tile-decimal,
+    .tile[data-value="123"] .tile-decimal,
+    .tile[data-value="124"] .tile-decimal,
+    .tile[data-value="125"] .tile-decimal,
+    .tile[data-value="126"] .tile-decimal,
+    .tile[data-value="127"] .tile-decimal,
+    .tile[data-value="128"] .tile-decimal,
+    .tile[data-value="256"] .tile-decimal,
+    .tile[data-value="512"] .tile-decimal {
+        font-size: 13px;
+    }
+    .tile[data-value="1024"] .tile-decimal,
+    .tile[data-value="2048"] .tile-decimal,
+    .tile[data-value="4096"] .tile-decimal {
+        font-size: 11px;
+    }
+}
+
+/* ============================================
+   SPAWN ANIMATION (Kept - only plays once)
+   ============================================ */
+@keyframes gate-spawn {
+    0% {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.gate-tile.new {
+    animation: gate-spawn 0.3s ease-out;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    .tile-decimal {
+        font-size: 18px;
+    }
+    
+    .tile-binary {
+        font-size: 11px;
+    }
+    
+    .gate-tile {
+        font-size: 30px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .tile-decimal {
+        font-size: 16px;
+    }
+    
+    .tile-binary {
+        font-size: 9px;
+    }
+    
+    .gate-tile {
+        font-size: 22px !important;
+    }
+}

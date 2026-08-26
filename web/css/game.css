@@ -1,0 +1,575 @@
+.game-board {
+    background: #0f0f1e;
+    border-radius: 0;
+    padding: 8px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-bottom: 0;
+    box-shadow: 
+        inset 0 0 0 4px #2a2a4a,
+        inset 0 0 20px rgba(0, 0, 0, 0.9);
+    border: 4px solid #1a1a2e;
+    touch-action: none; 
+    user-select: none;
+    overflow: hidden;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tile {
+    background: #1a1a2e;
+    border-radius: 0;
+    aspect-ratio: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+    font-weight: normal;
+    color: #ffffff;
+    transition: all 0.15s ease-in-out;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.2),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5);
+    border: 2px solid #0f0f1e;
+    font-family: 'Press Start 2P', cursive;
+    letter-spacing: 1px;
+    isolation: isolate;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    width: 100%;
+}
+
+/* SNES color palette for tiles - Updated for Boolean Logic */
+
+/* Value 0 - Can appear from AND operations or as empty space */
+.tile[data-value="0"] {
+    background: #2a2a3a;
+    color: #666;
+    border-color: #1a1a2a;
+    font-size: 16px;
+}
+
+/* Value 1 - Starting tile */
+.tile[data-value="1"] {
+    background: linear-gradient(135deg, #5a5a6a 0%, #4a4a5a 100%);
+    color: #ffffff;
+    border-color: #3a3a4a;
+}
+
+.tile[data-value="2"] { 
+    background: linear-gradient(135deg, #7c7c7c 0%, #5a5a5a 100%); 
+    color: #ffffff; 
+    border-color: #4a4a4a;
+}
+
+/* Value 3 - Maximum for 2-bit mode */
+.tile[data-value="3"] {
+    background: linear-gradient(135deg, #9090a0 0%, #707080 100%);
+    color: #ffffff;
+    border-color: #606070;
+}
+
+.tile[data-value="4"] { 
+    background: linear-gradient(135deg, #b8b8d0 0%, #9090b0 100%); 
+    color: #ffffff; 
+    border-color: #7070a0;
+}
+.tile[data-value="8"] { 
+    background: linear-gradient(135deg, #f0a000 0%, #d08000 100%); 
+    color: #ffffff; 
+    border-color: #b07000;
+}
+
+/* Odd numbers from gate operations (5, 6, 7, 9, 10, etc.) */
+.tile[data-value="5"],
+.tile[data-value="6"],
+.tile[data-value="7"] {
+    background: linear-gradient(135deg, #d0a060 0%, #b08040 100%);
+    color: #ffffff;
+    border-color: #a07030;
+}
+
+.tile[data-value="9"],
+.tile[data-value="10"],
+.tile[data-value="11"],
+.tile[data-value="12"],
+.tile[data-value="13"],
+.tile[data-value="14"],
+.tile[data-value="15"] {
+    background: linear-gradient(135deg, #ff8844 0%, #dd6622 100%);
+    color: #ffffff;
+    border-color: #cc5511;
+}
+
+.tile[data-value="16"] { 
+    background: linear-gradient(135deg, #ff6a00 0%, #d85000 100%); 
+    color: #ffffff; 
+    border-color: #b84000;
+}
+.tile[data-value="32"] { 
+    background: linear-gradient(135deg, #ff3838 0%, #d02020 100%); 
+    color: #ffffff; 
+    border-color: #b01010;
+}
+.tile[data-value="64"] { 
+    background: linear-gradient(135deg, #ff0080 0%, #d00060 100%); 
+    color: #ffffff; 
+    border-color: #b00050;
+}
+.tile[data-value="128"] { 
+    background: linear-gradient(135deg, #8a2be2 0%, #6010b0 100%); 
+    color: #ffff00; 
+    font-size: 16px; 
+    border-color: #5010a0;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="256"] { 
+    background: linear-gradient(135deg, #00bfff 0%, #0090d0 100%); 
+    color: #ffff00; 
+    font-size: 16px; 
+    border-color: #0070b0;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="512"] { 
+    background: linear-gradient(135deg, #00ff00 0%, #00cc00 100%); 
+    color: #ffffff; 
+    font-size: 16px; 
+    border-color: #00aa00;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.3),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="1024"] { 
+    background: linear-gradient(135deg, #ffff00 0%, #cccc00 100%); 
+    color: #000000; 
+    font-size: 18px; 
+    border-color: #aaaa00;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="2048"] { 
+    background: linear-gradient(135deg, #ff00ff 0%, #cc00cc 100%); 
+    color: #ffffff; 
+    font-size: 18px; 
+    border-color: #aa00aa;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="4096"] { 
+    background: linear-gradient(135deg, #00ffff 0%, #00cccc 100%); 
+    color: #000000; 
+    font-size: 16px; 
+    border-color: #00aaaa;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="8192"] { 
+    background: linear-gradient(135deg, #ff6600 0%, #cc5200 100%); 
+    color: #ffffff; 
+    font-size: 16px; 
+    border-color: #aa4400;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+}
+.tile[data-value="16384"] { 
+    background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%); 
+    color: #ffffff; 
+    font-size: 14px; 
+    border-color: #aa0000;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.7);
+}
+.tile[data-value="32768"] { 
+    background: linear-gradient(135deg, #ffffff 0%, #cccccc 100%); 
+    color: #000000; 
+    font-size: 14px; 
+    border-color: #aaaaaa;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.6),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.7);
+}
+.tile[data-value="65536"] { 
+    background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); 
+    color: #000000; 
+    font-size: 12px; 
+    font-weight: bold;
+    border-color: #ff8800;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.7),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.8);
+}
+
+
+/* ============================================================
+   GRADUATED FILL RANGES
+   Smooth color progression between power-of-2 anchor colors
+   ============================================================ */
+
+/* 17-31: orange-hot → red */
+.tile[data-value="17"] { background: linear-gradient(135deg, #ff6a00 0%, #cc5400 100%); color: #ffffff; border-color: #b24a00; }
+.tile[data-value="18"] { background: linear-gradient(135deg, #ff6604 0%, #cc5103 100%); color: #ffffff; border-color: #b24702; }
+.tile[data-value="19"] { background: linear-gradient(135deg, #ff6208 0%, #cc4e06 100%); color: #ffffff; border-color: #b24405; }
+.tile[data-value="20"] { background: linear-gradient(135deg, #ff5f0c 0%, #cc4c09 100%); color: #ffffff; border-color: #b24208; }
+.tile[data-value="21"] { background: linear-gradient(135deg, #ff5b10 0%, #cc480c 100%); color: #ffffff; border-color: #b23f0b; }
+.tile[data-value="22"] { background: linear-gradient(135deg, #ff5814 0%, #cc4610 100%); color: #ffffff; border-color: #b23d0e; }
+.tile[data-value="23"] { background: linear-gradient(135deg, #ff5418 0%, #cc4313 100%); color: #ffffff; border-color: #b23a10; }
+.tile[data-value="24"] { background: linear-gradient(135deg, #ff511c 0%, #cc4016 100%); color: #ffffff; border-color: #b23813; }
+.tile[data-value="25"] { background: linear-gradient(135deg, #ff4d20 0%, #cc3d19 100%); color: #ffffff; border-color: #b23516; }
+.tile[data-value="26"] { background: linear-gradient(135deg, #ff4924 0%, #cc3a1c 100%); color: #ffffff; border-color: #b23319; }
+.tile[data-value="27"] { background: linear-gradient(135deg, #ff4628 0%, #cc3820 100%); color: #ffffff; border-color: #b2311c; }
+.tile[data-value="28"] { background: linear-gradient(135deg, #ff422c 0%, #cc3423 100%); color: #ffffff; border-color: #b22e1e; }
+.tile[data-value="29"] { background: linear-gradient(135deg, #ff3f30 0%, #cc3226 100%); color: #ffffff; border-color: #b22c21; }
+.tile[data-value="30"] { background: linear-gradient(135deg, #ff3b34 0%, #cc2f29 100%); color: #ffffff; border-color: #b22924; }
+.tile[data-value="31"] { background: linear-gradient(135deg, #ff3838 0%, #cc2c2c 100%); color: #ffffff; border-color: #b22727; }
+
+/* 33-63: red → hot-pink */
+.tile[data-value="33"] { background: linear-gradient(135deg, #ff3838 0%, #cc2c2c 100%); color: #ffffff; border-color: #b22727; }
+.tile[data-value="34"] { background: linear-gradient(135deg, #ff363a 0%, #cc2b2e 100%); color: #ffffff; border-color: #b22528; }
+.tile[data-value="35"] { background: linear-gradient(135deg, #ff343c 0%, #cc2930 100%); color: #ffffff; border-color: #b2242a; }
+.tile[data-value="36"] { background: linear-gradient(135deg, #ff323f 0%, #cc2832 100%); color: #ffffff; border-color: #b2232c; }
+.tile[data-value="37"] { background: linear-gradient(135deg, #ff3041 0%, #cc2634 100%); color: #ffffff; border-color: #b2212d; }
+.tile[data-value="38"] { background: linear-gradient(135deg, #ff2e44 0%, #cc2436 100%); color: #ffffff; border-color: #b2202f; }
+.tile[data-value="39"] { background: linear-gradient(135deg, #ff2c46 0%, #cc2338 100%); color: #ffffff; border-color: #b21e31; }
+.tile[data-value="40"] { background: linear-gradient(135deg, #ff2a48 0%, #cc2139 100%); color: #ffffff; border-color: #b21d32; }
+.tile[data-value="41"] { background: linear-gradient(135deg, #ff294b 0%, #cc203c 100%); color: #ffffff; border-color: #b21c34; }
+.tile[data-value="42"] { background: linear-gradient(135deg, #ff274d 0%, #cc1f3d 100%); color: #ffffff; border-color: #b21b35; }
+.tile[data-value="43"] { background: linear-gradient(135deg, #ff2550 0%, #cc1d40 100%); color: #ffffff; border-color: #b21938; }
+.tile[data-value="44"] { background: linear-gradient(135deg, #ff2352 0%, #cc1c41 100%); color: #ffffff; border-color: #b21839; }
+.tile[data-value="45"] { background: linear-gradient(135deg, #ff2154 0%, #cc1a43 100%); color: #ffffff; border-color: #b2173a; }
+.tile[data-value="46"] { background: linear-gradient(135deg, #ff1f57 0%, #cc1845 100%); color: #ffffff; border-color: #b2153c; }
+.tile[data-value="47"] { background: linear-gradient(135deg, #ff1d59 0%, #cc1747 100%); color: #ffffff; border-color: #b2143e; }
+.tile[data-value="48"] { background: linear-gradient(135deg, #ff1c5c 0%, #cc1649 100%); color: #ffffff; border-color: #b21340; }
+.tile[data-value="49"] { background: linear-gradient(135deg, #ff1a5e 0%, #cc144b 100%); color: #ffffff; border-color: #b21241; }
+.tile[data-value="50"] { background: linear-gradient(135deg, #ff1860 0%, #cc134c 100%); color: #ffffff; border-color: #b21043; }
+.tile[data-value="51"] { background: linear-gradient(135deg, #ff1663 0%, #cc114f 100%); color: #ffffff; border-color: #b20f45; }
+.tile[data-value="52"] { background: linear-gradient(135deg, #ff1465 0%, #cc1050 100%); color: #ffffff; border-color: #b20e46; }
+.tile[data-value="53"] { background: linear-gradient(135deg, #ff1268 0%, #cc0e53 100%); color: #ffffff; border-color: #b20c48; }
+.tile[data-value="54"] { background: linear-gradient(135deg, #ff106a 0%, #cc0c54 100%); color: #ffffff; border-color: #b20b4a; }
+.tile[data-value="55"] { background: linear-gradient(135deg, #ff0e6c 0%, #cc0b56 100%); color: #ffffff; border-color: #b2094b; }
+.tile[data-value="56"] { background: linear-gradient(135deg, #ff0d6f 0%, #cc0a58 100%); color: #ffffff; border-color: #b2094d; }
+.tile[data-value="57"] { background: linear-gradient(135deg, #ff0b71 0%, #cc085a 100%); color: #ffffff; border-color: #b2074f; }
+.tile[data-value="58"] { background: linear-gradient(135deg, #ff0974 0%, #cc075c 100%); color: #ffffff; border-color: #b20651; }
+.tile[data-value="59"] { background: linear-gradient(135deg, #ff0776 0%, #cc055e 100%); color: #ffffff; border-color: #b20452; }
+.tile[data-value="60"] { background: linear-gradient(135deg, #ff0578 0%, #cc0460 100%); color: #ffffff; border-color: #b20354; }
+.tile[data-value="61"] { background: linear-gradient(135deg, #ff037b 0%, #cc0262 100%); color: #ffffff; border-color: #b20256; }
+.tile[data-value="62"] { background: linear-gradient(135deg, #ff017d 0%, #cc0064 100%); color: #ffffff; border-color: #b20057; }
+.tile[data-value="63"] { background: linear-gradient(135deg, #ff0080 0%, #cc0066 100%); color: #ffffff; border-color: #b20059; }
+
+/* 65-127: hot-pink → purple */
+.tile[data-value="65"] { background: linear-gradient(135deg, #ff0080 0%, #cc0066 100%); color: #ffffff; border-color: #b20059; }
+.tile[data-value="66"] { background: linear-gradient(135deg, #fd0081 0%, #ca0067 100%); color: #ffffff; border-color: #b1005a; }
+.tile[data-value="67"] { background: linear-gradient(135deg, #fb0183 0%, #c80068 100%); color: #ffffff; border-color: #af005b; }
+.tile[data-value="68"] { background: linear-gradient(135deg, #f90284 0%, #c70169 100%); color: #ffffff; border-color: #ae015c; }
+.tile[data-value="69"] { background: linear-gradient(135deg, #f70286 0%, #c5016b 100%); color: #ffffff; border-color: #ac015d; }
+.tile[data-value="70"] { background: linear-gradient(135deg, #f50387 0%, #c4026c 100%); color: #ffffff; border-color: #ab025e; }
+.tile[data-value="71"] { background: linear-gradient(135deg, #f30489 0%, #c2036d 100%); color: #ffffff; border-color: #aa025f; }
+.tile[data-value="72"] { background: linear-gradient(135deg, #f1048b 0%, #c0036f 100%); color: #ffffff; border-color: #a80261; }
+.tile[data-value="73"] { background: linear-gradient(135deg, #ef058c 0%, #bf0470 100%); color: #ffffff; border-color: #a70362; }
+.tile[data-value="74"] { background: linear-gradient(135deg, #ee068e 0%, #be0471 100%); color: #ffffff; border-color: #a60463; }
+.tile[data-value="75"] { background: linear-gradient(135deg, #ec068f 0%, #bc0472 100%); color: #ffffff; border-color: #a50464; }
+.tile[data-value="76"] { background: linear-gradient(135deg, #ea0791 0%, #bb0574 100%); color: #ffffff; border-color: #a30465; }
+.tile[data-value="77"] { background: linear-gradient(135deg, #e80892 0%, #b90674 100%); color: #ffffff; border-color: #a20566; }
+.tile[data-value="78"] { background: linear-gradient(135deg, #e60994 0%, #b80776 100%); color: #ffffff; border-color: #a10667; }
+.tile[data-value="79"] { background: linear-gradient(135deg, #e40996 0%, #b60778 100%); color: #ffffff; border-color: #9f0669; }
+.tile[data-value="80"] { background: linear-gradient(135deg, #e20a97 0%, #b40878 100%); color: #ffffff; border-color: #9e0769; }
+.tile[data-value="81"] { background: linear-gradient(135deg, #e00b99 0%, #b3087a 100%); color: #ffffff; border-color: #9c076b; }
+.tile[data-value="82"] { background: linear-gradient(135deg, #de0b9a 0%, #b1087b 100%); color: #ffffff; border-color: #9b076b; }
+.tile[data-value="83"] { background: linear-gradient(135deg, #dd0c9c 0%, #b0097c 100%); color: #ffffff; border-color: #9a086d; }
+.tile[data-value="84"] { background: linear-gradient(135deg, #db0d9e 0%, #af0a7e 100%); color: #ffffff; border-color: #99096e; }
+.tile[data-value="85"] { background: linear-gradient(135deg, #d90d9f 0%, #ad0a7f 100%); color: #ffffff; border-color: #97096f; }
+.tile[data-value="86"] { background: linear-gradient(135deg, #d70ea1 0%, #ac0b80 100%); color: #ffffff; border-color: #960970; }
+.tile[data-value="87"] { background: linear-gradient(135deg, #d50fa2 0%, #aa0c81 100%); color: #ffffff; border-color: #950a71; }
+.tile[data-value="88"] { background: linear-gradient(135deg, #d30fa4 0%, #a80c83 100%); color: #ffffff; border-color: #930a72; }
+.tile[data-value="89"] { background: linear-gradient(135deg, #d110a5 0%, #a70c84 100%); color: #ffffff; border-color: #920b73; }
+.tile[data-value="90"] { background: linear-gradient(135deg, #cf11a7 0%, #a50d85 100%); color: #ffffff; border-color: #900b74; }
+.tile[data-value="91"] { background: linear-gradient(135deg, #cd12a9 0%, #a40e87 100%); color: #ffffff; border-color: #8f0c76; }
+.tile[data-value="92"] { background: linear-gradient(135deg, #cc12aa 0%, #a30e88 100%); color: #ffffff; border-color: #8e0c76; }
+.tile[data-value="93"] { background: linear-gradient(135deg, #ca13ac 0%, #a10f89 100%); color: #ffffff; border-color: #8d0d78; }
+.tile[data-value="94"] { background: linear-gradient(135deg, #c814ad 0%, #a0108a 100%); color: #ffffff; border-color: #8c0e79; }
+.tile[data-value="95"] { background: linear-gradient(135deg, #c614af 0%, #9e108c 100%); color: #ffffff; border-color: #8a0e7a; }
+.tile[data-value="96"] { background: linear-gradient(135deg, #c415b1 0%, #9c108d 100%); color: #ffffff; border-color: #890e7b; }
+.tile[data-value="97"] { background: linear-gradient(135deg, #c216b2 0%, #9b118e 100%); color: #ffffff; border-color: #870f7c; }
+.tile[data-value="98"] { background: linear-gradient(135deg, #c016b4 0%, #991190 100%); color: #ffffff; border-color: #860f7d; }
+.tile[data-value="99"] { background: linear-gradient(135deg, #be17b5 0%, #981290 100%); color: #ffffff; border-color: #85107e; }
+.tile[data-value="100"] { background: linear-gradient(135deg, #bc18b7 0%, #961392 100%); color: #ffffff; border-color: #831080; }
+.tile[data-value="101"] { background: linear-gradient(135deg, #bb18b8 0%, #951393 100%); color: #ffffff; border-color: #821080; }
+.tile[data-value="102"] { background: linear-gradient(135deg, #b919ba 0%, #941494 100%); color: #ffffff; border-color: #811182; }
+.tile[data-value="103"] { background: linear-gradient(135deg, #b71abc 0%, #921496 100%); color: #ffffff; border-color: #801283; }
+.tile[data-value="104"] { background: linear-gradient(135deg, #b51bbd 0%, #901597 100%); color: #ffffff; border-color: #7e1284; }
+.tile[data-value="105"] { background: linear-gradient(135deg, #b31bbf 0%, #8f1598 100%); color: #ffffff; border-color: #7d1285; }
+.tile[data-value="106"] { background: linear-gradient(135deg, #b11cc0 0%, #8d1699 100%); color: #ffffff; border-color: #7b1386; }
+.tile[data-value="107"] { background: linear-gradient(135deg, #af1dc2 0%, #8c179b 100%); color: #ffffff; border-color: #7a1487; }
+.tile[data-value="108"] { background: linear-gradient(135deg, #ad1dc3 0%, #8a179c 100%); color: #ffffff; border-color: #791488; }
+.tile[data-value="109"] { background: linear-gradient(135deg, #ab1ec5 0%, #88189d 100%); color: #ffffff; border-color: #771589; }
+.tile[data-value="110"] { background: linear-gradient(135deg, #aa1fc7 0%, #88189f 100%); color: #ffffff; border-color: #76158b; }
+.tile[data-value="111"] { background: linear-gradient(135deg, #a81fc8 0%, #8618a0 100%); color: #ffffff; border-color: #75158c; }
+.tile[data-value="112"] { background: linear-gradient(135deg, #a620ca 0%, #8419a1 100%); color: #ffffff; border-color: #74168d; }
+.tile[data-value="113"] { background: linear-gradient(135deg, #a421cb 0%, #831aa2 100%); color: #ffffff; border-color: #72178e; }
+.tile[data-value="114"] { background: linear-gradient(135deg, #a221cd 0%, #811aa4 100%); color: #ffffff; border-color: #71178f; }
+.tile[data-value="115"] { background: linear-gradient(135deg, #a022cf 0%, #801ba5 100%); color: #ffffff; border-color: #701790; }
+.tile[data-value="116"] { background: linear-gradient(135deg, #9e23d0 0%, #7e1ca6 100%); color: #ffffff; border-color: #6e1891; }
+.tile[data-value="117"] { background: linear-gradient(135deg, #9c24d2 0%, #7c1ca8 100%); color: #ffffff; border-color: #6d1993; }
+.tile[data-value="118"] { background: linear-gradient(135deg, #9a24d3 0%, #7b1ca8 100%); color: #ffffff; border-color: #6b1993; }
+.tile[data-value="119"] { background: linear-gradient(135deg, #9925d5 0%, #7a1daa 100%); color: #ffffff; border-color: #6b1995; }
+.tile[data-value="120"] { background: linear-gradient(135deg, #9726d6 0%, #781eab 100%); color: #ffffff; border-color: #691a95; }
+.tile[data-value="121"] { background: linear-gradient(135deg, #9526d8 0%, #771eac 100%); color: #ffffff; border-color: #681a97; }
+.tile[data-value="122"] { background: linear-gradient(135deg, #9327da 0%, #751fae 100%); color: #ffffff; border-color: #661b98; }
+.tile[data-value="123"] { background: linear-gradient(135deg, #9128db 0%, #7420af 100%); color: #ffffff; border-color: #651c99; }
+.tile[data-value="124"] { background: linear-gradient(135deg, #8f28dd 0%, #7220b0 100%); color: #ffffff; border-color: #641c9a; }
+.tile[data-value="125"] { background: linear-gradient(135deg, #8d29de 0%, #7020b1 100%); color: #ffffff; border-color: #621c9b; }
+.tile[data-value="126"] { background: linear-gradient(135deg, #8b2ae0 0%, #6f21b3 100%); color: #ffffff; border-color: #611d9c; }
+.tile[data-value="127"] { background: linear-gradient(135deg, #8a2be2 0%, #6e22b4 100%); color: #ffffff; border-color: #601e9e; }
+
+/* 129-255: purple → blue */
+.tile[data-value="129"] { background: linear-gradient(135deg, #8a2be2 0%, #6e22b4 100%); color: #ffffff; border-color: #601e9e; }
+.tile[data-value="130"] { background: linear-gradient(135deg, #882ce2 0%, #6c23b4 100%); color: #ffffff; border-color: #5f1e9e; }
+.tile[data-value="131"] { background: linear-gradient(135deg, #872de2 0%, #6c24b4 100%); color: #ffffff; border-color: #5e1f9e; }
+.tile[data-value="132"] { background: linear-gradient(135deg, #862ee2 0%, #6b24b4 100%); color: #ffffff; border-color: #5d209e; }
+.tile[data-value="133"] { background: linear-gradient(135deg, #852fe2 0%, #6a25b4 100%); color: #ffffff; border-color: #5d209e; }
+.tile[data-value="134"] { background: linear-gradient(135deg, #8430e3 0%, #6926b5 100%); color: #ffffff; border-color: #5c219e; }
+.tile[data-value="135"] { background: linear-gradient(135deg, #8332e3 0%, #6828b5 100%); color: #ffffff; border-color: #5b239e; }
+.tile[data-value="136"] { background: linear-gradient(135deg, #8233e3 0%, #6828b5 100%); color: #ffffff; border-color: #5b239e; }
+.tile[data-value="137"] { background: linear-gradient(135deg, #8134e3 0%, #6729b5 100%); color: #ffffff; border-color: #5a249e; }
+.tile[data-value="138"] { background: linear-gradient(135deg, #8035e4 0%, #662ab6 100%); color: #ffffff; border-color: #59259f; }
+.tile[data-value="139"] { background: linear-gradient(135deg, #7f36e4 0%, #652bb6 100%); color: #ffffff; border-color: #58259f; }
+.tile[data-value="140"] { background: linear-gradient(135deg, #7d37e4 0%, #642cb6 100%); color: #ffffff; border-color: #57269f; }
+.tile[data-value="141"] { background: linear-gradient(135deg, #7c39e4 0%, #632db6 100%); color: #ffffff; border-color: #56279f; }
+.tile[data-value="142"] { background: linear-gradient(135deg, #7b3ae4 0%, #622eb6 100%); color: #ffffff; border-color: #56289f; }
+.tile[data-value="143"] { background: linear-gradient(135deg, #7a3be5 0%, #612fb7 100%); color: #ffffff; border-color: #5529a0; }
+.tile[data-value="144"] { background: linear-gradient(135deg, #793ce5 0%, #6030b7 100%); color: #ffffff; border-color: #542aa0; }
+.tile[data-value="145"] { background: linear-gradient(135deg, #783de5 0%, #6030b7 100%); color: #ffffff; border-color: #542aa0; }
+.tile[data-value="146"] { background: linear-gradient(135deg, #773ee5 0%, #5f31b7 100%); color: #ffffff; border-color: #532ba0; }
+.tile[data-value="147"] { background: linear-gradient(135deg, #7640e6 0%, #5e33b8 100%); color: #ffffff; border-color: #522ca1; }
+.tile[data-value="148"] { background: linear-gradient(135deg, #7541e6 0%, #5d34b8 100%); color: #ffffff; border-color: #512da1; }
+.tile[data-value="149"] { background: linear-gradient(135deg, #7442e6 0%, #5c34b8 100%); color: #ffffff; border-color: #512ea1; }
+.tile[data-value="150"] { background: linear-gradient(135deg, #7343e6 0%, #5c35b8 100%); color: #ffffff; border-color: #502ea1; }
+.tile[data-value="151"] { background: linear-gradient(135deg, #7144e7 0%, #5a36b8 100%); color: #ffffff; border-color: #4f2fa1; }
+.tile[data-value="152"] { background: linear-gradient(135deg, #7046e7 0%, #5938b8 100%); color: #ffffff; border-color: #4e31a1; }
+.tile[data-value="153"] { background: linear-gradient(135deg, #6f47e7 0%, #5838b8 100%); color: #ffffff; border-color: #4d31a1; }
+.tile[data-value="154"] { background: linear-gradient(135deg, #6e48e7 0%, #5839b8 100%); color: #ffffff; border-color: #4d32a1; }
+.tile[data-value="155"] { background: linear-gradient(135deg, #6d49e7 0%, #573ab8 100%); color: #ffffff; border-color: #4c33a1; }
+.tile[data-value="156"] { background: linear-gradient(135deg, #6c4ae8 0%, #563bb9 100%); color: #ffffff; border-color: #4b33a2; }
+.tile[data-value="157"] { background: linear-gradient(135deg, #6b4be8 0%, #553cb9 100%); color: #ffffff; border-color: #4a34a2; }
+.tile[data-value="158"] { background: linear-gradient(135deg, #6a4de8 0%, #543db9 100%); color: #ffffff; border-color: #4a35a2; }
+.tile[data-value="159"] { background: linear-gradient(135deg, #694ee8 0%, #543eb9 100%); color: #ffffff; border-color: #4936a2; }
+.tile[data-value="160"] { background: linear-gradient(135deg, #684fe9 0%, #533fba 100%); color: #ffffff; border-color: #4837a3; }
+.tile[data-value="161"] { background: linear-gradient(135deg, #6650e9 0%, #5140ba 100%); color: #ffffff; border-color: #4738a3; }
+.tile[data-value="162"] { background: linear-gradient(135deg, #6551e9 0%, #5040ba 100%); color: #ffffff; border-color: #4638a3; }
+.tile[data-value="163"] { background: linear-gradient(135deg, #6452e9 0%, #5041ba 100%); color: #ffffff; border-color: #4639a3; }
+.tile[data-value="164"] { background: linear-gradient(135deg, #6354ea 0%, #4f43bb 100%); color: #ffffff; border-color: #453aa3; }
+.tile[data-value="165"] { background: linear-gradient(135deg, #6255ea 0%, #4e44bb 100%); color: #ffffff; border-color: #443ba3; }
+.tile[data-value="166"] { background: linear-gradient(135deg, #6156ea 0%, #4d44bb 100%); color: #ffffff; border-color: #433ca3; }
+.tile[data-value="167"] { background: linear-gradient(135deg, #6057ea 0%, #4c45bb 100%); color: #ffffff; border-color: #433ca3; }
+.tile[data-value="168"] { background: linear-gradient(135deg, #5f58ea 0%, #4c46bb 100%); color: #ffffff; border-color: #423da3; }
+.tile[data-value="169"] { background: linear-gradient(135deg, #5e59eb 0%, #4b47bc 100%); color: #ffffff; border-color: #413ea4; }
+.tile[data-value="170"] { background: linear-gradient(135deg, #5d5beb 0%, #4a48bc 100%); color: #ffffff; border-color: #413fa4; }
+.tile[data-value="171"] { background: linear-gradient(135deg, #5c5ceb 0%, #4949bc 100%); color: #ffffff; border-color: #4040a4; }
+.tile[data-value="172"] { background: linear-gradient(135deg, #5a5deb 0%, #484abc 100%); color: #ffffff; border-color: #3e41a4; }
+.tile[data-value="173"] { background: linear-gradient(135deg, #595eec 0%, #474bbc 100%); color: #ffffff; border-color: #3e41a5; }
+.tile[data-value="174"] { background: linear-gradient(135deg, #585fec 0%, #464cbc 100%); color: #ffffff; border-color: #3d42a5; }
+.tile[data-value="175"] { background: linear-gradient(135deg, #5761ec 0%, #454dbc 100%); color: #ffffff; border-color: #3c43a5; }
+.tile[data-value="176"] { background: linear-gradient(135deg, #5662ec 0%, #444ebc 100%); color: #ffffff; border-color: #3c44a5; }
+.tile[data-value="177"] { background: linear-gradient(135deg, #5563ed 0%, #444fbd 100%); color: #ffffff; border-color: #3b45a5; }
+.tile[data-value="178"] { background: linear-gradient(135deg, #5464ed 0%, #4350bd 100%); color: #ffffff; border-color: #3a46a5; }
+.tile[data-value="179"] { background: linear-gradient(135deg, #5365ed 0%, #4250bd 100%); color: #ffffff; border-color: #3a46a5; }
+.tile[data-value="180"] { background: linear-gradient(135deg, #5266ed 0%, #4151bd 100%); color: #ffffff; border-color: #3947a5; }
+.tile[data-value="181"] { background: linear-gradient(135deg, #5168ed 0%, #4053bd 100%); color: #ffffff; border-color: #3848a5; }
+.tile[data-value="182"] { background: linear-gradient(135deg, #4f69ee 0%, #3f54be 100%); color: #ffffff; border-color: #3749a6; }
+.tile[data-value="183"] { background: linear-gradient(135deg, #4e6aee 0%, #3e54be 100%); color: #ffffff; border-color: #364aa6; }
+.tile[data-value="184"] { background: linear-gradient(135deg, #4d6bee 0%, #3d55be 100%); color: #ffffff; border-color: #354aa6; }
+.tile[data-value="185"] { background: linear-gradient(135deg, #4c6cee 0%, #3c56be 100%); color: #ffffff; border-color: #354ba6; }
+.tile[data-value="186"] { background: linear-gradient(135deg, #4b6def 0%, #3c57bf 100%); color: #ffffff; border-color: #344ca7; }
+.tile[data-value="187"] { background: linear-gradient(135deg, #4a6fef 0%, #3b58bf 100%); color: #ffffff; border-color: #334da7; }
+.tile[data-value="188"] { background: linear-gradient(135deg, #4970ef 0%, #3a59bf 100%); color: #ffffff; border-color: #334ea7; }
+.tile[data-value="189"] { background: linear-gradient(135deg, #4871ef 0%, #395abf 100%); color: #ffffff; border-color: #324fa7; }
+.tile[data-value="190"] { background: linear-gradient(135deg, #4772f0 0%, #385bc0 100%); color: #ffffff; border-color: #314fa8; }
+.tile[data-value="191"] { background: linear-gradient(135deg, #4673f0 0%, #385cc0 100%); color: #ffffff; border-color: #3150a8; }
+.tile[data-value="192"] { background: linear-gradient(135deg, #4575f0 0%, #375dc0 100%); color: #ffffff; border-color: #3051a8; }
+.tile[data-value="193"] { background: linear-gradient(135deg, #4376f0 0%, #355ec0 100%); color: #ffffff; border-color: #2e52a8; }
+.tile[data-value="194"] { background: linear-gradient(135deg, #4277f0 0%, #345fc0 100%); color: #ffffff; border-color: #2e53a8; }
+.tile[data-value="195"] { background: linear-gradient(135deg, #4178f1 0%, #3460c0 100%); color: #ffffff; border-color: #2d54a8; }
+.tile[data-value="196"] { background: linear-gradient(135deg, #4079f1 0%, #3360c0 100%); color: #ffffff; border-color: #2c54a8; }
+.tile[data-value="197"] { background: linear-gradient(135deg, #3f7af1 0%, #3261c0 100%); color: #ffffff; border-color: #2c55a8; }
+.tile[data-value="198"] { background: linear-gradient(135deg, #3e7cf1 0%, #3163c0 100%); color: #ffffff; border-color: #2b56a8; }
+.tile[data-value="199"] { background: linear-gradient(135deg, #3d7df2 0%, #3064c1 100%); color: #ffffff; border-color: #2a57a9; }
+.tile[data-value="200"] { background: linear-gradient(135deg, #3c7ef2 0%, #3064c1 100%); color: #ffffff; border-color: #2a58a9; }
+.tile[data-value="201"] { background: linear-gradient(135deg, #3b7ff2 0%, #2f65c1 100%); color: #ffffff; border-color: #2958a9; }
+.tile[data-value="202"] { background: linear-gradient(135deg, #3a80f2 0%, #2e66c1 100%); color: #ffffff; border-color: #2859a9; }
+.tile[data-value="203"] { background: linear-gradient(135deg, #3881f3 0%, #2c67c2 100%); color: #ffffff; border-color: #275aaa; }
+.tile[data-value="204"] { background: linear-gradient(135deg, #3783f3 0%, #2c68c2 100%); color: #ffffff; border-color: #265baa; }
+.tile[data-value="205"] { background: linear-gradient(135deg, #3684f3 0%, #2b69c2 100%); color: #ffffff; border-color: #255caa; }
+.tile[data-value="206"] { background: linear-gradient(135deg, #3585f3 0%, #2a6ac2 100%); color: #ffffff; border-color: #255daa; }
+.tile[data-value="207"] { background: linear-gradient(135deg, #3486f3 0%, #296bc2 100%); color: #ffffff; border-color: #245daa; }
+.tile[data-value="208"] { background: linear-gradient(135deg, #3387f4 0%, #286cc3 100%); color: #ffffff; border-color: #235eaa; }
+.tile[data-value="209"] { background: linear-gradient(135deg, #3288f4 0%, #286cc3 100%); color: #ffffff; border-color: #235faa; }
+.tile[data-value="210"] { background: linear-gradient(135deg, #318af4 0%, #276ec3 100%); color: #ffffff; border-color: #2260aa; }
+.tile[data-value="211"] { background: linear-gradient(135deg, #308bf4 0%, #266fc3 100%); color: #ffffff; border-color: #2161aa; }
+.tile[data-value="212"] { background: linear-gradient(135deg, #2f8cf5 0%, #2570c4 100%); color: #ffffff; border-color: #2062ab; }
+.tile[data-value="213"] { background: linear-gradient(135deg, #2e8df5 0%, #2470c4 100%); color: #ffffff; border-color: #2062ab; }
+.tile[data-value="214"] { background: linear-gradient(135deg, #2c8ef5 0%, #2371c4 100%); color: #ffffff; border-color: #1e63ab; }
+.tile[data-value="215"] { background: linear-gradient(135deg, #2b90f5 0%, #2273c4 100%); color: #ffffff; border-color: #1e64ab; }
+.tile[data-value="216"] { background: linear-gradient(135deg, #2a91f6 0%, #2174c4 100%); color: #ffffff; border-color: #1d65ac; }
+.tile[data-value="217"] { background: linear-gradient(135deg, #2992f6 0%, #2074c4 100%); color: #ffffff; border-color: #1c66ac; }
+.tile[data-value="218"] { background: linear-gradient(135deg, #2893f6 0%, #2075c4 100%); color: #ffffff; border-color: #1c66ac; }
+.tile[data-value="219"] { background: linear-gradient(135deg, #2794f6 0%, #1f76c4 100%); color: #ffffff; border-color: #1b67ac; }
+.tile[data-value="220"] { background: linear-gradient(135deg, #2695f6 0%, #1e77c4 100%); color: #ffffff; border-color: #1a68ac; }
+.tile[data-value="221"] { background: linear-gradient(135deg, #2597f7 0%, #1d78c5 100%); color: #ffffff; border-color: #1969ac; }
+.tile[data-value="222"] { background: linear-gradient(135deg, #2498f7 0%, #1c79c5 100%); color: #ffffff; border-color: #196aac; }
+.tile[data-value="223"] { background: linear-gradient(135deg, #2399f7 0%, #1c7ac5 100%); color: #ffffff; border-color: #186bac; }
+.tile[data-value="224"] { background: linear-gradient(135deg, #219af7 0%, #1a7bc5 100%); color: #ffffff; border-color: #176bac; }
+.tile[data-value="225"] { background: linear-gradient(135deg, #209bf8 0%, #197cc6 100%); color: #ffffff; border-color: #166cad; }
+.tile[data-value="226"] { background: linear-gradient(135deg, #1f9cf8 0%, #187cc6 100%); color: #ffffff; border-color: #156dad; }
+.tile[data-value="227"] { background: linear-gradient(135deg, #1e9ef8 0%, #187ec6 100%); color: #ffffff; border-color: #156ead; }
+.tile[data-value="228"] { background: linear-gradient(135deg, #1d9ff8 0%, #177fc6 100%); color: #ffffff; border-color: #146fad; }
+.tile[data-value="229"] { background: linear-gradient(135deg, #1ca0f9 0%, #1680c7 100%); color: #ffffff; border-color: #1370ae; }
+.tile[data-value="230"] { background: linear-gradient(135deg, #1ba1f9 0%, #1580c7 100%); color: #ffffff; border-color: #1270ae; }
+.tile[data-value="231"] { background: linear-gradient(135deg, #1aa2f9 0%, #1481c7 100%); color: #ffffff; border-color: #1271ae; }
+.tile[data-value="232"] { background: linear-gradient(135deg, #19a3f9 0%, #1482c7 100%); color: #ffffff; border-color: #1172ae; }
+.tile[data-value="233"] { background: linear-gradient(135deg, #18a5f9 0%, #1384c7 100%); color: #ffffff; border-color: #1073ae; }
+.tile[data-value="234"] { background: linear-gradient(135deg, #17a6fa 0%, #1284c8 100%); color: #ffffff; border-color: #1074af; }
+.tile[data-value="235"] { background: linear-gradient(135deg, #15a7fa 0%, #1085c8 100%); color: #ffffff; border-color: #0e74af; }
+.tile[data-value="236"] { background: linear-gradient(135deg, #14a8fa 0%, #1086c8 100%); color: #ffffff; border-color: #0e75af; }
+.tile[data-value="237"] { background: linear-gradient(135deg, #13a9fa 0%, #0f87c8 100%); color: #ffffff; border-color: #0d76af; }
+.tile[data-value="238"] { background: linear-gradient(135deg, #12abfb 0%, #0e88c8 100%); color: #ffffff; border-color: #0c77af; }
+.tile[data-value="239"] { background: linear-gradient(135deg, #11acfb 0%, #0d89c8 100%); color: #ffffff; border-color: #0b78af; }
+.tile[data-value="240"] { background: linear-gradient(135deg, #10adfb 0%, #0c8ac8 100%); color: #ffffff; border-color: #0b79af; }
+.tile[data-value="241"] { background: linear-gradient(135deg, #0faefb 0%, #0c8bc8 100%); color: #ffffff; border-color: #0a79af; }
+.tile[data-value="242"] { background: linear-gradient(135deg, #0eaffc 0%, #0b8cc9 100%); color: #ffffff; border-color: #097ab0; }
+.tile[data-value="243"] { background: linear-gradient(135deg, #0db0fc 0%, #0a8cc9 100%); color: #ffffff; border-color: #097bb0; }
+.tile[data-value="244"] { background: linear-gradient(135deg, #0cb2fc 0%, #098ec9 100%); color: #ffffff; border-color: #087cb0; }
+.tile[data-value="245"] { background: linear-gradient(135deg, #0ab3fc 0%, #088fc9 100%); color: #ffffff; border-color: #077db0; }
+.tile[data-value="246"] { background: linear-gradient(135deg, #09b4fc 0%, #0790c9 100%); color: #ffffff; border-color: #067db0; }
+.tile[data-value="247"] { background: linear-gradient(135deg, #08b5fd 0%, #0690ca 100%); color: #ffffff; border-color: #057eb1; }
+.tile[data-value="248"] { background: linear-gradient(135deg, #07b6fd 0%, #0591ca 100%); color: #ffffff; border-color: #047fb1; }
+.tile[data-value="249"] { background: linear-gradient(135deg, #06b7fd 0%, #0492ca 100%); color: #ffffff; border-color: #0480b1; }
+.tile[data-value="250"] { background: linear-gradient(135deg, #05b9fd 0%, #0494ca 100%); color: #ffffff; border-color: #0381b1; }
+.tile[data-value="251"] { background: linear-gradient(135deg, #04bafe 0%, #0394cb 100%); color: #ffffff; border-color: #0282b1; }
+.tile[data-value="252"] { background: linear-gradient(135deg, #03bbfe 0%, #0295cb 100%); color: #ffffff; border-color: #0282b1; }
+.tile[data-value="253"] { background: linear-gradient(135deg, #02bcfe 0%, #0196cb 100%); color: #ffffff; border-color: #0183b1; }
+.tile[data-value="254"] { background: linear-gradient(135deg, #01bdfe 0%, #0097cb 100%); color: #ffffff; border-color: #0084b1; }
+.tile[data-value="255"] { background: linear-gradient(135deg, #00bfff 0%, #0098cc 100%); color: #ffffff; border-color: #0085b2; }
+
+/* ============================================================
+   MAX-VALUE SPECIAL TILES (per mode)
+   Static rainbow gradient — reserved for the exact max value
+   in each bit mode. Overrides theme colors via higher specificity.
+   ============================================================ */
+
+/* Non-Gauntlet modes: rainbow on the exact max value for that theme.
+   These are fixed single-mode games so every tile of that value = rainbow. */
+body[data-theme="gameboy"] .tile[data-value="3"],
+body[data-theme="nes"] .tile[data-value="7"],
+body[data-theme="snes"] .tile[data-value="15"],
+body[data-theme="genesis"] .tile[data-value="31"],
+body[data-theme="arcade"] .tile[data-value="63"],
+body[data-theme="neogeo"] .tile[data-value="127"],
+body[data-theme="ps1"] .tile[data-value="255"] {
+    background: linear-gradient(
+        135deg,
+        #ff69b4 0%,
+        #c94fd8 14%,
+        #8a2be2 28%,
+        #5b8dee 42%,
+        #00bfff 56%,
+        #00e8c0 70%,
+        #7fff50 84%,
+        #ffd700 100%
+    ) !important;
+    color: #000000 !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2) !important;
+    animation: none !important;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+}
+
+/* Gauntlet mode: rainbow is class-based, not value-based.
+   JS adds .gauntlet-max-earned to exactly one tile per earned value.
+   This overrides the matrix theme's normal tile colors. */
+body[data-theme="matrix"] .tile.gauntlet-max-earned {
+    background: linear-gradient(
+        135deg,
+        #ff69b4 0%,
+        #c94fd8 14%,
+        #8a2be2 28%,
+        #5b8dee 42%,
+        #00bfff 56%,
+        #00e8c0 70%,
+        #7fff50 84%,
+        #ffd700 100%
+    ) !important;
+    color: #000000 !important;
+    border: 2px solid rgba(255, 255, 255, 0.6) !important;
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.2) !important;
+    animation: none !important;
+    font-weight: bold;
+    text-shadow: 1px 1px 0 rgba(255,255,255,0.4);
+}
+
+
+/* Fallback super tile for truly out-of-range values (endless overflow etc.) */
+.tile[data-value="65536"] ~ .tile,
+.tile[data-supertile="true"] {
+    background: linear-gradient(135deg, #ff00ff 0%, #00ffff 50%, #ffff00 100%);
+    color: #000000;
+    font-size: 11px;
+    font-weight: bold;
+    border: 3px solid #ffffff;
+    box-shadow: 
+        inset 2px 2px 0 rgba(255, 255, 255, 0.8),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.9);
+}
+
+/* REMOVED: Rainbow animation for performance
+@keyframes rainbow {
+    0%, 100% { filter: hue-rotate(0deg); }
+    50% { filter: hue-rotate(180deg); }
+}
+*/
+
+@keyframes retropulse {
+    0%, 100% { 
+        box-shadow: 
+            inset 2px 2px 0 rgba(255, 255, 255, 0.4),
+            inset -2px -2px 0 rgba(0, 0, 0, 0.6);
+    }
+    50% { 
+        box-shadow: 
+            inset 2px 2px 0 rgba(255, 255, 255, 0.5),
+            inset -2px -2px 0 rgba(0, 0, 0, 0.7);
+    }
+}
+
+.tile.new {
+    animation: pixelappear 0.2s steps(4);
+}
+
+.tile.merged {
+    animation: pixelpop 0.2s steps(2);
+}
+
+@keyframes pixelappear {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pixelpop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}

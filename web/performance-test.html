@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Performance Diagnostic - George Boole</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a2e;
+            color: #00ff00;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #00ffff;
+            text-align: center;
+        }
+        .test-section {
+            background: #2d2d44;
+            border: 2px solid #00ffff;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-section h2 {
+            color: #ff00ff;
+            margin-top: 0;
+        }
+        button {
+            background: #8a2be2;
+            color: white;
+            border: 2px solid #00ffff;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #9d3bff;
+        }
+        .results {
+            background: #0f0f1e;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 4px solid #00ff00;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+        }
+        .metric-label {
+            color: #00ffff;
+        }
+        .metric-value {
+            color: #ffff00;
+            font-weight: bold;
+        }
+        .warning {
+            color: #ff6b6b;
+        }
+        .good {
+            color: #00ff00;
+        }
+        .instructions {
+            background: #1a1a3a;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid #ffd700;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+        #monitor {
+            font-size: 11px;
+            color: #00ff00;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔥 Performance Diagnostic Tool</h1>
+    
+    <div class="instructions">
+        <strong>📋 INSTRUCTIONS:</strong><br>
+        1. Open Chrome Task Manager: <strong>Shift+Esc</strong> or Menu → More Tools → Task Manager<br>
+        2. Find the "Tab: Performance Diagnostic" row<br>
+        3. Note the CPU % before each test<br>
+        4. Run each test for 10 seconds<br>
+        5. Note the CPU % during each test<br>
+        6. The test causing the biggest CPU increase is the culprit!
+    </div>
+
+    <!-- TEST 1: Baseline (Nothing) -->
+    <div class="test-section">
+        <h2>Test 1: Baseline (Do Nothing)</h2>
+        <p>This establishes your baseline CPU usage with just the page open.</p>
+        <button onclick="runBaseline()">Start Baseline Test</button>
+        <div id="baseline-results" class="results" style="display:none;">
+            <div class="metric">
+                <span class="metric-label">Status:</span>
+                <span class="metric-value" id="baseline-status">Running...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Duration:</span>
+                <span class="metric-value" id="baseline-duration">0s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEST 2: Animations Only -->
+    <div class="test-section">
+        <h2>Test 2: CSS Animations Only</h2>
+        <p>Tests scanlines, CRT effects, and tile animations without game logic.</p>
+        <button onclick="runAnimationTest()">Start Animation Test</button>
+        <button onclick="stopAnimationTest()">Stop Test</button>
+        <div id="animation-results" class="results" style="display:none;">
+            <div class="metric">
+                <span class="metric-label">Status:</span>
+                <span class="metric-value" id="animation-status">Running...</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Animated Tiles:</span>
+                <span class="metric-value" id="animation-count">0</span>
+            </div>
+        </div>
+        <div id="animation-container" style="display:grid; grid-template-columns: repeat(4, 80px); gap: 10px; margin-top: 10px;"></div>
+    </div>
+
+    <!-- TEST 3: Background Music -->
+    <div class="test-section">
+        <h2>Test 3: Background Music Loop</h2>
+        <p>Tests audio decoding CPU usage (usually the biggest culprit).</p>
+        <button onclick="playMusic()">Play Music</button>
+        <button onclick="stopMusic()">Stop Music</button>
+        <audio id="testMusic" loop>
+            <source src="audio/game-loop.ogg" type="audio/ogg">
+        </audio>
+        <div id="music-results" class="results" style="display:none;">
+            <div class="metric">
+                <span class="metric-label">Status:</span>
+                <span class="metric-value" id="music-status">Stopped</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Duration:</span>
+                <span class="metric-value" id="music-duration">0s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TEST 4: Rendering Loop -->
+    <div class="test-section">
+        <h2>Test 4: Constant Re-rendering</h2>
+        <p>Tests DOM update performance (simulates game render loop).</p>
+        <button onclick="startRenderTest()">Start Render Test</button>
+        <button onclick="stopRenderTest()">Stop Test</button>
+        <div id="render-results" class="results" style="display:none;">
+            <div class="metric">
+                <span class="metric-label">Status:</span>
+                <span class="metric-value" id="render-status">Stopped</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Renders/sec:</span>
+                <span class="metric-value" id="render-fps">0</span>
+            </div>
+            <div class="metric">
+                <span class="metric-label">Total Renders:</span>
+                <span class="metric-value" id="render-count">0</span>
+            </div>
+        </div>
+        <div id="render-container" style="display:grid; grid-template-columns: repeat(4, 80px); gap: 10px; margin-top: 10px;"></div>
+    </div>
+
+    <!-- TEST 5: All Combined -->
+    <div class="test-section">
+        <h2>Test 5: Everything Together</h2>
+        <p>Music + Animations + Rendering (simulates actual gameplay).</p>
+        <button onclick="runFullTest()">Start Full Test</button>
+        <button onclick="stopFullTest()">Stop Test</button>
+        <div id="full-results" class="results" style="display:none;">
+            <div class="metric">
+                <span class="metric-label">Status:</span>
+                <span class="metric-value" id="full-status">Stopped</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live Monitor -->
+    <div class="test-section">
+        <h2>📊 Live Performance Monitor</h2>
+        <button onclick="toggleMonitor()">Start Monitoring</button>
+        <div id="monitor" style="margin-top: 10px;"></div>
+    </div>
+
+    <div class="instructions" style="margin-top: 30px;">
+        <strong>📈 INTERPRETING RESULTS:</strong><br>
+        • <strong>Baseline:</strong> Should be 0-2% CPU<br>
+        • <strong>Animations:</strong> If this jumps 10%+, CSS effects are the issue<br>
+        • <strong>Music:</strong> If this jumps 15-30%, audio decoding is the issue (most common!)<br>
+        • <strong>Rendering:</strong> If this jumps 10%+, DOM updates need optimization<br>
+        • <strong>Combined:</strong> This is what your game uses during play<br><br>
+        <strong>💡 TIP:</strong> Close other tabs and stop other programs for accurate results!
+    </div>
+
+    <script>
+        let animationInterval = null;
+        let renderInterval = null;
+        let monitorInterval = null;
+        let renderCount = 0;
+        let startTime = 0;
+        let musicStartTime = 0;
+
+        // Test 1: Baseline
+        function runBaseline() {
+            const results = document.getElementById('baseline-results');
+            results.style.display = 'block';
+            document.getElementById('baseline-status').textContent = 'Running for 10 seconds...';
+            
+            let elapsed = 0;
+            const interval = setInterval(() => {
+                elapsed++;
+                document.getElementById('baseline-duration').textContent = elapsed + 's';
+                
+                if (elapsed >= 10) {
+                    clearInterval(interval);
+                    document.getElementById('baseline-status').textContent = 'Complete! Check Task Manager CPU %';
+                    document.getElementById('baseline-status').className = 'metric-value good';
+                }
+            }, 1000);
+        }
+
+        // Test 2: Animations
+        function runAnimationTest() {
+            const container = document.getElementById('animation-container');
+            const results = document.getElementById('animation-results');
+            results.style.display = 'block';
+            
+            // Create animated tiles
+            container.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const tile = document.createElement('div');
+                tile.style.cssText = `
+                    width: 80px;
+                    height: 80px;
+                    background: linear-gradient(135deg, #8a2be2, #4b0082);
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+                    animation: pulse 2s ease-in-out infinite;
+                    box-shadow: 0 0 20px rgba(138, 43, 226, 0.6);
+                `;
+                tile.textContent = Math.pow(2, (i % 11) + 1);
+                container.appendChild(tile);
+            }
+            
+            document.getElementById('animation-status').textContent = 'Running - check CPU!';
+            document.getElementById('animation-count').textContent = '16';
+        }
+
+        function stopAnimationTest() {
+            document.getElementById('animation-container').innerHTML = '';
+            document.getElementById('animation-status').textContent = 'Stopped';
+        }
+
+        // Test 3: Music
+        function playMusic() {
+            const music = document.getElementById('testMusic');
+            const results = document.getElementById('music-results');
+            results.style.display = 'block';
+            
+            music.volume = 0.5;
+            music.play();
+            document.getElementById('music-status').textContent = 'Playing - check CPU!';
+            document.getElementById('music-status').className = 'metric-value warning';
+            
+            musicStartTime = Date.now();
+            const interval = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - musicStartTime) / 1000);
+                document.getElementById('music-duration').textContent = elapsed + 's';
+            }, 1000);
+        }
+
+        function stopMusic() {
+            const music = document.getElementById('testMusic');
+            music.pause();
+            music.currentTime = 0;
+            document.getElementById('music-status').textContent = 'Stopped';
+            document.getElementById('music-status').className = 'metric-value good';
+        }
+
+        // Test 4: Rendering
+        function startRenderTest() {
+            const container = document.getElementById('render-container');
+            const results = document.getElementById('render-results');
+            results.style.display = 'block';
+            
+            // Create tiles
+            container.innerHTML = '';
+            const tiles = [];
+            for (let i = 0; i < 16; i++) {
+                const tile = document.createElement('div');
+                tile.style.cssText = `
+                    width: 80px;
+                    height: 80px;
+                    background: #2d2d44;
+                    color: white;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 20px;
+                    border: 2px solid #00ffff;
+                `;
+                container.appendChild(tile);
+                tiles.push(tile);
+            }
+            
+            renderCount = 0;
+            startTime = Date.now();
+            
+            // Constantly update tiles (simulates game rendering)
+            renderInterval = setInterval(() => {
+                tiles.forEach(tile => {
+                    tile.textContent = Math.floor(Math.random() * 2048);
+                    tile.style.background = `hsl(${Math.random() * 360}, 70%, 50%)`;
+                });
+                renderCount++;
+                
+                const elapsed = (Date.now() - startTime) / 1000;
+                const fps = Math.round(renderCount / elapsed);
+                
+                document.getElementById('render-status').textContent = 'Running - check CPU!';
+                document.getElementById('render-fps').textContent = fps;
+                document.getElementById('render-count').textContent = renderCount;
+            }, 16); // ~60fps
+        }
+
+        function stopRenderTest() {
+            clearInterval(renderInterval);
+            document.getElementById('render-container').innerHTML = '';
+            document.getElementById('render-status').textContent = 'Stopped';
+        }
+
+        // Test 5: Full test
+        function runFullTest() {
+            document.getElementById('full-results').style.display = 'block';
+            document.getElementById('full-status').textContent = 'Running ALL tests - check CPU!';
+            document.getElementById('full-status').className = 'metric-value warning';
+            
+            runAnimationTest();
+            playMusic();
+            startRenderTest();
+        }
+
+        function stopFullTest() {
+            stopAnimationTest();
+            stopMusic();
+            stopRenderTest();
+            document.getElementById('full-status').textContent = 'Stopped';
+            document.getElementById('full-status').className = 'metric-value good';
+        }
+
+        // Live monitor
+        let monitoring = false;
+        function toggleMonitor() {
+            monitoring = !monitoring;
+            const btn = event.target;
+            
+            if (monitoring) {
+                btn.textContent = 'Stop Monitoring';
+                monitorInterval = setInterval(() => {
+                    const monitor = document.getElementById('monitor');
+                    monitor.innerHTML = `
+                        ⏱️ ${new Date().toLocaleTimeString()}<br>
+                        💾 Memory: ~${(performance.memory ? (performance.memory.usedJSHeapSize / 1048576).toFixed(1) : 'N/A')} MB<br>
+                        🎯 Tip: Open Task Manager (Shift+Esc) to see real CPU usage!
+                    `;
+                }, 1000);
+            } else {
+                btn.textContent = 'Start Monitoring';
+                clearInterval(monitorInterval);
+                document.getElementById('monitor').innerHTML = '';
+            }
+        }
+
+        // Add CSS for pulse animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

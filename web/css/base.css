@@ -1,0 +1,144 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+body {
+    font-family: 'Press Start 2P', cursive;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 20px;
+    padding-bottom: 40px;
+    position: relative;
+    overflow-x: hidden;
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+}
+
+/* CRT Scanline Effect - Optimized */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 0, 0, 0.1) 0px,
+        rgba(0, 0, 0, 0.1) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Performance mode: disable CRT effect */
+body.performance-mode::before {
+    display: none;
+}
+
+/* Pixel grid overlay - Performance Optimized */
+body::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 30% 40%, rgba(138, 43, 226, 0.1) 0%, transparent 40%),
+        radial-gradient(circle at 70% 60%, rgba(0, 191, 255, 0.08) 0%, transparent 40%);
+    pointer-events: none;
+    opacity: 0.6; /* Static opacity by default - no animation */
+}
+
+/* Only animate when game is actively being played */
+body.game-active::after {
+    animation: retroglow 12s ease-in-out infinite;
+}
+
+/* Performance mode: disable all animations */
+body.performance-mode::after {
+    animation: none !important;
+    opacity: 0.5 !important;
+}
+
+@keyframes retroglow {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 0.7; }
+}
+
+/* Loading Screen */
+.loading-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s;
+}
+
+.loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Stop spinner animation when loading screen is hidden */
+.loading-screen.hidden .loading-spinner {
+    animation: none !important;
+}
+
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h1 {
+    color: #00ffff;
+    font-size: 32px;
+    font-weight: normal;
+    text-shadow: 
+        4px 4px 0px #0066cc,
+        0 0 20px rgba(0, 255, 255, 0.8);
+    margin-bottom: 30px;
+    letter-spacing: 3px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 6px solid rgba(138, 43, 226, 0.3);
+    border-top-color: #8a2be2;
+    border-radius: 0;
+    animation: pixelspin 1s steps(8) infinite;
+    margin: 0 auto 20px;
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.6);
+}
+
+.loading-content p {
+    color: #00ff00;
+    font-size: 12px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    text-shadow: 2px 2px 0px #006600;
+}
+
+@keyframes pixelspin {
+    to { transform: rotate(360deg); }
+}

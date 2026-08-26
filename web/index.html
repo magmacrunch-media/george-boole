@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>George Boole has entered the chat</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    
+    <!-- Font Loading Fix -->
+    <style>
+        .font-loading body {
+            visibility: hidden;
+        }
+        :root {
+            --mc-back-color: rgba(138, 43, 226, 0.6);
+            --mc-back-glow: 0 0 8px rgba(0, 255, 255, 0.95);
+        }
+        body.game-active .mc-back {
+            opacity: 0.5;
+            font-size: 8px;
+        }
+    </style>
+    <script>
+        document.documentElement.classList.add('font-loading');
+        document.fonts.ready.then(() => {
+            document.documentElement.classList.remove('font-loading');
+        });
+    </script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../shared/arcade-base.css?v=de5e0d7b">
+    <link rel="stylesheet" href="css/base.css?v=ab57284b">
+    <link rel="stylesheet" href="css/themes.css?v=97c2703d">
+    <link rel="stylesheet" href="css/container.css?v=a30fdcef">
+    <link rel="stylesheet" href="css/game.css?v=6ed5ff9f">
+    <link rel="stylesheet" href="css/modal-title.css?v=2e343cc0">
+    <link rel="stylesheet" href="css/modal-lore.css?v=357c09c1">
+    <link rel="stylesheet" href="css/modal-difficulty.css?v=92f9537f">
+    <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
+    <link rel="stylesheet" href="css/modal-settings.css?v=2b438cc9">
+    <link rel="stylesheet" href="css/modal-misc.css?v=a4ed8aee">
+    <link rel="stylesheet" href="css/responsive.css?v=2d3065ce">
+    <link rel="stylesheet" href="css/gates.css?v=71f1f693">
+    <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
+</head>
+<body>
+    <a href="../" class="mc-back">magmacrunch arcade</a>
+
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-content">
+            <h1>george boole</h1>
+            <div class="loading-spinner"></div>
+            <p>loading...</p>
+        </div>
+    </div>
+    <div class="game-layout">
+        <!-- LEFT PANEL: Quick Rules -->
+        <div class="side-panel left-panel" id="leftPanel">
+            <div class="side-panel-inner">
+                <div class="side-panel-title">quick rules</div>
+
+                <div class="rule-section">
+                    <div class="rule-section-title">MOVES</div>
+                    <div class="rule-item">arrow keys or swipe</div>
+                    <div class="rule-item">all tiles slide one direction</div>
+                </div>
+
+                <div class="rule-section">
+                    <div class="rule-section-title">MERGING</div>
+                    <div class="rule-item"><span class="rule-highlight">same + same = same</span> (idempotence)</div>
+                    <div class="rule-item">different #s need a <span class="rule-highlight">gate</span> between them</div>
+                    <div class="rule-item">gates: <span class="rule-highlight">&oplus; &or; &and;</span> sandwich</div>
+                    <div class="rule-item"><span class="rule-highlight">&not;</span> slides into any number</div>
+                </div>
+
+                <div class="rule-section">
+                    <div class="rule-section-title">SCORING</div>
+                    <div class="scoring-row">
+                        <span class="scoring-label">operations</span>
+                        <span class="scoring-value">= result</span>
+                    </div>
+                    <div class="scoring-row">
+                        <span class="scoring-label">height bonus</span>
+                        <span class="scoring-value">2&times; value</span>
+                    </div>
+                    <div class="scoring-row">
+                        <span class="scoring-label">overflow</span>
+                        <span class="scoring-value">3&times; max</span>
+                    </div>
+                </div>
+
+                <div class="overflow-box">
+                    <div class="overflow-box-title">OVERFLOW</div>
+                    <div>exceeding max value awards <span class="rule-bonus">bonus points</span> &amp; clears the tile</div>
+                    <div style="margin-top: 4px;"><span class="rule-warn">&not;max</span> &rarr; overflow!</div>
+                </div>
+
+                <div class="rule-section rule-section-gauntlet" style="margin-top: 12px;">
+                    <div class="rule-section-title">GAUNTLET</div>
+                    <div class="rule-item">start <span class="rule-highlight">2-bit</span>, reach max to upgrade</div>
+                    <div class="rule-item">progress through <span class="rule-highlight">8-bit</span></div>
+                </div>
+
+                <div class="full-rules-link" id="sidePanelHowToPlay">full rules &rarr;</div>
+            </div>
+        </div>
+
+        <!-- CENTER: Game Container -->
+        <div class="container">
+            <div class="header">
+                <div class="title-container">
+                    <h1>george boole</h1>
+                    <div class="subtitle">has entered the chat</div>
+                </div>
+                <div class="score-container">
+                    <div class="score-label">points</div>
+                    <div class="score" id="score">0</div>
+                </div>
+            </div>
+            
+            <!-- Mode display: positioned between header and controls -->
+            <div id="modeDisplay" style="text-align: center; font-size: 10px; color: rgba(255,255,255,0.8); font-weight: bold; letter-spacing: 2px; margin: -8px 0 6px 0; text-transform: uppercase;">
+                <!-- Bit mode displayed here -->
+            </div>
+            
+            <div class="controls">
+                <button id="newGame">new game</button>
+                <button id="toggleScoreboard">high scores</button>
+                <button id="toggleSettings">settings</button>
+            </div>
+            
+            <div class="game-board" id="gameBoard"></div>
+        </div>
+
+        <!-- RIGHT PANEL: Logic Gate Reference -->
+        <div class="side-panel right-panel" id="rightPanel">
+            <div class="side-panel-inner">
+                <div class="side-panel-title">logic gates</div>
+
+                <div class="gate-ref" data-gate="xor">
+                    <div class="gate-ref-symbol">&#x2295;</div>
+                    <div class="gate-ref-name">XOR</div>
+                    <div class="gate-ref-desc">exclusive or &mdash; flips bits where inputs differ</div>
+                    <div class="gate-ref-example">1 &oplus; 2 = 3<br>2 &oplus; 3 = 1</div>
+                    <div class="gate-ref-usage">sandwich: [num][&oplus;][num]</div>
+                </div>
+
+                <div class="gate-ref" data-gate="or">
+                    <div class="gate-ref-symbol">&#x2228;</div>
+                    <div class="gate-ref-name">OR</div>
+                    <div class="gate-ref-desc">bitwise or &mdash; sets any bit that is 1 in either input</div>
+                    <div class="gate-ref-example">1 &or; 2 = 3<br>4 &or; 3 = 7</div>
+                    <div class="gate-ref-usage">sandwich: [num][&or;][num]</div>
+                </div>
+
+                <div class="gate-ref" data-gate="and">
+                    <div class="gate-ref-symbol">&#x2227;</div>
+                    <div class="gate-ref-name">AND</div>
+                    <div class="gate-ref-desc">bitwise and &mdash; keeps only shared bits</div>
+                    <div class="gate-ref-example">3 &and; 2 = 2<br>7 &and; 4 = 4</div>
+                    <div class="gate-ref-usage">sandwich: [num][&and;][num]</div>
+                </div>
+
+                <div class="gate-ref" data-gate="not">
+                    <div class="gate-ref-symbol">&#xAC;</div>
+                    <div class="gate-ref-name">NOT</div>
+                    <div class="gate-ref-desc">inverts all bits &mdash; unary, acts on one number</div>
+                    <div class="gate-ref-example">&not;1 = 2 (2-bit)<br>&not;8 = 7 (4-bit)</div>
+                    <div class="gate-ref-usage">slide into any tile</div>
+                </div>
+
+                <div class="gate-ref-note">
+                    <strong>idempotence:</strong> same + same = same<br>
+                    1 + 1 = 1 &nbsp;&middot;&nbsp; 7 + 7 = 7<br>
+                    <span style="color: rgba(255,255,255,0.6);">(A &or; A = A)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Title Screen -->
+    <div class="title-screen active" id="titleScreen">
+        <div class="title-screen-content">
+            <div class="title-main">
+                <h1 class="title-large">GEORGE BOOLE</h1>
+                <h2 class="title-subtitle">HAS ENTERED THE CHAT</h2>
+            </div>
+            
+            <button class="start-button" id="startButton">
+                <span class="start-text">press [space] or click to start</span>
+            </button>
+            
+            <!-- 
+            <div class="boolean-quote">
+                "No general method for the solution of<br>questions in the theory of probabilities<br>can be established."
+                <div class="quote-author">— George Boole, 1854</div>
+            </div>
+            -->
+        </div>
+    </div>
+    
+    <!-- Lore / Rules Intro Screen -->
+    <div class="lore-screen" id="loreScreen">
+        <div class="lore-content">
+            <div class="lore-flavor">
+                <div class="lore-quote">"No general method for the solution of<br>questions in the theory of probabilities<br>can be established."</div>
+                <div class="lore-attribution">— George Boole, <em>The Laws of Thought</em>, 1854</div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="lore-rules">
+                <div class="lore-rule">
+                    <span class="lore-rule-icon">&#8592;&#8593;&#8594;&#8595;</span>
+                    <span class="lore-rule-text">arrow keys or swipe to move tiles</span>
+                </div>
+                <div class="lore-rule">
+                    <span class="lore-rule-highlight">same + same = same</span>
+                    <span class="lore-rule-text">(idempotence &mdash; consolidates, not doubles)</span>
+                </div>
+                <div class="lore-rule">
+                    <span class="lore-rule-text">different numbers need a</span>
+                    <span class="lore-rule-highlight">gate</span>
+                    <span class="lore-rule-text">between them</span>
+                </div>
+                <div class="lore-rule">
+                    <span class="lore-rule-gates">&#8853; &#8744; &#8743; &#172;</span>
+                    <span class="lore-rule-text">sandwich binary gates, &#172;NOT slides into any tile</span>
+                </div>
+                <div class="lore-rule">
+                    <span class="lore-rule-text">reach max value &rarr; overflow bonus</span>
+                    <span class="lore-rule-highlight">3&times; max</span>
+                </div>
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="lore-quick-actions">
+                <button class="lore-action-btn" id="quickHighScores">
+                    <span>HIGH SCORES</span>
+                </button>
+                <button class="lore-action-btn" id="quickSettings">
+                    <span>SETTINGS</span>
+                </button>
+            </div>
+
+            <button class="lore-continue-btn" id="loreContinue">
+                <span>SELECT MODE &rarr;</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Difficulty Selector Modal -->
+    <div class="difficulty-modal" id="difficultyModal">
+        <div class="difficulty-content">
+            <h3>SELECT YOUR MODE</h3>
+            <p class="difficulty-subtitle">how many bits?</p>
+            
+            <div class="difficulty-buttons">
+                <!-- 2-BIT MODE -->
+                <button class="difficulty-btn joke-mode" data-difficulty="2" data-target="4" data-theme="gameboy">
+                    <span class="diff-label">2-BIT</span>
+                    <span class="diff-subtitle">crumb | max: 3</span>
+                </button>               
+
+                <!-- 3-BIT MODE -->
+                <button class="difficulty-btn" data-difficulty="3" data-target="8" data-theme="nes">
+                    <span class="diff-label">3-BIT</span>
+                    <span class="diff-subtitle">tribit | max: 7</span>
+                    <!--<span class="diff-value">Max: 7</span> -->
+                </button>               
+
+                <!-- 4-BIT MODE -->
+                <button class="difficulty-btn" data-difficulty="4" data-target="16" data-theme="snes">
+                    <span class="diff-label">4-BIT</span>
+                    <span class="diff-subtitle">nibble | max: 15</span>
+                    <!--<span class="diff-value">Max: 15</span> -->
+                </button>               
+
+                <!-- 5-BIT MODE  -->
+                <button class="difficulty-btn" data-difficulty="5" data-target="32" data-theme="genesis">
+                    <span class="diff-label">5-BIT</span>
+                    <span class="diff-subtitle">pentad | max: 31</span>
+                    <!--<span class="diff-value">Max: 31</span> -->
+                </button>               
+
+                <!-- 6-BIT MODE - Expert -->
+                <button class="difficulty-btn highlighted" data-difficulty="6" data-target="64" data-theme="arcade">
+                    <span class="diff-label">6-BIT</span>
+                    <span class="diff-subtitle">hexad | max: 63</span>
+                    <!--<span class="diff-value">Max: 63</span> -->
+                </button>               
+
+                <!-- 7-BIT MODE -->
+                <button class="difficulty-btn" data-difficulty="7" data-target="128" data-theme="neogeo">
+                    <span class="diff-label">7-BIT</span>
+                    <span class="diff-subtitle">ascii | max: 127</span>
+                    <!--<span class="diff-value">Max: 127</span> -->
+                </button>               
+
+                <!-- 8-BIT MODE -->
+                <button class="difficulty-btn legendary" data-difficulty="8" data-target="256" data-theme="ps1">
+                    <span class="diff-label">8-BIT</span>
+                    <span class="diff-subtitle">byte  | max: 255</span>
+                    <!--<span class="diff-value">Max: 255</span> -->
+                </button>               
+
+                <!-- GAUNTLET MODE-->
+                <button class="difficulty-btn endless" data-difficulty="endless" data-target="999999" data-theme="matrix">
+                    <span class="diff-label">GAUNTLET</span>
+                    <span class="diff-subtitle">progressive</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="initials-prompt" id="initialsPrompt">
+        <h3>*** NEW HIGH SCORE! ***</h3>
+        <p>enter your initials:</p>
+        <input type="text" id="initialsInput" maxlength="3" placeholder="ABC">
+        <br>
+        <button id="submitInitials">submit</button>
+    </div>
+    
+    <!-- Overflow / new-high / level-up banner. game.js writes all three here. -->
+    <div class="game-notification" id="overflowNotification"></div>
+    
+    <div class="game-over" id="gameOver">
+        <div class="game-over-content">
+            <h2>GAME OVER!</h2>
+            <p>Final Score: <span id="finalScore">0</span></p>
+            <button id="restartGame">play again</button>
+        </div>
+    </div>
+    
+    <div class="scoreboard-modal" id="scoreboardModal">
+        <div class="scoreboard-content">
+            <h3>all-time high scores</h3>
+            <div class="mode-selector-container">
+                <label class="mode-label">SELECT MODE:</label>
+                <div class="custom-dropdown" id="customDropdown">
+                    <div class="dropdown-selected" id="dropdownSelected">
+                        <span class="selected-text">OVERALL (all modes)</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </div>
+                    <div class="dropdown-options" id="dropdownOptions">
+                        <div class="dropdown-option active" data-value="overall">OVERALL (all modes)</div>
+                        <div class="dropdown-option" data-value="2">2-BIT (crumb)</div>
+                        <div class="dropdown-option" data-value="3">3-BIT (tribit)</div>
+                        <div class="dropdown-option" data-value="4">4-BIT (nibble)</div>
+                        <div class="dropdown-option" data-value="5">5-BIT (pentad)</div>
+                        <div class="dropdown-option" data-value="6">6-BIT (hexad)</div>
+                        <div class="dropdown-option" data-value="7">7-BIT (ascii)</div>
+                        <div class="dropdown-option" data-value="8">8-BIT (byte)</div>
+                        <div class="dropdown-option" data-value="endless">GAUNTLET (progressive)</div>
+                    </div>
+                </div>
+            </div>
+            <div class="score-columns" id="scoreColumns"></div>
+            <button id="closeScoreboard">close</button>
+        </div>
+    </div>
+
+    <div class="instructions-modal" id="instructionsModal">
+        <div class="instructions-content" style="max-width: 650px; max-height: 85vh; overflow-y: auto; padding: 35px; padding-right: 20px;">
+            <h3 style="margin-bottom: 25px;">how to play</h3>
+            
+            <div class="info-box" style="background: rgba(138, 43, 226, 0.15); padding: 15px; margin-bottom: 20px; border-left: 4px solid #8a2be2;">
+                <p style="font-size: 11px; line-height: 1.8; margin: 0;">Just as in <em>2048</em>, <strong style="color: #00ffff;">use arrow keys or swipe</strong> to move tiles on a 4 by 4 grid in any direction.</p>
+            </div>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">GOAL: SURVIVE & SCORE!</h4>
+            <p style="font-size: 11px; line-height: 1.9; margin-bottom: 8px;">
+                This is a <strong style="color: #ffff00;">survival game</strong> with no win state!
+            </p>
+            <ul style="font-size: 11px; line-height: 1.9; margin: 8px 0 8px 20px; padding: 0; list-style: none;">
+                <li style="margin-bottom: 6px; color: rgba(255, 255, 255, 0.95);">• collect points through operations</li>
+                <li style="margin-bottom: 6px; color: rgba(255, 255, 255, 0.95);">• survive as long as possible, reach a high score</li>
+                <li style="margin-bottom: 6px; color: rgba(255, 255, 255, 0.95);">• game ends when the board fills with no moves</li>
+            </ul>
+            <p style="font-size: 11px; line-height: 1.9; margin-bottom: 8px;">
+                As a warm up, play <strong style="color: #ffff00;"><em>2048 (actually, 2^N)</em></strong> at magmacrunch.com/arcade!
+            </p>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">BOOLEAN LOGIC RULES</h4>
+            
+            <div class="rule-box" style="background: rgba(255, 255, 0, 0.08); padding: 12px; margin-bottom: 15px; border-left: 3px solid #ffff00;">
+                <p style="margin: 0 0 8px 0; font-size: 11px;"><strong style="color: #ffff00;">same + same = same</strong> <span style="color: #00ff00; opacity: 0.9;">(idempotence)</span></p>
+                <ul style="font-size: 10px; line-height: 1.7; margin: 0; margin-left: 15px; padding: 0; list-style: none; color: rgba(255, 255, 255, 0.95);">
+                    <li style="margin-bottom: 4px;">→ 1 + 1 = 1 <span style="opacity: 0.8;">(consolidates, awards points)</span></li>
+                    <li style="margin-bottom: 4px;">→ 2 + 2 = 2 <span style="opacity: 0.8;">(merges to same, no doubling!)</span></li>
+                    <li style="margin-bottom: 4px;">→ 7 + 7 = 7 <span style="opacity: 0.8;">(Boolean logic: A∨A = A)</span></li>
+                </ul>
+            </div>
+            
+            <div class="rule-box" style="background: rgba(255, 0, 255, 0.08); padding: 12px; margin-bottom: 15px; border-left: 3px solid #ff00ff;">
+                <p style="margin: 0 0 8px 0; font-size: 11px;"><strong style="color: #ff00ff;">different numbers need gates</strong></p>
+                <p style="font-size: 10px; line-height: 1.7; margin: 0; color: rgba(255, 255, 255, 0.95);">
+                    e.g., you <strong>cannot</strong> merge 1 + 2 directly; you must use tiles with <strong>logic gates (⊕ ∨ ∧ ¬)</strong>.
+                </p>
+            </div>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">LOGIC GATES</h4>
+            
+            <div class="gates-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
+                    <div style="font-size: 11px; color: #00ffff; margin-bottom: 4px;"><strong>⊕ XOR</strong></div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">flips bits where different</div>
+                    <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">1⊕2=3, 2⊕3=1</div>
+                </div>
+                <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
+                    <div style="font-size: 11px; color: #00ffff; margin-bottom: 4px;"><strong>∨ OR</strong></div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">effectively combines values</div>
+                    <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">1∨2=3, 4∨3=7</div>
+                </div>
+                <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
+                    <div style="font-size: 11px; color: #00ffff; margin-bottom: 4px;"><strong>∧ AND</strong></div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">keeps shared bits</div>
+                    <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">3∧2=2, 7∧4=4</div>
+                </div>
+                <div class="gate-card" style="background: rgba(255, 215, 0, 0.08); padding: 10px; border: 2px solid rgba(255, 215, 0, 0.5);">
+                    <div style="font-size: 11px; color: #ffd700; margin-bottom: 4px;"><strong>¬ NOT</strong></div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">inverts all bits (acts one number only)</div>
+                    <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">¬1=2 (2-bit), ¬8=7 (4-bit)</div>
+                    <div style="font-size: 9px; color: #ff4444; margin-top: 3px;">¬max = OVERFLOW</div>
+                </div>
+            </div>
+            
+            <div class="info-box" style="background: rgba(138, 43, 226, 0.12); padding: 12px; margin-bottom: 15px; border-left: 3px solid #8a2be2;">
+                <p style="margin: 0 0 6px 0; font-size: 10px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);"><strong style="color: #00ffff;">gate usage:</strong></p>
+                <ul style="font-size: 10px; line-height: 1.7; margin: 0; margin-left: 15px; padding: 0; list-style: none; color: rgba(255, 255, 255, 0.95);">
+                    <li style="margin-bottom: 4px;"><strong style="color: #ffd700;">¬ NOT:</strong> slide into any number! <span style="color: #00ff00;">[¬][num]</span> or <span style="color: #00ff00;">[num][¬]</span></li>
+                    <li style="margin-bottom: 4px;"><strong style="color: #00ffff;">⊕ ∨ ∧:</strong> sandwich between two numbers! <span style="color: #00ff00;">[num][gate][num]</span></li>
+                </ul>
+            </div>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">MAXIMUM VALUES & OVERFLOW</h4>
+            
+            <div style="background: rgba(255, 0, 0, 0.08); padding: 15px; margin-bottom: 15px; border-left: 3px solid #ff4444;">
+                <p style="font-size: 11px; line-height: 1.8; margin-bottom: 10px; color: rgba(255, 255, 255, 0.95);">
+                    The N-bit mode has a <strong style="color: #ff00ff;">maximum value</strong> (2^N - 1):
+                </p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 10px; line-height: 1.6; margin-bottom: 12px; color: rgba(255, 255, 255, 0.95);">
+                    <div><strong style="color: #00ffff;">2-bit:</strong> max 3</div>
+                    <div><strong style="color: #00ffff;">3-bit:</strong> max 7</div>
+                    <div><strong style="color: #00ffff;">4-bit:</strong> max 15</div>
+                    <div><strong style="color: #00ffff;">5-bit:</strong> max 31</div>
+                    <div><strong style="color: #00ffff;">6-bit:</strong> max 63</div>
+                    <div><strong style="color: #00ffff;">7-bit:</strong> max 127</div>
+                    <div><strong style="color: #00ffff;">8-bit:</strong> max 255</div>
+                    <div><strong style="color: #00ffff;">GAUNTLET:</strong> progressive</div>
+                </div>
+                <div style="background: rgba(255, 100, 100, 0.15); padding: 10px; border: 2px dashed #ff4444; margin-top: 10px;">
+                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #ff4444;"><strong>EXCEEDING MAX = OVERFLOW BONUS!</strong></p>
+                    <p style="margin: 0; font-size: 10px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);">
+                        • operations that exceed the maximum are awarded a <strong style="color: #ffff00;">3× max value bonus</strong><br>
+                        • the resulting tile disappears (clears space)<br>
+                        • OVERFLOW mainly happens when <strong style="color: #ffd700;">¬ NOT is applied to the max value</strong><br>
+                        • e.g., in 2-bit: ¬3 → <strong style="color: #00ff00;">overflow! +9 pts</strong><br>
+                        • e.g., in 4-bit: ¬15 → <strong style="color: #00ff00;">overflow! +45 pts</strong>
+                    </p>
+                </div>
+            </div>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">GAUNTLET MODE: PROGRESSIVE CHALLENGE</h4>
+            
+            <div style="background: rgba(138, 43, 226, 0.15); padding: 15px; margin-bottom: 15px; border-left: 3px solid #8a2be2;">
+                <p style="font-size: 11px; line-height: 1.8; margin-bottom: 10px; color: rgba(255, 255, 255, 0.95);">
+                    This is the <strong style="color: #ff00ff;">ultimate survival mode</strong> with escalating difficulty!
+                </p>
+                
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; margin: 10px 0; border: 2px solid rgba(138, 43, 226, 0.4);">
+                    <p style="margin: 0 0 8px 0; font-size: 10px; color: #00ffff;"><strong>how it works:</strong></p>
+                    <ul style="font-size: 10px; line-height: 1.8; margin: 0; margin-left: 15px; padding: 0; list-style: none; color: rgba(255, 255, 255, 0.95);">
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">START:</strong> begin at 2-BIT mode (max value: 3)</li>
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">GOAL:</strong> merge tiles to create the max value</li>
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">UPGRADE:</strong> creating max → automatic upgrade</li>
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">PROGRESS:</strong> 2→3→4→5→6→7→8 BIT challenges</li>
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">DISPLAY:</strong> message reminder is at the top</li>
+                        <li style="margin-bottom: 5px;">• <strong style="color: #ffff00;">SURVIVE:</strong> final challenge is 8-BIT!</li>
+                    </ul>
+                </div>
+                
+                <div style="background: rgba(0, 255, 0, 0.08); padding: 10px; margin-top: 10px; border-left: 3px solid #00ff00;">
+                    <p style="margin: 0 0 6px 0; font-size: 10px; color: #00ff00;"><strong>example progression:</strong></p>
+                    <p style="margin: 0; font-size: 9px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);">
+                        Start: 2-BIT, max = 3<br>
+                        Merge: 1 OR 2 to get 3<br>
+                        <strong style="color: #ff00ff;">UPGRADE!</strong> now 3-BIT, max = 7<br>
+                        Merge tiles in another way to create 7<br>
+                        <strong style="color: #ff00ff;">UPGRADE!</strong> now 4-BIT, max = 15<br>
+                        ...and so on through 8-BIT!
+                    </p>
+                </div>
+            
+            </div>
+            
+            <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
+            
+            <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">SCORING</h4>
+            
+            <ul style="font-size: 11px; line-height: 1.9; margin: 8px 0 8px 20px; padding: 0; list-style: none;">
+                <li style="margin-bottom: 8px; color: rgba(255, 255, 255, 0.95);"><strong style="color: #00ffff;">operations:</strong> points = result value</li>
+                <li style="margin-bottom: 8px; color: rgba(255, 255, 255, 0.95);"><strong style="color: #00ffff;">height bonuses:</strong> first time reaching certain values (2× value)</li>
+                <li style="margin-bottom: 8px; color: rgba(255, 255, 255, 0.95);"><strong style="color: #00ffff;">overflow bonuses:</strong> 3× max value when you overflow</li>
+            </ul>
+            
+            <div class="example-box" style="background: rgba(0, 255, 0, 0.08); padding: 10px; margin-top: 12px; border-left: 3px solid #00ff00;">
+                <p style="margin: 0; font-size: 10px; line-height: 1.7; color: #00ff00;">
+                    <strong>example (4-bit):</strong> first time reaching 15 → +15 pts + 30 bonus = <strong>45 pts total!</strong>
+                </p>
+            </div>
+            
+            <div class="quote-box" style="background: rgba(26, 26, 46, 0.3); padding: 15px; margin-top: 20px; border: 2px solid rgba(138, 43, 226, 0.3); text-align: center;">
+                <p style="margin: 0 0 10px 0; font-size: 9px; line-height: 1.7; color: #00ff00; text-shadow: 1px 1px 0px #006600;">
+                    "No general method for the solution of<br>questions in the theory of probabilities<br>can be established."
+                </p>
+                <p style="margin: 0; font-size: 8px; color: #00ffff; text-shadow: 1px 1px 0px #006699;">
+                    — George Boole, 1854
+                </p>
+            </div>
+            
+            <div class="modal-btn-row" style="margin-top: 25px; display: flex; gap: 10px;">
+                <button id="closeInstructions">close</button>
+                <button id="instructionsToSettings">settings</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <h3>settings</h3>
+            
+            <div class="settings-section">
+                <h4>audio controls</h4>
+                <div class="toggle-group">
+                    <div class="toggle-item">
+                        <span class="toggle-label">background music</span>
+                        <button class="toggle-button active" id="musicToggle">
+                            <span class="toggle-status">ON</span>
+                        </button>
+                    </div>
+                    <div class="toggle-item">
+                        <span class="toggle-label">sound effects</span>
+                        <button class="toggle-button active" id="sfxToggle">
+                            <span class="toggle-status">ON</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4>display options</h4>
+                <div class="toggle-group">
+                    <div class="toggle-item">
+                        <span class="toggle-label">binary display</span>
+                        <button class="toggle-button active" id="binaryToggle">
+                            <span class="toggle-status">ON</span>
+                        </button>
+                    </div>
+                    <div class="toggle-item">
+                        <span class="toggle-label">performance mode</span>
+                        <button class="toggle-button" id="performanceToggle">
+                            <span class="toggle-status">OFF</span>
+                        </button>
+                    </div>
+                </div>
+                <p style="font-size: 8px; color: rgba(255, 255, 255, 0.6); margin-top: 10px; line-height: 1.4;">Performance mode disables visual effects to reduce CPU usage and heat.</p>
+            </div>
+            
+            <div class="settings-section">
+                <h4>information</h4>
+                <div class="settings-links">
+                    <button class="settings-link" id="settingsHowToPlay">how to play</button>
+                    <button class="settings-link" id="settingsCredits">credits</button>
+                </div>
+            </div>
+            
+            <button id="closeSettings">close</button>
+        </div>
+    </div>
+
+    <div class="credits-modal" id="creditsModal">
+        <div class="credits-content">
+            <h3>credits</h3>
+            
+            <p><strong>game design & development:</strong><br>Jake A. McCoy</p>
+            
+            <p><strong>music:</strong><br>"George Boole has entered the chat" by Juanito Thompson</p>
+            
+            <p><strong>original concept:</strong><br>This game is inspired by Gabriele Cirulli's <em>2048</em> (2014), reimagined with Boolean logic and bitwise operations instead of simple addition.</p>
+            
+            <p><strong>technology & resources:</strong><br>
+            • HTML5 (Canvas API & DOM), CSS3, and pure vanilla JavaScript<br>
+            • Web Audio API (background music &amp; SFX)<br>
+            • MOOG <em>GRANDMOTHER</em> synth (sound effects)<br>
+            • Press Start 2P font by CodeMan38 (Google Fonts)<br>
+            • <a href="https://github.com/magmacrunchmedia/adenosine" style="color:#8a2be2">adenosine</a> puzzle framework &amp; score client</p>
+            
+            <p><strong>publisher:</strong><br>magmacrunch media</p>
+            
+            <p><strong>named in honor of:</strong><br>George Boole (1815-1864), mathematician & father of Boolean logic</p>
+            
+            <p><strong>cheapness impact factor:</strong><br>2.4</p>
+
+            <p><strong>last updated:</strong><br>July 14, 2026</p>
+            
+            <div class="modal-btn-row" style="margin-top: 25px; display: flex; gap: 10px;">
+                <button id="closeCredits">close</button>
+                <button id="creditsToSettings">settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript files -->
+<script src="../shared/adenosine-score-client.js?v=55cabd6d"></script>
+<script src="../shared/score-server.js?v=9acd988c"></script>
+<script>const scoreClient = new AdScore.ScoreClient().auto(MC_SCORE_OPTS);</script>
+<script src="../shared/adenosine-audio.js?v=a750a5d1"></script>
+<script src="../shared/adenosine-puzzle.js?v=6c0cfe5d"></script>
+    <script src="js/config.js?v=fdc4d4d3"></script>
+    <script src="js/scoring.js?v=36b0bed2"></script>
+    <script src="js/game.js?v=a040fdb1"></script>
+    <script src="js/main.js?v=8c388c2c"></script>
+
+<link rel="stylesheet" href="../shared/chat-widget.css?v=4fb80289">
+<script src="../shared/adenosine-chat.js?v=7b669821"></script>
+<script src="../shared/chat-server.js?v=2efa8028"></script>
+<script>const { ChatWidget } = AdChat;</script>
+<script>ChatWidget.connect(MC_CHAT_OPTS);</script>
+
+</body>
+</html>

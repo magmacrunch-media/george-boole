@@ -1,0 +1,445 @@
+/* =============================================
+   SIDE PANELS — WIDESCREEN LAYOUT
+   Logic gate reference (left) + quick rules (right)
+   Hidden on mobile/tablet, shown on desktop (≥960px)
+   ============================================= */
+
+.game-layout {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* On narrow screens (no side panels), center the game vertically */
+@media (max-width: 959px) {
+    .game-layout {
+        justify-content: center;
+        align-items: center;
+    }
+
+    body {
+        align-items: center;
+    }
+}
+
+.left-panel {
+    margin-top: 36px;
+}
+
+.side-panel {
+    display: none;
+    width: 220px;
+    flex-shrink: 0;
+    font-family: 'Press Start 2P', cursive;
+}
+
+.side-panel-inner {
+    background: linear-gradient(135deg, #2d2d44 0%, #1a1a2e 100%);
+    border: 3px solid #8a2be2;
+    box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+    padding: 16px;
+}
+
+.side-panel-title {
+    color: #00ffff;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 0px #0066cc, 0 0 10px rgba(0, 255, 255, 0.6);
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.5);
+}
+
+/* ---- GATE REFERENCE CARDS ---- */
+.gate-ref {
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    transition: border-color 0.2s;
+}
+
+.gate-ref:hover {
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.gate-ref-symbol {
+    font-size: 28px;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.gate-ref-name {
+    font-size: 8px;
+    color: #ff00ff;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-shadow: 1px 1px 0px #990099;
+}
+
+.gate-ref-desc {
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+    margin-bottom: 6px;
+}
+
+.gate-ref-example {
+    font-size: 7px;
+    color: #00ff00;
+    line-height: 1.5;
+    text-shadow: 1px 1px 0px #006600;
+}
+
+.gate-ref-usage {
+    font-size: 6px;
+    color: rgba(0, 255, 255, 0.7);
+    margin-top: 4px;
+    line-height: 1.5;
+}
+
+/* Per-gate accent borders */
+.gate-ref[data-gate="xor"] {
+    border-color: rgba(0, 255, 255, 0.3);
+}
+.gate-ref[data-gate="xor"] .gate-ref-symbol {
+    color: #00ffff;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+.gate-ref[data-gate="xor"]:hover {
+    border-color: rgba(0, 255, 255, 0.6);
+}
+
+.gate-ref[data-gate="or"] {
+    border-color: rgba(255, 255, 0, 0.3);
+}
+.gate-ref[data-gate="or"] .gate-ref-symbol {
+    color: #ffe03a;
+    text-shadow: 0 0 8px rgba(255, 224, 58, 0.5);
+}
+.gate-ref[data-gate="or"]:hover {
+    border-color: rgba(255, 255, 0, 0.6);
+}
+
+.gate-ref[data-gate="and"] {
+    border-color: rgba(57, 255, 110, 0.3);
+}
+.gate-ref[data-gate="and"] .gate-ref-symbol {
+    color: #39ff6e;
+    text-shadow: 0 0 8px rgba(57, 255, 110, 0.5);
+}
+.gate-ref[data-gate="and"]:hover {
+    border-color: rgba(57, 255, 110, 0.6);
+}
+
+.gate-ref[data-gate="not"] {
+    border-color: rgba(255, 215, 0, 0.3);
+}
+.gate-ref[data-gate="not"] .gate-ref-symbol {
+    color: #ffd700;
+    text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+}
+.gate-ref[data-gate="not"]:hover {
+    border-color: rgba(255, 215, 0, 0.6);
+}
+
+/* Idempotence note */
+.gate-ref-note {
+    margin-bottom: 12px;
+    padding: 8px;
+    background: rgba(255, 255, 0, 0.08);
+    border-left: 3px solid #ffe03a;
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+}
+
+.gate-ref-note strong {
+    color: #ffe03a;
+}
+
+/* ---- RULES PANEL ---- */
+.rule-section {
+    margin-bottom: 12px;
+}
+
+.rule-section-gauntlet {
+    display: none;
+}
+
+body.game-active-gauntlet .rule-section-gauntlet {
+    display: block;
+    padding: 8px;
+    background: rgba(138, 43, 226, 0.15);
+    border: 2px solid rgba(255, 0, 255, 0.5);
+    margin-top: 12px;
+    animation: gauntlet-pulse 2s ease-in-out infinite;
+}
+
+@keyframes gauntlet-pulse {
+    0%, 100% { border-color: rgba(255, 0, 255, 0.5); }
+    50% { border-color: rgba(255, 0, 255, 0.9); }
+}
+
+body[data-theme="gameboy"].game-active-gauntlet .rule-section-gauntlet { background: rgba(155, 188, 15, 0.12); border-color: rgba(155, 188, 15, 0.5); animation-name: gauntlet-pulse-gameboy; }
+@keyframes gauntlet-pulse-gameboy { 0%, 100% { border-color: rgba(155, 188, 15, 0.5); } 50% { border-color: rgba(155, 188, 15, 0.9); } }
+body[data-theme="gameboy"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #9bbc0f; }
+
+body[data-theme="nes"].game-active-gauntlet .rule-section-gauntlet { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.5); animation-name: gauntlet-pulse-nes; }
+@keyframes gauntlet-pulse-nes { 0%, 100% { border-color: rgba(255, 215, 0, 0.5); } 50% { border-color: rgba(255, 215, 0, 0.9); } }
+body[data-theme="nes"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #ffd700; }
+
+body[data-theme="snes"].game-active-gauntlet .rule-section-gauntlet { background: rgba(138, 43, 226, 0.15); animation-name: gauntlet-pulse; }
+body[data-theme="snes"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #ff00ff; }
+
+body[data-theme="genesis"].game-active-gauntlet .rule-section-gauntlet { background: rgba(255, 215, 0, 0.1); border-color: rgba(65, 105, 225, 0.5); animation-name: gauntlet-pulse-genesis; }
+@keyframes gauntlet-pulse-genesis { 0%, 100% { border-color: rgba(65, 105, 225, 0.5); } 50% { border-color: rgba(65, 105, 225, 0.9); } }
+body[data-theme="genesis"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #ffd700; }
+
+body[data-theme="arcade"].game-active-gauntlet .rule-section-gauntlet { background: rgba(255, 165, 0, 0.1); border-color: rgba(255, 165, 0, 0.5); animation-name: gauntlet-pulse-arcade; }
+@keyframes gauntlet-pulse-arcade { 0%, 100% { border-color: rgba(255, 165, 0, 0.5); } 50% { border-color: rgba(255, 165, 0, 0.9); } }
+body[data-theme="arcade"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #ffa500; }
+
+body[data-theme="neogeo"].game-active-gauntlet .rule-section-gauntlet { background: rgba(0, 255, 255, 0.1); border-color: rgba(255, 20, 147, 0.5); animation-name: gauntlet-pulse-neogeo; }
+@keyframes gauntlet-pulse-neogeo { 0%, 100% { border-color: rgba(0, 255, 255, 0.5); } 50% { border-color: rgba(0, 255, 255, 0.9); } }
+body[data-theme="neogeo"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #00ffff; }
+
+body[data-theme="ps1"].game-active-gauntlet .rule-section-gauntlet { background: rgba(255, 215, 0, 0.1); border-color: rgba(255, 215, 0, 0.5); animation-name: gauntlet-pulse-ps1; }
+@keyframes gauntlet-pulse-ps1 { 0%, 100% { border-color: rgba(255, 215, 0, 0.5); } 50% { border-color: rgba(255, 215, 0, 0.9); } }
+body[data-theme="ps1"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #ffd700; }
+
+body[data-theme="matrix"].game-active-gauntlet .rule-section-gauntlet { background: rgba(0, 255, 0, 0.1); border-color: rgba(0, 255, 0, 0.5); animation-name: gauntlet-pulse-matrix; }
+@keyframes gauntlet-pulse-matrix { 0%, 100% { border-color: rgba(0, 255, 0, 0.5); } 50% { border-color: rgba(0, 255, 0, 0.9); } }
+body[data-theme="matrix"].game-active-gauntlet .rule-section-gauntlet .rule-section-title { color: #00ff00; }
+
+.rule-section-title {
+    font-size: 8px;
+    color: #ffff00;
+    letter-spacing: 1px;
+    text-shadow: 1px 1px 0px #999900;
+    margin-bottom: 6px;
+}
+
+.rule-item {
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.7;
+    padding-left: 10px;
+    position: relative;
+    margin-bottom: 4px;
+}
+
+.rule-item::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    color: #ff00ff;
+}
+
+.rule-highlight {
+    color: #00ffff;
+}
+
+.rule-warn {
+    color: #ff3d6e;
+}
+
+.rule-bonus {
+    color: #39ff6e;
+}
+
+.overflow-box {
+    padding: 8px;
+    background: rgba(255, 60, 60, 0.08);
+    border: 2px dashed rgba(255, 60, 60, 0.4);
+    margin-top: 8px;
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+}
+
+.overflow-box-title {
+    color: #ff3d6e;
+    font-size: 7px;
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.scoring-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.7;
+    padding: 2px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.scoring-row:last-child {
+    border-bottom: none;
+}
+
+.scoring-label {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.scoring-value {
+    color: #ffff00;
+    text-shadow: 1px 1px 0px #999900;
+}
+
+.full-rules-link {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 2px solid rgba(138, 43, 226, 0.5);
+    font-size: 7px;
+    color: rgba(0, 255, 255, 0.7);
+    text-align: center;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color 0.2s, text-shadow 0.2s;
+}
+
+.full-rules-link:hover {
+    color: #00ffff;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+/* ---- Mobile/Tablet: hide panels, center game ---- */
+@media (max-width: 959px) {
+    .side-panel {
+        display: none !important;
+    }
+}
+
+/* ---- WIDESCREEN BREAKPOINT ---- */
+@media (min-width: 960px) {
+    .side-panel {
+        display: block;
+    }
+
+    .game-layout .container {
+        max-width: 600px;
+        flex-shrink: 0;
+    }
+}
+
+@media (min-width: 1100px) {
+    .side-panel {
+        width: 250px;
+    }
+}
+
+@media (min-width: 1300px) {
+    .side-panel {
+        width: 270px;
+    }
+    .game-layout {
+        gap: 32px;
+    }
+}
+
+/* ---- THEME OVERRIDE SUPPORT ---- */
+/* Side panels pick up theme colors on body[data-theme] */
+
+body[data-theme="gameboy"] .side-panel-inner {
+    background: linear-gradient(135deg, #0f380f 0%, #306230 100%);
+    border-color: #9bbc0f;
+    box-shadow: 0 0 15px rgba(155, 188, 15, 0.4);
+}
+body[data-theme="gameboy"] .side-panel-title {
+    color: #9bbc0f;
+    text-shadow: 2px 2px 0px #0f380f, 0 0 10px rgba(155, 188, 15, 0.6);
+}
+body[data-theme="gameboy"] .gate-ref-name { color: #9bbc0f; text-shadow: none; }
+body[data-theme="gameboy"] .gate-ref[data-gate="xor"] { border-color: rgba(74, 122, 106, 0.6); }
+body[data-theme="gameboy"] .gate-ref[data-gate="or"]  { border-color: rgba(160, 144, 80, 0.6); }
+body[data-theme="gameboy"] .gate-ref[data-gate="and"] { border-color: rgba(58, 74, 106, 0.6); }
+body[data-theme="gameboy"] .gate-ref[data-gate="not"] { border-color: rgba(155, 188, 15, 0.4); }
+body[data-theme="gameboy"] .gate-ref[data-gate="not"] .gate-ref-symbol { color: #9bbc0f; }
+body[data-theme="gameboy"] .gate-ref-note { border-left-color: #9bbc0f; background: rgba(155, 188, 15, 0.1); }
+body[data-theme="gameboy"] .gate-ref-note strong { color: #9bbc0f; }
+body[data-theme="gameboy"] .full-rules-link { color: rgba(155, 188, 15, 0.7); border-top-color: rgba(155, 188, 15, 0.4); }
+body[data-theme="gameboy"] .full-rules-link:hover { color: #9bbc0f; text-shadow: 0 0 8px rgba(155, 188, 15, 0.5); }
+
+body[data-theme="nes"] .side-panel-inner {
+    background: linear-gradient(135deg, #1a1a3a 0%, #2a2a4a 100%);
+    border-color: #ff6347;
+    box-shadow: 0 0 15px rgba(255, 99, 71, 0.4);
+}
+body[data-theme="nes"] .side-panel-title {
+    color: #ff6347;
+    text-shadow: 2px 2px 0px #8b0000, 0 0 10px rgba(255, 99, 71, 0.6);
+}
+body[data-theme="nes"] .full-rules-link { color: rgba(255, 215, 0, 0.7); border-top-color: rgba(255, 99, 71, 0.4); }
+body[data-theme="nes"] .full-rules-link:hover { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+
+body[data-theme="genesis"] .side-panel-inner {
+    background: linear-gradient(135deg, #003366 0%, #001a33 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+body[data-theme="genesis"] .side-panel-title {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #8b6914, 0 0 10px rgba(255, 215, 0, 0.6);
+}
+body[data-theme="genesis"] .full-rules-link { color: rgba(65, 105, 225, 0.7); border-top-color: rgba(255, 215, 0, 0.4); }
+body[data-theme="genesis"] .full-rules-link:hover { color: #4169e1; text-shadow: 0 0 8px rgba(65, 105, 225, 0.5); }
+
+body[data-theme="arcade"] .side-panel-inner {
+    background: linear-gradient(135deg, #2d1000 0%, #1a0800 100%);
+    border-color: #ffa500;
+    box-shadow: 0 0 15px rgba(255, 165, 0, 0.4);
+}
+body[data-theme="arcade"] .side-panel-title {
+    color: #ffa500;
+    text-shadow: 2px 2px 0px #7a3000, 0 0 10px rgba(255, 165, 0, 0.6);
+}
+body[data-theme="arcade"] .full-rules-link { color: rgba(255, 165, 0, 0.7); border-top-color: rgba(255, 165, 0, 0.4); }
+body[data-theme="arcade"] .full-rules-link:hover { color: #ffa500; text-shadow: 0 0 8px rgba(255, 165, 0, 0.5); }
+
+body[data-theme="neogeo"] .side-panel-inner {
+    background: linear-gradient(135deg, #4b0082 0%, #9400d3 100%);
+    border-color: #00ffff;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.4);
+}
+body[data-theme="neogeo"] .side-panel-title {
+    color: #00ffff;
+    text-shadow: 2px 2px 0px #ff1493, 0 0 30px rgba(0, 255, 255, 1);
+}
+body[data-theme="neogeo"] .full-rules-link { color: rgba(0, 255, 255, 0.7); border-top-color: rgba(255, 20, 147, 0.4); }
+body[data-theme="neogeo"] .full-rules-link:hover { color: #00ffff; text-shadow: 0 0 8px rgba(0, 255, 255, 0.5); }
+
+body[data-theme="ps1"] .side-panel-inner {
+    background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+    border-color: #ffd700;
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+}
+body[data-theme="ps1"] .side-panel-title {
+    color: #ffd700;
+    text-shadow: 2px 2px 0px #8b6914, 0 0 30px rgba(255, 215, 0, 1);
+}
+body[data-theme="ps1"] .full-rules-link { color: rgba(255, 215, 0, 0.7); border-top-color: rgba(255, 215, 0, 0.4); }
+body[data-theme="ps1"] .full-rules-link:hover { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.5); }
+
+body[data-theme="matrix"] .side-panel-inner {
+    background: linear-gradient(135deg, #001a00 0%, #000000 100%);
+    border-color: #00ff00;
+    box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
+}
+body[data-theme="matrix"] .side-panel-title {
+    color: #00ff00;
+    text-shadow: 2px 2px 0px #003300, 0 0 30px rgba(0, 255, 0, 1);
+}
+body[data-theme="matrix"] .gate-ref-name { color: #00ff00; }
+body[data-theme="matrix"] .gate-ref-note { border-left-color: #00ff00; background: rgba(0, 255, 0, 0.08); }
+body[data-theme="matrix"] .gate-ref-note strong { color: #00ff00; }
+body[data-theme="matrix"] .full-rules-link { color: rgba(0, 255, 0, 0.6); border-top-color: rgba(0, 255, 0, 0.4); }
+body[data-theme="matrix"] .full-rules-link:hover { color: #00ff00; text-shadow: 0 0 8px rgba(0, 255, 0, 0.5); }

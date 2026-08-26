@@ -17,9 +17,9 @@ endif
 #---------------------------------------------------------------------------------
 TARGET      := george-boole
 BUILD       := build
-SOURCES     := source ../magnolia/source ../magnolia/font
+SOURCES     := source ../../magnolia/source ../../magnolia/font
 DATA        :=
-INCLUDES    := ../magnolia ../magnolia/source ../magnolia/font source
+INCLUDES    := ../../magnolia ../../magnolia/source ../../magnolia/font source
 
 CFLAGS      = -g -O2 -Wall $(MACHDEP) $(INCLUDE)
 CXXFLAGS    = $(CFLAGS)
