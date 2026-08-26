@@ -124,4 +124,5 @@ Commercial use is reserved.
 The audio, the game's name and the visual design are © 2026 magmacrunch media,
 all rights reserved, and are **not** covered by that licence. They are in the
 repository because the game is built from them, not because they are on offer.
-See [NOTICE](../NOTICE) for the exact boundary and the third-party components.
+The music is by Juanito Thompson, a magmacrunch media record label release. See
+[NOTICE](../NOTICE) for the exact boundary and the third-party components.
