@@ -1,4 +1,4 @@
-# george-boole
+# George Boole Has Entered The Chat — Wii port
 
 A Wii homebrew game built on [magnolia](../../magnolia). The browser version
 it was ported from lives beside this folder at [`../web/`](../web/).

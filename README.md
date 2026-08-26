@@ -1,4 +1,4 @@
-# George Boole
+# George Boole Has Entered The Chat
 
 Logic-gate puzzle game. One repo, every version of the game.
 
