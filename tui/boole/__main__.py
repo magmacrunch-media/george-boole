@@ -13,10 +13,10 @@ def main() -> None:
         description="George Boole Has Entered The Chat - terminal version.",
     )
     parser.add_argument(
-        "-m", "--mode", default="nibble",
+        "-m", "--mode", default=None,
         choices=[mode.key for mode in modes.MODES],
-        help="difficulty; each is a bit width, gauntlet climbs from 2-bit "
-             "(default: %(default)s)",
+        help="skip the menu and start this mode; each is a bit width, and "
+             "gauntlet climbs from 2-bit. Omit to choose from the title screen.",
     )
     parser.add_argument(
         "--seed", type=int, default=None,
@@ -28,7 +28,9 @@ def main() -> None:
     # or its terminal extra installed.
     from boole.app import run
 
-    run(args.mode, args.seed)
+    # Naming a mode is an instruction to play it, so the menu would be in the
+    # way. Esc still reaches it.
+    run(args.mode or "nibble", args.seed, skip_menu=args.mode is not None)
 
 
 if __name__ == "__main__":
