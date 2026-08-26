@@ -116,8 +116,10 @@ will read the previous run's log and debug a binary that is not running.
 
 ## License
 
-Code under the [Apache License 2.0](../LICENSE) — the board and gate rules, the
-tile animation, and the host tests are all reusable, and worth reusing.
+Under the [PolyForm Noncommercial License 1.0.0](../LICENSE), like the rest of
+the repository — the board and gate rules, the tile animation, and the host
+tests are all there to read and build on for any noncommercial purpose.
+Commercial use is reserved.
 
 The audio, the game's name and the visual design are © 2026 magmacrunch media,
 all rights reserved, and are **not** covered by that licence. They are in the
