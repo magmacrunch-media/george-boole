@@ -6,8 +6,13 @@ AsciiPatrol, Cataclysm:DDA and the rest of the command-line-only canon.
 
 ```
 pip install -e .
-python -m boole
+python -m boole          # or the installed `george-boole` command
 ```
+
+Published as **`magmacrunch-george-boole`** — prefixed because PyPI has no
+scoping like the npm `@magmacrunch/…` packages, and unprefixed names get
+taken (`adenosine` and `magnolia` both already belong to someone else there).
+The import package stays plain `boole`.
 
 That opens the title screen, where you pick one of the eight modes. Naming a
 mode is an instruction to play it, so `--mode` skips straight into a game:
