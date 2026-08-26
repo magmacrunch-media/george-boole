@@ -10,7 +10,7 @@ from boole import modes
 def main() -> None:
     parser = argparse.ArgumentParser(
         prog="boole",
-        description="George Boole Has Entered The Chat — terminal version.",
+        description="George Boole Has Entered The Chat - terminal version.",
     )
     parser.add_argument(
         "-m", "--mode", default="nibble",
