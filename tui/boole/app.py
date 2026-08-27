@@ -1,91 +1,102 @@
-"""Wiring — the game, the renderer, and the scene stack.
+"""Wiring — what outlives a single run, and how the screens reach it.
 
 Everything that draws lives in :mod:`boole.scenes`; everything that decides
-lives in :mod:`boole.board`. This module holds them together and owns the
-state that outlives a single run: which mode is selected, and the best score
-in each.
+lives in :mod:`boole.board`. This holds them together.
+
+**The terminal is not owned here.** It belongs to a
+:class:`~texastoast.core.tui_host.TuiHost`, which this is handed. That is what
+lets the game run as its own command *and* be seated by a launcher without
+knowing which happened: building the terminal, holding the scene stack and
+routing keys is identical either way, so the engine does it and the game does
+not have a second copy.
+
+What is left here is genuinely this game's: which mode is selected, and the
+best score in each.
 """
 
 from __future__ import annotations
 
-from texastoast.core.tui_game import TuiGame, TuiInput
-from texastoast.scene import SceneStack
+from typing import Any
 
 from boole import modes
 from boole.scenes import GameScene, MenuScene
 
-FPS = 20
-
 
 class BooleApp:
-    """Owns the terminal game and the screen stack."""
+    """A session of George Boole, drawing on somebody else's terminal."""
 
-    def __init__(self, mode_key: str = "nibble", seed: int | None = None,
-                 skip_menu: bool = False):
+    def __init__(self, host: Any, mode_key: str = "nibble",
+                 seed: int | None = None):
+        self.host = host
         self.seed = seed
         self.mode = modes.MODES_BY_KEY.get(mode_key, modes.MODES_BY_KEY["nibble"])
-        #: Best score per mode key, for the life of this process.
+        #: Best score per mode key, for as long as this session lasts.
         self.best: dict[str, int] = {}
 
-        # hold_ms=0 gives edge semantics — one keystroke, one move. A decay
-        # timer here would turn a single arrow press into a slide across the
-        # board, because a terminal reports repeats but never releases.
-        self.game = TuiGame(title="George Boole Has Entered The Chat",
-                            fps=FPS, input_source=TuiInput(hold_ms=0))
-        self.renderer = self.game.renderer
+        #: The mode menu. The caller pushes it — a game that pushed its own
+        #: scene would take that decision away from whatever is seating it.
+        self.root_scene = MenuScene(self)
 
-        self.stack = SceneStack()
-        self.game.set_update(self.update)
-        self.game.set_render(self.stack.render)
+    # ── What the scenes reach for ───────────────────────────────────
 
-        # The menu is always the bottom of the stack, so Esc from a game has
-        # somewhere to land and no scene needs an "in menu" flag.
-        self.stack.push(MenuScene(self))
-        if skip_menu:
-            self.stack.push(GameScene(self, self.mode))
+    @property
+    def renderer(self):
+        return self.host.renderer
 
-    # ── Scene transitions ───────────────────────────────────────────
+    @property
+    def game(self):
+        """The terminal app.
+
+        Named ``game`` because that is what the scenes called it when this
+        class owned one. It is the host's now.
+        """
+        return self.host
 
     def start_mode(self, mode: modes.Mode) -> None:
-        """Begin a run. Pushed over the menu, which waits underneath."""
+        """Begin a run, over the menu, which waits underneath."""
         self.mode = mode
-        self.stack.push(GameScene(self, mode))
+        self.host.push_scene(GameScene(self, mode))
 
     def to_menu(self) -> None:
-        """Leave the current run. The menu is already there, under it."""
-        if len(self.stack) > 1:
-            self.stack.pop()
+        """Leave the current run for the mode menu underneath it."""
+        self.host.pop_scene()
+
+    def leave(self) -> None:
+        """Leave the game entirely.
+
+        Popping the mode menu. Run on its own that is the last scene and the
+        session ends; seated by a launcher the arcade menu is underneath and
+        this returns to it. The game does not need to know which — see
+        ``TuiHost.pop_scene``.
+        """
+        self.host.pop_scene()
 
     def record_best(self, mode: modes.Mode, score: int) -> None:
         if score > self.best.get(mode.key, 0):
             self.best[mode.key] = score
 
-    # ── Frame ───────────────────────────────────────────────────────
-
-    def update(self, dt: float) -> None:
-        """Route keys to the top scene, then run the stack's own update.
-
-        Keys are drained here rather than bound individually because a terminal
-        delivers them as a stream and the stack decides who gets them:
-        ``dispatch_key`` reaches the top scene only, which is the same modality
-        rule that governs updates.
-        """
-        for key in self.game.input.drain():
-            self.stack.dispatch_key(key)
-        self.stack.update(dt)
-
-    # ── Introspection, for tests and callers ────────────────────────
+    # ── Introspection, for tests ────────────────────────────────────
 
     @property
     def scene(self):
-        """The scene currently on top."""
-        return self.stack.top
+        return self.host.scene
 
     @property
     def in_game(self) -> bool:
-        return isinstance(self.stack.top, GameScene)
+        return isinstance(self.host.scene, GameScene)
 
 
 def run(mode_key: str = "nibble", seed: int | None = None,
         skip_menu: bool = False) -> None:
-    BooleApp(mode_key, seed, skip_menu).game.start()
+    """Play George Boole as its own command."""
+    from texastoast.core.tui_host import TuiHost
+
+    from boole.arcade import GAME
+
+    host = TuiHost(title=GAME.info.title, fps=GAME.info.fps,
+                   hold_ms=GAME.info.hold_ms)
+    app = BooleApp(host, mode_key, seed)
+    host.push_scene(app.root_scene)
+    if skip_menu:
+        host.push_scene(GameScene(app, app.mode))
+    host.run()

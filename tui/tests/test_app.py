@@ -16,8 +16,11 @@ import pytest
 
 pytest.importorskip("textual", reason='needs: pip install -e ".[dev]" with texastoast[tui]')
 
+from texastoast.core.tui_host import TuiHost  # noqa: E402
+
 from boole import modes, theme  # noqa: E402
 from boole.app import BooleApp  # noqa: E402
+from boole.arcade import GAME  # noqa: E402
 from boole.board import (  # noqa: E402
     GATE_NOT,
     GATE_OR,
@@ -29,7 +32,17 @@ from boole.scenes import GameScene, MenuScene  # noqa: E402
 
 
 def buffer_text(app: BooleApp) -> str:
-    return app.game.surface.buffer.to_text()
+    return app.host.game.surface.buffer.to_text()
+
+
+class _Blank:
+    """Stands in for whatever a launcher would have underneath a game."""
+
+    def update(self, dt):
+        pass
+
+    def render(self):
+        pass
 
 
 def blank_board(scene: GameScene) -> None:
@@ -38,20 +51,31 @@ def blank_board(scene: GameScene) -> None:
 
 def settle(app: BooleApp) -> None:
     """Apply the stack's pending push/pop, which the engine defers a frame."""
-    app.stack.update(0.0)
+    app.host.stack.update(0.0)
+
+
+def hosted(mode_key="nibble", seed=5) -> BooleApp:
+    """A session on a real host, built the way the standalone command does."""
+    host = TuiHost(title=GAME.info.title, fps=GAME.info.fps,
+                   hold_ms=GAME.info.hold_ms)
+    app = BooleApp(host, mode_key=mode_key, seed=seed)
+    host.push_scene(app.root_scene)
+    settle(app)
+    return app
 
 
 def game_app(mode_key="nibble", seed=5) -> tuple[BooleApp, GameScene]:
-    app = BooleApp(mode_key=mode_key, seed=seed, skip_menu=True)
+    app = hosted(mode_key, seed)
+    app.start_mode(app.mode)
     settle(app)
-    return app, app.stack.top
+    return app, app.host.scene
 
 
 async def _piloted(app: BooleApp, size=(80, 24)):
     from texastoast.core.tui_game import _GameApp
 
-    textual_app = _GameApp(app.game, app.game.surface)
-    app.game._app = textual_app
+    textual_app = _GameApp(app.host.game, app.host.game.surface)
+    app.host.game._app = textual_app
     return textual_app.run_test(size=size)
 
 
@@ -63,9 +87,8 @@ def run(coro):
 
 
 def test_the_menu_is_the_bottom_of_the_stack():
-    app = BooleApp(seed=1)
-    settle(app)
-    assert isinstance(app.stack.top, MenuScene)
+    app = hosted(seed=1)
+    assert isinstance(app.host.scene, MenuScene)
     assert not app.in_game
 
 
@@ -74,51 +97,48 @@ def test_naming_a_mode_starts_a_game_over_the_menu():
     assert app.in_game
     assert scene.board.bits == 8
     # The menu is still underneath, which is what Esc lands on.
-    assert len(app.stack) == 2
-    assert isinstance(app.stack.scenes[0], MenuScene)
+    assert len(app.host.stack) == 2
+    assert isinstance(app.host.stack.scenes[0], MenuScene)
 
 
 def test_the_menu_opens_on_the_mode_already_selected():
     # Not at the top of the list: reopening the menu should put the cursor
     # where the player left it, not make them scroll back every time.
-    app = BooleApp(mode_key="byte", seed=1)
-    settle(app)
-    assert app.stack.top.menu.selected_index == modes.MODES.index(
+    app = hosted("byte", seed=1)
+    assert app.host.scene.menu.selected_index == modes.MODES.index(
         modes.MODES_BY_KEY["byte"])
 
 
 def test_choosing_a_mode_pushes_a_game():
-    app = BooleApp(mode_key="crumb", seed=1)
-    settle(app)
-    menu = app.stack.top
+    app = hosted("crumb", seed=1)
+    menu = app.host.scene
     assert menu.menu.selected_index == 0
     menu.handle_key("down")
     menu.handle_key("enter")
     settle(app)
     assert app.in_game
-    assert app.stack.top.mode is modes.MODES[1]
+    assert app.host.scene.mode is modes.MODES[1]
 
 
 def test_escape_pops_back_to_the_menu():
     app, scene = game_app()
     scene.handle_key("escape")
     settle(app)
-    assert isinstance(app.stack.top, MenuScene)
-    assert len(app.stack) == 1
+    assert isinstance(app.host.scene, MenuScene)
+    assert len(app.host.stack) == 1
 
 
 def test_the_menu_is_usable_again_after_a_game_is_popped():
     # Menu.confirm() hides the menu as it fires, so without on_resume the
     # screen underneath comes back empty.
-    app = BooleApp(seed=1)
-    settle(app)
-    app.stack.top.handle_key("enter")
+    app = hosted(seed=1)
+    app.host.scene.handle_key("enter")
     settle(app)
     assert app.in_game
 
-    app.stack.top.handle_key("escape")
+    app.host.scene.handle_key("escape")
     settle(app)
-    menu = app.stack.top
+    menu = app.host.scene
     assert menu.menu.active, "the menu should be live again, not blank"
 
 
@@ -127,23 +147,23 @@ def test_a_game_is_not_updated_while_the_menu_is_on_top():
     # with no flag anywhere saying so.
     app, scene = game_app()
     before = scene.frame
-    app.stack.update(0.1)
+    app.host.stack.update(0.1)
     assert scene.frame > before
 
     scene.handle_key("escape")
     settle(app)
     frozen = scene.frame
     for _ in range(5):
-        app.stack.update(0.1)
+        app.host.stack.update(0.1)
     assert scene.frame == frozen
 
 
 def test_keys_reach_only_the_top_scene():
     app, scene = game_app()
-    menu = app.stack.scenes[0]
+    menu = app.host.stack.scenes[0]
     selected = menu.menu.selected_index
 
-    app.stack.dispatch_key("down")          # a menu key, while a game is up
+    app.host.stack.dispatch_key("down")          # a menu key, while a game is up
     assert menu.menu.selected_index == selected
 
 
@@ -152,8 +172,7 @@ def test_keys_reach_only_the_top_scene():
 
 def test_the_menu_screen_renders_every_mode():
     async def go():
-        app = BooleApp(seed=1)
-        settle(app)
+        app = hosted(seed=1)
         async with await _piloted(app) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
@@ -162,15 +181,14 @@ def test_the_menu_screen_renders_every_mode():
             assert "CHOOSE A MODE" in text
             for mode in modes.MODES:
                 assert mode.name in text, f"{mode.name} missing from the menu"
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
 
 def test_menu_rows_carry_the_bit_width_not_just_the_name():
     async def go():
-        app = BooleApp(seed=1)
-        settle(app)
+        app = hosted(seed=1)
         async with await _piloted(app) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
@@ -178,15 +196,14 @@ def test_menu_rows_carry_the_bit_width_not_just_the_name():
             assert "4-bit" in text
             assert "ceiling 15" in text
             assert "climbs 2→8-bit" in text
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
 
 def test_the_selection_marker_follows_the_arrow_keys():
     async def go():
-        app = BooleApp(mode_key="crumb", seed=1)
-        settle(app)
+        app = hosted("crumb", seed=1)
         async with await _piloted(app) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
@@ -199,15 +216,14 @@ def test_the_selection_marker_follows_the_arrow_keys():
             await pilot.press("up")
             await asyncio.sleep(0.15)
             assert "> crumb" in buffer_text(app)
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
 
 def test_enter_starts_the_highlighted_mode_end_to_end():
     async def go():
-        app = BooleApp(mode_key="crumb", seed=1)
-        settle(app)
+        app = hosted("crumb", seed=1)
         async with await _piloted(app) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
@@ -217,16 +233,17 @@ def test_enter_starts_the_highlighted_mode_end_to_end():
             await asyncio.sleep(0.25)
             assert app.in_game
             # Opened on crumb, two rows down is nibble.
-            assert app.stack.top.mode.key == "nibble"
+            assert app.host.scene.mode.key == "nibble"
             assert "SCORE" in buffer_text(app)
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
 
 def test_escape_from_a_game_shows_the_menu_again_end_to_end():
     async def go():
-        app = BooleApp(mode_key="crumb", seed=1, skip_menu=True)
+        app = hosted("crumb", seed=1)
+        app.start_mode(app.mode)
         settle(app)
         async with await _piloted(app) as pilot:
             await pilot.pause()
@@ -236,15 +253,14 @@ def test_escape_from_a_game_shows_the_menu_again_end_to_end():
             await pilot.press("escape")
             await asyncio.sleep(0.25)
             assert "CHOOSE A MODE" in buffer_text(app)
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
 
 def test_a_too_small_terminal_says_so_on_both_screens():
     async def go():
-        app = BooleApp(seed=1)
-        settle(app)
+        app = hosted(seed=1)
         async with await _piloted(app, size=(30, 10)) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
@@ -259,7 +275,7 @@ def test_a_too_small_terminal_says_so_on_both_screens():
             await pilot.resize_terminal(40, 12)
             await asyncio.sleep(0.25)
             assert "too small" in buffer_text(app)
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -277,7 +293,7 @@ def test_the_board_and_panel_render():
             assert theme.BANNER in text
             assert "SCORE" in text
             assert "XOR" in text
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -290,13 +306,13 @@ def test_glyphs_keep_the_background_of_the_tile_they_sit_on():
         async with await _piloted(app) as pilot:
             await pilot.pause()
             await asyncio.sleep(0.25)
-            buf = app.game.surface.buffer
+            buf = app.host.game.surface.buffer
             holes = [
                 (x, y) for y in range(buf.height) for x in range(buf.width)
                 if buf.get(x, y).char != " " and buf.get(x, y).bg is None
             ]
             assert holes == []
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -311,7 +327,7 @@ def test_keys_move_the_board_and_score():
                 await pilot.press(key)
                 await asyncio.sleep(0.06)
             assert scene.board.score > 0
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -328,7 +344,7 @@ def test_resizing_does_not_corrupt_the_layout():
                 assert app.renderer.height == height
                 for line in buffer_text(app).split("\n"):
                     assert len(line) <= width
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -342,7 +358,7 @@ def test_the_game_over_banner_renders():
             scene.board.score = 1234
             scene.render()
             assert "GAME OVER — 1234 points." in buffer_text(app)
-            app.game.quit()
+            app.host.quit()
 
     run(go())
 
@@ -469,7 +485,7 @@ def test_the_best_score_is_kept_per_mode_and_survives_the_menu():
     app.start_mode(modes.MODES_BY_KEY["byte"])
     settle(app)
     assert app.best["crumb"] == 250
-    assert app.stack.top.mode.key == "byte"
+    assert app.host.scene.mode.key == "byte"
     assert app.best.get("byte", 0) == 0
 
 
@@ -500,3 +516,93 @@ def test_the_ramp_spans_the_whole_width_in_every_mode():
         low = theme.tile_colors(1, max_value)[0]
         high = theme.tile_colors(max_value, max_value)[0]
         assert low != high
+
+
+# ── Launchable by an arcade ─────────────────────────────────────────
+#
+# The game has to work two ways: as its own command, and seated by a launcher
+# that owns the terminal. The difference must be invisible to the game.
+
+
+def test_the_entry_point_object_is_a_valid_arcade_game():
+    from texastoast.arcade import ArcadeGame
+
+    assert isinstance(GAME, ArcadeGame)
+
+
+def test_the_declared_info_matches_what_the_game_actually_needs():
+    assert GAME.info.key == "george-boole"
+    assert GAME.info.min_cols == theme.MIN_COLS
+    assert GAME.info.min_rows == theme.MIN_ROWS
+    # Turn-based: edge input, or one arrow press slides across the board.
+    assert GAME.info.hold_ms == 0
+
+
+def test_starting_returns_a_scene_without_pushing_it():
+    host = TuiHost(title="t", fps=20)
+    scene = GAME.start(host)
+    host.stack.update(0)
+    assert isinstance(scene, MenuScene)
+    assert host.scene is None, "start() must leave the pushing to the caller"
+
+
+def test_a_launcher_can_seat_the_game_over_its_own_menu():
+    host = TuiHost(title="arcade", fps=20)
+
+    class ArcadeMenu:
+        def update(self, dt):
+            pass
+
+        def render(self):
+            pass
+
+    arcade_menu = ArcadeMenu()
+    host.push_scene(arcade_menu)
+    host.seat(GAME)
+    host.stack.update(0)
+    assert isinstance(host.scene, MenuScene)
+
+    # Esc from the game's mode menu returns to the arcade, not the shell.
+    host.scene.handle_key("escape")
+    host.stack.update(0)
+    assert host.scene is arcade_menu
+
+
+def test_escape_from_the_mode_menu_ends_a_standalone_session():
+    # Same key, same call — but with nothing underneath there is nowhere to go
+    # but out, and the host decides that, not the game.
+    host = TuiHost(title="t", fps=20)
+    quit_calls = []
+    host.quit = lambda: quit_calls.append(1)
+    host.seat(GAME)
+    host.stack.update(0)
+
+    host.scene.handle_key("escape")
+    assert quit_calls == [1]
+
+
+def test_seating_applies_the_declared_frame_rate_and_input():
+    from texastoast.core.loop import GameLoop
+    from texastoast.core.scheduler import ManualScheduler
+
+    host = TuiHost(title="t", fps=60, hold_ms=999)
+    host._game._loop = GameLoop(ManualScheduler(), lambda dt: None,
+                                lambda: None, fps=60)
+    host.seat(GAME)
+    assert round(host.game.loop.target_fps) == GAME.info.fps
+    assert host.input.hold_ms == GAME.info.hold_ms
+
+
+def test_a_seated_game_plays():
+    host = TuiHost(title="t", fps=20)
+    host.push_scene(_Blank())      # stand in for an arcade menu
+    host.seat(GAME)
+    host.stack.update(0)
+
+    host.scene.handle_key("enter")          # start the highlighted mode
+    host.stack.update(0)
+    assert isinstance(host.scene, GameScene)
+
+    for key in ["left", "up", "right", "down"] * 3:
+        host.scene.handle_key(key)
+    assert host.scene.board.score >= 0

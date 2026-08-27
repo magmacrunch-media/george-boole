@@ -112,8 +112,13 @@ class MenuScene:
             self.menu.move_down()
         elif key in ("enter", "space"):
             self.menu.confirm()
-        elif key in ("q", "escape"):
-            self.app.game.quit()
+        elif key == "q":
+            self.app.host.quit()
+        elif key == "escape":
+            # Leave the game, not the process. Run on its own this is the last
+            # scene and the session ends; under a launcher the arcade menu is
+            # underneath and this returns to it. Same call either way.
+            self.app.leave()
         elif key == "g":
             self.app.start_mode(modes.MODES_BY_KEY["gauntlet"])
         elif len(key) == 1 and key in "2345678":
@@ -234,7 +239,7 @@ class GameScene:
 
     def handle_key(self, key: str) -> bool:
         if key == "q":
-            self.app.game.quit()
+            self.app.host.quit()
         elif key == "escape":
             self.app.to_menu()
         elif key == "r":
