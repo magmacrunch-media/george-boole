@@ -178,11 +178,61 @@ def test_the_menu_screen_renders_every_mode():
             await pilot.pause()
             await asyncio.sleep(0.25)
             text = buffer_text(app)
-            assert bigtext.lines(theme.BIG_TITLE)[0] in text
-            assert theme.SUBTITLE in text
+            # 80x24 gets the game's own title-card treatment: the name in
+            # block letters, the rest of it in text underneath.
+            assert bigtext.lines("GEORGE BOOLE")[0] in text
+            assert "HAS ENTERED THE CHAT" in text
             assert "CHOOSE A MODE" in text
             for mode in modes.MODES:
                 assert mode.name in text, f"{mode.name} missing from the menu"
+            app.host.quit()
+
+    run(go())
+
+
+def test_every_rung_of_the_ladder_spells_the_whole_name():
+    """A title that fits by dropping half of itself is not the title. What the
+    ladder trades away is how much is drawn rather than typed."""
+    for big, rest in theme.TITLE_LADDER:
+        spelled = (big.replace("\n", " ") + " " + rest).split()
+        assert spelled == theme.BANNER.split(), f"{big!r} + {rest!r}"
+
+
+def test_a_tall_terminal_draws_the_whole_name_in_block_letters():
+    """The puzzles card on magmacrunch.com breaks it over three lines, and
+    with the rows to spare that is what this does too."""
+    async def go():
+        app = hosted(seed=1)
+        async with await _piloted(app, size=(80, 38)) as pilot:
+            await pilot.pause()
+            await asyncio.sleep(0.25)
+            text = buffer_text(app)
+            for word in ("GEORGE BOOLE", "HAS ENTERED", "THE CHAT"):
+                assert bigtext.lines(word)[0].strip() in text, word
+            assert "HAS ENTERED THE CHAT" not in text, "no text rung needed here"
+            assert "CHOOSE A MODE" in text
+            app.host.quit()
+
+    run(go())
+
+
+def test_the_title_never_lands_where_the_menu_will_draw():
+    """The engine's Menu centres itself vertically, so the room a title has
+    moves with the window. Reserving a fixed number of rows would let a tall
+    terminal draw a title the menu then paints over."""
+    from boole.scenes import _menu_box_top
+
+    async def go():
+        app = hosted(seed=1)
+        async with await _piloted(app, size=(80, 30)) as pilot:
+            await pilot.pause()
+            await asyncio.sleep(0.25)
+            r = app.renderer
+            top = _menu_box_top(r)
+            buf = app.host.game.surface.buffer
+            rows = buf.to_text().split("\n")
+            below = "".join(rows[top:])
+            assert "CHOOSE A MODE" in below, "the box does not start where we think"
             app.host.quit()
 
     run(go())
@@ -199,16 +249,11 @@ def test_a_short_terminal_gets_the_plain_banner_instead_of_block_letters():
             await asyncio.sleep(0.25)
             text = buffer_text(app)
             assert theme.BANNER in text
-            assert bigtext.lines(theme.BIG_TITLE)[0] not in text
+            assert bigtext.lines("GEORGE BOOLE")[0].strip() not in text
             assert "CHOOSE A MODE" in text, "the menu is still reachable"
             app.host.quit()
 
     run(go())
-
-
-def test_the_block_title_fits_the_width_it_is_drawn_at():
-    assert bigtext.fits(theme.BIG_TITLE, theme.MENU_MIN_COLS) is False
-    assert bigtext.fits(theme.BIG_TITLE, 78)
 
 
 def test_menu_rows_carry_the_bit_width_not_just_the_name():

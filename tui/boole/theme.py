@@ -76,18 +76,21 @@ RAMP = (
 #: Cycled for the Gauntlet tile that earned a promotion.
 RAINBOW = ("#ff5f5f", "#ffaf5f", "#ffff5f", "#5fff87", "#5fd7ff", "#af87ff")
 
-#: The plain title, and the fallback when the block face will not fit.
+#: The plain title, and the last fallback when no block face will fit.
 BANNER = "GEORGE BOOLE HAS ENTERED THE CHAT"
 SUBTITLE = "a command-line-only Boolean puzzle"
 
-#: Drawn in :mod:`texastoast.ui.bigtext` when there is room. The full banner
-#: is 33 characters and would be 164 columns in block letters, so the block
-#: face carries the name alone and the strapline stays beneath it in text.
-BIG_TITLE = "GEORGE BOOLE"
-#: The block title costs two rows more than the plain one, and the mode menu
-#: is eight rows of list plus its box. Below this the plain banner is drawn
-#: instead, which is what keeps the screen usable at MENU_MIN_ROWS.
-BIG_TITLE_MIN_ROWS = MENU_MIN_ROWS + 3
+#: How the name is set, best first: the block text, and whatever is left of
+#: the name in plain text beneath it. The whole name is on screen in every
+#: rung - what changes is how much of it is drawn rather than typed.
+#:
+#: Both come from magmacrunch.com. The puzzles card breaks the name over three
+#: lines (``GEORGE BOOLE<br>HAS ENTERED<br>THE CHAT``); the game's own title
+#: card sets ``GEORGE BOOLE`` large with ``HAS ENTERED THE CHAT`` under it.
+TITLE_LADDER = (
+    ("GEORGE BOOLE\nHAS ENTERED\nTHE CHAT", ""),
+    ("GEORGE BOOLE", "HAS ENTERED THE CHAT"),
+)
 
 
 def tile_colors(value: int, max_value: int, *,
