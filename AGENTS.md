@@ -46,3 +46,14 @@ rediscovered a fourth time.
 The **rainbow tile** (the tile that earned a Gauntlet promotion) *is* in all
 three. Note it only appears when a *merge* lands on the ceiling — NOT-of-ceiling
 also promotes, but clears the tile, so there is nothing left to mark.
+
+## `tui/LICENSE` and `tui/NOTICE` are copies
+
+The originals are at the repo root, where they cover `web/` and `wii/` too.
+The copies exist because the wheel is built from `tui/` and PolyForm requires
+the notice to travel with the distribution — a wheel built from a subdirectory
+cannot reach a file above it, and `force-include` does not help because
+`python -m build` builds the wheel from an unpacked sdist that has no parent.
+
+**Relicensing means changing all three copies**, here and in
+`texas-holdem-lava-dome/tui/`. Nothing checks this automatically.
