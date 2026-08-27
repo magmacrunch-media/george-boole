@@ -5,7 +5,20 @@ Runs entirely in a shell — no graphics, just characters — in the tradition o
 AsciiPatrol, Cataclysm:DDA and the rest of the command-line-only canon.
 
 ```
-pip install -e .
+pipx install magmacrunch-george-boole
+george-boole
+```
+
+`pipx` rather than `pip` because it puts the command on your PATH in
+its own virtualenv; plain `pip install` only reaches your PATH inside an
+activated venv. It is also a cabinet in the
+[magmacrunch](https://pypi.org/project/magmacrunch/) arcade — `pipx install magmacrunch`
+gets this and the other two — and plays identically either way.
+
+For working on it:
+
+```
+pip install -e ".[dev]"
 python -m boole          # or the installed `george-boole` command
 ```
 
