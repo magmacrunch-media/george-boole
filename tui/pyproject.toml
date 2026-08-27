@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+# Prefixed, not "george-boole-tui". PyPI has no scoping like the npm
+# @magmacrunch/… packages, so a name prefix is the only way to claim the
+# family — and `adenosine` and `magnolia` are both already taken on PyPI by
+# other people, which is what happens to unprefixed names.
+#
+# The distribution is namespaced; the import package stays plain `boole`,
+# because that is what you type in code and it is not competing for anything.
+name = "magmacrunch-george-boole"
+version = "0.1.0"
+description = "George Boole Has Entered The Chat — terminal version"
+readme = "README.md"
+license = "PolyForm-Noncommercial-1.0.0"
+requires-python = ">=3.10"
+authors = [{ name = "magmacrunch media" }]
+
+# The engine, with its terminal backend. The rules in boole/board.py and
+# boole/modes.py depend on neither and are importable on their own.
+dependencies = ["texastoast[tui]>=0.6.0"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0", "ruff>=0.6"]
+
+[project.scripts]
+george-boole = "boole.__main__:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["boole"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
