@@ -12,6 +12,7 @@ neither knows what Textual is.
 from __future__ import annotations
 
 import random
+import textwrap
 from dataclasses import replace
 
 from texastoast.ui import DEFAULT_THEME, Menu, bigtext
@@ -38,7 +39,47 @@ GAME_HELP = (
     ("Q", "quit"),
 )
 
-MENU_HELP = "↑↓ choose    Enter start    Q quit"
+#: The order the gate table is drawn in: the three that combine two
+#: numbers, then the one that sandwiches.
+GATE_ORDER = (GATE_XOR, GATE_OR, GATE_AND, GATE_NOT)
+
+MENU_HELP = "↑↓ choose    Enter start    H how to play    Q quit"
+
+#: The label the mode menu carries under the eight modes. It is not a mode, so
+#: MenuScene._chose has to tell it apart by index rather than by name.
+HOW_TO_PLAY = "how to play"
+
+#: Ported from the "quick rules" panel in web/index.html, which is what a
+#: browser player reads. Kept as the same four headings in the same order, so
+#: someone who learned the game there recognises this.
+RULES = (
+    ("MOVES", (
+        "Arrow keys or WASD. Every tile slides one direction at once.",
+    )),
+    ("MERGING", (
+        "Same value and same value make the same value again — a number "
+        "merges with itself and stays put, which is idempotence.",
+        "Two different numbers will not merge on their own. They need a gate "
+        "between them, and the gate decides what comes out.",
+        "NOT is the exception: it sandwiches, sliding into any single number "
+        "and inverting it.",
+    )),
+    ("SCORING", (
+        "An operation scores its result. Land one above the halfway mark and "
+        "it scores double.",
+        "Overflowing the ceiling scores three times the maximum value.",
+    )),
+    ("OVERFLOW", (
+        "Exceeding the mode's maximum awards the bonus and clears the tile "
+        "rather than leaving something impossible on the board.",
+        "NOT of the maximum is an overflow too — it comes out as zero.",
+    )),
+    ("GAUNTLET", (
+        "Starts at 2-bit and upgrades the whole board every time you reach "
+        "the ceiling, climbing to 8-bit. The tile that earned the promotion "
+        "keeps a rainbow.",
+    )),
+)
 
 
 def _menu_box_top(renderer) -> int:
@@ -50,8 +91,9 @@ def _menu_box_top(renderer) -> int:
     out rather than reserving a fixed number of rows is what stops a tall
     terminal from drawing a title the menu then paints over.
     """
-    rows = (len(modes.MODES) * theme.MENU_ITEM_H
-            + 2 * theme.MENU_PAD + theme.MENU_TITLE_H)
+    # The eight modes plus the how-to-play row beneath them. Counted from
+    # the same place the menu is built so the two cannot disagree.
+    rows = (len(modes.MODES) + 1) * theme.MENU_ITEM_H + 2 * theme.MENU_PAD
     return (renderer.height - rows) // 2 - theme.MENU_BORDER
 
 
@@ -121,9 +163,12 @@ class MenuScene:
 
     def _show(self) -> None:
         self.menu.show(
-            [self._label(mode) for mode in modes.MODES],
+            [self._label(mode) for mode in modes.MODES] + [HOW_TO_PLAY],
             on_select=self._chose,
-            title="CHOOSE A MODE",
+            # No heading. It used to read "CHOOSE A MODE", which stopped being
+            # true when the list gained a row that is not a mode — and losing
+            # it reclaims the two rows the new row cost, so the block title
+            # still fits an ordinary 80x24 terminal.
             selected=modes.MODES.index(self.app.mode),
         )
 
@@ -136,7 +181,12 @@ class MenuScene:
                f"{modes.max_value(mode.start_bits)}"
 
     def _chose(self, index: int, label: str) -> None:  # noqa: ARG002
-        self.app.start_mode(modes.MODES[index])
+        # The last row is not a mode. Told apart by index rather than by label,
+        # because a mode could in principle be named anything.
+        if index >= len(modes.MODES):
+            self.app.show_rules()
+        else:
+            self.app.start_mode(modes.MODES[index])
 
     def on_resume(self) -> None:
         """Re-arm the menu when a game is popped off the top of it.
@@ -160,6 +210,8 @@ class MenuScene:
             # scene and the session ends; under a launcher the arcade menu is
             # underneath and this returns to it. Same call either way.
             self.app.leave()
+        elif key == "h":
+            self.app.show_rules()
         elif key == "g":
             self.app.start_mode(modes.MODES_BY_KEY["gauntlet"])
         elif len(key) == 1 and key in "2345678":
@@ -193,6 +245,112 @@ class MenuScene:
             r.ui_text(cx, r.height - 3, f"best in {self.app.mode.name}: {best}",
                       fill=theme.PANEL_LABEL, anchor="n")
         r.ui_text(cx, r.height - 2, MENU_HELP, fill=theme.DIM, anchor="n")
+        r.present()
+
+
+class RulesScene:
+    """How to play. Pushed over whatever is showing.
+
+    The text is the browser's "quick rules" panel, in the same order, so a
+    player who learned the game there recognises this one. The gate table is
+    added because the browser can afford to keep the four gates permanently
+    down the side of the page and a terminal cannot — in play they are in the
+    HUD, but the HUD is not where you go to find out what they mean.
+
+    **It scrolls rather than truncating.** Laid out at 80 columns the rules run
+    to about 31 rows and a standard terminal has 24, so a screen that simply
+    stopped would cut off mid-sentence and lose two of the five headings — the
+    two a new player most needs, since overflow and Gauntlet are the parts that
+    are not obvious from watching the board.
+    """
+
+    def __init__(self, app):
+        self.app = app
+        self.offset = 0
+
+    def handle_key(self, key: str) -> bool:
+        if key in ("up", "w", "k"):
+            self.offset = max(0, self.offset - 1)
+        elif key in ("down", "s", "j"):
+            self.offset = min(self._max_offset(), self.offset + 1)
+        else:
+            self.app.to_menu()
+        return True
+
+    def update(self, dt: float) -> None:
+        pass
+
+    # -- Content -----------------------------------------------------
+
+    def _lines(self, width: int) -> list[tuple[int, str, str]]:
+        """Every line, as ``(indent, text, colour)``.
+
+        Built fresh per render because the wrap depends on the width and a
+        terminal is resized constantly.
+        """
+        out: list[tuple[int, str, str]] = []
+        for heading, paragraphs in RULES:
+            out.append((0, heading, theme.MENU_SELECTED))
+            for paragraph in paragraphs:
+                for line in textwrap.wrap(paragraph, max(10, width - 2)):
+                    out.append((2, line, theme.PANEL_VALUE))
+            out.append((0, "", theme.DIM))
+        out.append((0, "GATES", theme.MENU_SELECTED))
+        for gate in GATE_ORDER:
+            out.append((2, f"{gate_symbol(gate)}  {GATE_NAMES[gate]}",
+                        theme.GATE_FG))
+        return out
+
+    def _viewport(self) -> int:
+        """Rows of text on screen.
+
+        Content runs from row 3 to two rows off the bottom, so the count is the
+        height less the heading block above it and the hint row below — five
+        rows in total. Getting this wrong by one writes a line of rules over
+        the hint, which is how it was first written.
+        """
+        return max(1, self.app.renderer.height - 5)
+
+    def _max_offset(self) -> int:
+        r = self.app.renderer
+        return max(0, len(self._lines(r.width - theme.MARGIN_X * 2))
+                   - self._viewport())
+
+    # -- Drawing -----------------------------------------------------
+
+    def render(self) -> None:
+        r = self.app.renderer
+        r.clear()
+        r.draw_rect(0, 0, r.width, r.height, theme.BG)
+        if _too_small(r, theme.MENU_MIN_COLS, theme.MENU_MIN_ROWS):
+            r.present()
+            return
+
+        avail = r.width - theme.MARGIN_X * 2
+        lines = self._lines(avail)
+        viewport = self._viewport()
+        # Clamped here as well as in handle_key: a resize can shrink the
+        # content out from under an offset that was legal a frame ago.
+        self.offset = min(self.offset, max(0, len(lines) - viewport))
+
+        r.ui_text(theme.MARGIN_X, 1, "HOW TO PLAY", fill=theme.TITLE)
+
+        y = 3
+        for indent, text, colour in lines[self.offset:self.offset + viewport]:
+            if y >= r.height - 2:
+                break
+            if text:
+                r.ui_text(theme.MARGIN_X + indent, y, text, fill=colour)
+            y += 1
+
+        more = len(lines) - (self.offset + viewport)
+        hint = "↑↓ scroll    any other key goes back" if (
+            more > 0 or self.offset) else "any key goes back"
+        r.ui_text(theme.MARGIN_X, r.height - 2, hint, fill=theme.DIM)
+        if more > 0:
+            tail = f"{more} more ↓"
+            r.ui_text(r.width - len(tail) - theme.MARGIN_X, r.height - 2,
+                      tail, fill=theme.MENU_SELECTED)
         r.present()
 
 

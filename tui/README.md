@@ -35,6 +35,12 @@ python -m boole --mode gauntlet
 python -m boole --mode byte --seed 42     # a reproducible run
 ```
 
+**How to play** is the last row of the mode list, or `H` from anywhere on the
+title screen. It carries the browser build's quick rules and a gate table —
+the gates are in the HUD during a game, but the HUD is not where you go to
+find out what they mean. It scrolls, because the rules are longer than a
+standard terminal is tall.
+
 **On the title screen**
 
 | key | |

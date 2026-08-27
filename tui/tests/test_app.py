@@ -19,7 +19,11 @@ pytest.importorskip("textual", reason='needs: pip install -e ".[dev]" with texas
 from texastoast.core.tui_host import TuiHost  # noqa: E402
 from texastoast.ui import bigtext  # noqa: E402
 
-from boole import modes, theme  # noqa: E402
+from boole import (  # noqa: E402
+    modes,
+    scenes,  # noqa: E402
+    theme,
+)
 from boole.app import BooleApp  # noqa: E402
 from boole.arcade import GAME  # noqa: E402
 from boole.board import (  # noqa: E402
@@ -182,7 +186,7 @@ def test_the_menu_screen_renders_every_mode():
             # block letters, the rest of it in text underneath.
             assert bigtext.lines("GEORGE BOOLE")[0] in text
             assert "HAS ENTERED THE CHAT" in text
-            assert "CHOOSE A MODE" in text
+            assert "how to play" in text
             for mode in modes.MODES:
                 assert mode.name in text, f"{mode.name} missing from the menu"
             app.host.quit()
@@ -210,7 +214,7 @@ def test_a_tall_terminal_draws_the_whole_name_in_block_letters():
             for word in ("GEORGE BOOLE", "HAS ENTERED", "THE CHAT"):
                 assert bigtext.lines(word)[0].strip() in text, word
             assert "HAS ENTERED THE CHAT" not in text, "no text rung needed here"
-            assert "CHOOSE A MODE" in text
+            assert "how to play" in text
             app.host.quit()
 
     run(go())
@@ -232,7 +236,7 @@ def test_the_title_never_lands_where_the_menu_will_draw():
             buf = app.host.game.surface.buffer
             rows = buf.to_text().split("\n")
             below = "".join(rows[top:])
-            assert "CHOOSE A MODE" in below, "the box does not start where we think"
+            assert "crumb" in below, "the box does not start where we think"
             app.host.quit()
 
     run(go())
@@ -250,7 +254,7 @@ def test_a_short_terminal_gets_the_plain_banner_instead_of_block_letters():
             text = buffer_text(app)
             assert theme.BANNER in text
             assert bigtext.lines("GEORGE BOOLE")[0].strip() not in text
-            assert "CHOOSE A MODE" in text, "the menu is still reachable"
+            assert "crumb" in text, "the menu is still reachable"
             app.host.quit()
 
     run(go())
@@ -322,7 +326,7 @@ def test_escape_from_a_game_shows_the_menu_again_end_to_end():
 
             await pilot.press("escape")
             await asyncio.sleep(0.25)
-            assert "CHOOSE A MODE" in buffer_text(app)
+            assert "how to play" in buffer_text(app)
             app.host.quit()
 
     run(go())
@@ -338,7 +342,7 @@ def test_a_too_small_terminal_says_so_on_both_screens():
 
             await pilot.resize_terminal(100, 30)
             await asyncio.sleep(0.25)
-            assert "CHOOSE A MODE" in buffer_text(app)
+            assert "how to play" in buffer_text(app)
 
             await pilot.press("enter")
             await asyncio.sleep(0.25)
@@ -676,3 +680,96 @@ def test_a_seated_game_plays():
     for key in ["left", "up", "right", "down"] * 3:
         host.scene.handle_key(key)
     assert host.scene.board.score >= 0
+
+# ── How to play ─────────────────────────────────────────────────────
+
+
+def test_the_menu_offers_the_rules_under_the_modes():
+    """The row is not a mode, and _chose has to tell it apart by index."""
+    app = hosted(seed=1)
+    menu = app.host.scene
+    assert menu.menu._items[-1]["label"] == scenes.HOW_TO_PLAY
+    assert len(menu.menu._items) == len(modes.MODES) + 1
+
+
+def test_choosing_it_opens_the_rules_rather_than_a_game():
+    app = hosted(seed=1)
+    menu = app.host.scene
+    menu.menu._selected = len(modes.MODES)
+    menu.handle_key("enter")
+    settle(app)
+    assert isinstance(app.host.scene, scenes.RulesScene)
+    assert not app.in_game
+
+
+def test_h_opens_the_rules_too():
+    app = hosted(seed=1)
+    app.host.scene.handle_key("h")
+    settle(app)
+    assert isinstance(app.host.scene, scenes.RulesScene)
+
+
+def test_any_other_key_goes_back_to_the_menu():
+    app = hosted(seed=1)
+    app.host.scene.handle_key("h")
+    settle(app)
+    app.host.scene.handle_key("x")
+    settle(app)
+    assert isinstance(app.host.scene, MenuScene)
+
+
+def test_the_rules_scroll_rather_than_truncating():
+    """Laid out at 80 columns the rules run past a standard terminal, so a
+    screen that stopped would lose overflow and Gauntlet - the two headings a
+    new player most needs, being the parts not obvious from the board."""
+    async def go():
+        app = hosted(seed=1)
+        async with await _piloted(app, size=(80, 24)) as pilot:
+            await pilot.pause()
+            await pilot.press("h")
+            await asyncio.sleep(0.3)
+            top = buffer_text(app)
+            assert "MOVES" in top
+            assert "more" in top, "should say there is more below"
+
+            for _ in range(30):
+                await pilot.press("down")
+            await asyncio.sleep(0.3)
+            end = buffer_text(app)
+            assert "GAUNTLET" in end
+            for gate in ("XOR", "OR", "AND", "NOT"):
+                assert gate in end, f"{gate} missing from the gate table"
+            app.host.quit()
+
+    run(go())
+
+
+def test_the_rules_never_write_over_their_own_hint():
+    """The viewport is the height less five rows. One out and a line of rules
+    lands on the hint, which is how it was first written."""
+    async def go():
+        app = hosted(seed=1)
+        async with await _piloted(app, size=(80, 24)) as pilot:
+            await pilot.pause()
+            await pilot.press("h")
+            await asyncio.sleep(0.3)
+            rows = buffer_text(app).splitlines()
+            hint = rows[app.renderer.height - 2]
+            assert hint.strip().startswith("↑↓ scroll"), hint
+            assert "goes back" in hint
+            app.host.quit()
+
+    run(go())
+
+
+def test_scrolling_stops_at_both_ends():
+    app = hosted(seed=1)
+    app.host.scene.handle_key("h")
+    settle(app)
+    rules = app.host.scene
+    rules.handle_key("up")
+    assert rules.offset == 0, "scrolled above the top"
+    for _ in range(200):
+        rules.handle_key("down")
+    assert rules.offset == rules._max_offset()
+    assert isinstance(app.host.scene, scenes.RulesScene), "still on the rules"

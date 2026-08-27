@@ -57,6 +57,12 @@ class BooleApp:
         self.mode = mode
         self.host.push_scene(GameScene(self, mode))
 
+    def show_rules(self) -> None:
+        """The rules, over whatever is showing. Any key pops them."""
+        from boole.scenes import RulesScene
+
+        self.host.push_scene(RulesScene(self))
+
     def to_menu(self) -> None:
         """Leave the current run for the mode menu underneath it."""
         self.host.pop_scene()
