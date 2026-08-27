@@ -20,13 +20,19 @@ authors = [{ name = "magmacrunch media" }]
 
 # The engine, with its terminal backend. The rules in boole/board.py and
 # boole/modes.py depend on neither and are importable on their own.
-dependencies = ["texastoast[tui]>=0.6.0"]
+dependencies = ["texastoast[tui]>=0.9.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "ruff>=0.6"]
 
 [project.scripts]
 george-boole = "boole.__main__:main"
+
+# Found by a launcher enumerating installed games. Declaring it costs nothing
+# when the game is run on its own, and is the whole of what makes it appear in
+# an arcade menu — see texastoast.arcade.
+[project.entry-points."magmacrunch.games"]
+george-boole = "boole.arcade:GAME"
 
 [tool.hatch.build.targets.wheel]
 packages = ["boole"]

@@ -47,6 +47,23 @@ Needs a terminal at least 59x20 for the board, 44x18 for the menu. Below that
 it says so rather than drawing a clipped screen. Truecolor is used for the
 value ramp but not required.
 
+## Launchable by an arcade
+
+The game declares itself through an entry point, so anything enumerating
+`magmacrunch.games` finds it:
+
+```toml
+[project.entry-points."magmacrunch.games"]
+george-boole = "boole.arcade:GAME"
+```
+
+It does not own the terminal. A `texastoast.core.tui_host.TuiHost` does, and
+`BooleApp` is handed one — which is what lets the same code run as its own
+command and be seated by a launcher without knowing which happened. Esc from
+the mode menu ends a standalone session and returns to the arcade menu under a
+launcher, and the game does not have to know the difference: it pops a scene
+and the host decides what that means.
+
 ## How it is built
 
 The engine is [texastoast](../../texastoast) with its terminal backend
