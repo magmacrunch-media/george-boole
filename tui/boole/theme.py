@@ -76,7 +76,18 @@ RAMP = (
 #: Cycled for the Gauntlet tile that earned a promotion.
 RAINBOW = ("#ff5f5f", "#ffaf5f", "#ffff5f", "#5fff87", "#5fd7ff", "#af87ff")
 
+#: The plain title, and the fallback when the block face will not fit.
 BANNER = "GEORGE BOOLE HAS ENTERED THE CHAT"
+SUBTITLE = "a command-line-only Boolean puzzle"
+
+#: Drawn in :mod:`texastoast.ui.bigtext` when there is room. The full banner
+#: is 33 characters and would be 164 columns in block letters, so the block
+#: face carries the name alone and the strapline stays beneath it in text.
+BIG_TITLE = "GEORGE BOOLE"
+#: The block title costs two rows more than the plain one, and the mode menu
+#: is eight rows of list plus its box. Below this the plain banner is drawn
+#: instead, which is what keeps the screen usable at MENU_MIN_ROWS.
+BIG_TITLE_MIN_ROWS = MENU_MIN_ROWS + 3
 
 
 def tile_colors(value: int, max_value: int, *,

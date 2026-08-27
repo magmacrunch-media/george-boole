@@ -20,7 +20,7 @@ authors = [{ name = "magmacrunch media" }]
 
 # The engine, with its terminal backend. The rules in boole/board.py and
 # boole/modes.py depend on neither and are importable on their own.
-dependencies = ["texastoast[tui]>=0.9.0"]
+dependencies = ["texastoast[tui]>=0.10.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "ruff>=0.6"]

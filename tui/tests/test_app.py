@@ -17,6 +17,7 @@ import pytest
 pytest.importorskip("textual", reason='needs: pip install -e ".[dev]" with texastoast[tui]')
 
 from texastoast.core.tui_host import TuiHost  # noqa: E402
+from texastoast.ui import bigtext  # noqa: E402
 
 from boole import modes, theme  # noqa: E402
 from boole.app import BooleApp  # noqa: E402
@@ -177,13 +178,37 @@ def test_the_menu_screen_renders_every_mode():
             await pilot.pause()
             await asyncio.sleep(0.25)
             text = buffer_text(app)
-            assert theme.BANNER in text
+            assert bigtext.lines(theme.BIG_TITLE)[0] in text
+            assert theme.SUBTITLE in text
             assert "CHOOSE A MODE" in text
             for mode in modes.MODES:
                 assert mode.name in text, f"{mode.name} missing from the menu"
             app.host.quit()
 
     run(go())
+
+
+def test_a_short_terminal_gets_the_plain_banner_instead_of_block_letters():
+    """The mode menu is eight rows of list inside a box. A title that pushed
+    it off the screen would be a title nobody could get past."""
+    async def go():
+        app = hosted(seed=1)
+        async with await _piloted(app, size=(theme.MENU_MIN_COLS,
+                                             theme.MENU_MIN_ROWS)) as pilot:
+            await pilot.pause()
+            await asyncio.sleep(0.25)
+            text = buffer_text(app)
+            assert theme.BANNER in text
+            assert bigtext.lines(theme.BIG_TITLE)[0] not in text
+            assert "CHOOSE A MODE" in text, "the menu is still reachable"
+            app.host.quit()
+
+    run(go())
+
+
+def test_the_block_title_fits_the_width_it_is_drawn_at():
+    assert bigtext.fits(theme.BIG_TITLE, theme.MENU_MIN_COLS) is False
+    assert bigtext.fits(theme.BIG_TITLE, 78)
 
 
 def test_menu_rows_carry_the_bit_width_not_just_the_name():
