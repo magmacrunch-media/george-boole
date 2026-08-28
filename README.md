@@ -6,6 +6,7 @@ Logic-gate puzzle game. One repo, every version of the game.
 |---------|--------|--------|---------------|
 | Browser | [`web/`](web/) | [adenosine](https://github.com/magmacrunchmedia/adenosine) | [magmacrunch.com/arcade/george-boole](https://magmacrunch.com/arcade/george-boole/) |
 | Wii | [`wii/`](wii/) | [magnolia](https://github.com/magmacrunchmedia/magnolia) | Homebrew Channel |
+| Terminal | [`tui/`](tui/) | [texastoast](https://pypi.org/project/texastoast/) | any terminal |
 
 ## Layout
 
@@ -15,12 +16,19 @@ Logic-gate puzzle game. One repo, every version of the game.
 - `wii/` — the Wii port. Builds with devkitPPC and expects the magnolia engine
   checked out beside this repo (`../../magnolia` from inside `wii/`). See
   [`wii/README.md`](wii/README.md).
+- `tui/` — the terminal version. Runs on the
+  [texastoast](https://pypi.org/project/texastoast/) engine's terminal backend.
+  Install with `pipx install magmacrunch-george-boole` and launch with
+  `george-boole`. Also available as part of the
+  [magmacrunch](https://pypi.org/project/magmacrunch/) arcade.
+  See [`tui/README.md`](tui/README.md).
 
 ## Working on the game
 
-A rules or balance change usually lands in both versions: the browser sources
-under `web/js/` are the reference implementation the Wii port was checked
-against. Change `web/` first, then carry the change into `wii/source/`.
+A rules or balance change usually lands in all three versions: the browser
+sources under `web/js/` are the reference implementation the Wii port was
+checked against, and the TUI's Python scenes mirror the same logic. Change
+`web/` first, then carry the change into `wii/source/` and `tui/`.
 
 This repo was formed from `george-boole-wii` (whose history it keeps) plus
 the browser version imported from the website repo.
