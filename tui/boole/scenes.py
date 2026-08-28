@@ -236,7 +236,12 @@ class MenuScene:
 
         cx = r.width // 2
         y = _draw_title(r, cx)
-        r.ui_text(cx, y, theme.SUBTITLE, fill=theme.DIM, anchor="n")
+        # Only if there is a row left for it. The title takes what it needs
+        # first — it is the bigger thing on the screen — and a strapline drawn
+        # anyway would land under the menu box and be painted over, which is a
+        # missing line that reads as a design choice rather than a bug.
+        if y < _menu_box_top(r):
+            r.ui_text(cx, y, theme.SUBTITLE, fill=theme.DIM, anchor="n")
 
         self.menu.render()
 
