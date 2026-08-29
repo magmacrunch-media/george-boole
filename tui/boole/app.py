@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from texastoast.scores import ScoreBook
+from magmacrunch.engine.scores import ScoreBook
 
 from boole import modes
 from boole.scenes import GameScene, MenuScene
@@ -142,7 +142,7 @@ class BooleApp:
 def run(mode_key: str = "nibble", seed: int | None = None,
         skip_menu: bool = False) -> None:
     """Play George Boole as its own command."""
-    from texastoast.core.tui_host import TuiHost
+    from magmacrunch.engine.core.tui_host import TuiHost
 
     from boole.arcade import GAME
 

@@ -16,9 +16,9 @@ import pytest
 
 pytest.importorskip("textual", reason='needs: pip install -e ".[dev]" with texastoast[tui]')
 
-from texastoast import scores as score_mod  # noqa: E402
-from texastoast.core.tui_host import TuiHost  # noqa: E402
-from texastoast.ui import bigtext  # noqa: E402
+from magmacrunch.engine import scores as score_mod  # noqa: E402
+from magmacrunch.engine.core.tui_host import TuiHost  # noqa: E402
+from magmacrunch.engine.ui import bigtext  # noqa: E402
 
 from boole import (  # noqa: E402
     modes,
@@ -89,7 +89,7 @@ def game_app(mode_key="nibble", seed=5) -> tuple[BooleApp, GameScene]:
 
 
 async def _piloted(app: BooleApp, size=(80, 24)):
-    from texastoast.core.tui_game import _GameApp
+    from magmacrunch.engine.core.tui_game import _GameApp
 
     textual_app = _GameApp(app.host.game, app.host.game.surface)
     app.host.game._app = textual_app
@@ -587,7 +587,7 @@ def test_a_lower_score_does_not_replace_the_best():
 
 def test_the_score_survives_the_process(tmp_path):
     """The whole point of the file."""
-    from texastoast.scores import ScoreBook
+    from magmacrunch.engine.scores import ScoreBook
 
     from boole.arcade import GAME
 
