@@ -122,7 +122,7 @@ def _menu_box_top(renderer) -> int:
     return (renderer.height - rows) // 2 - theme.MENU_BORDER
 
 
-def _draw_title(renderer, cx: int) -> int:
+def _draw_title(renderer, cx: int, palette) -> int:
     """The name, set as large as the window allows. Returns the row below it.
 
     Every rung shows the *whole* name — a title that fits by dropping half of
@@ -139,13 +139,13 @@ def _draw_title(renderer, cx: int) -> int:
             continue
         y = 1
         for line in bigtext.lines(big):
-            renderer.ui_text(cx, y, line, fill=theme.TITLE, anchor="n")
+            renderer.ui_text(cx, y, line, fill=palette.accent, anchor="n")
             y += 1
         if rest:
-            renderer.ui_text(cx, y, rest, fill=theme.MENU_SELECTED, anchor="n")
+            renderer.ui_text(cx, y, rest, fill=palette.accent, anchor="n")
             y += 1
         return y
-    renderer.ui_text(cx, 1, theme.BANNER, fill=theme.TITLE, anchor="n")
+    renderer.ui_text(cx, 1, theme.BANNER, fill=palette.accent, anchor="n")
     return 2
 
 
@@ -171,9 +171,39 @@ class MenuScene:
 
     def __init__(self, app):
         self.app = app
+        # Both set by _build, which is the only thing that may set either:
+        # the palette and the widget wearing it have to be chosen together.
+        self.palette: theme.Palette
+        self.menu: Menu
+        self._build(modes.MODES.index(app.mode))
+
+    @staticmethod
+    def _palette_at(index: int) -> theme.Palette:
+        """The palette the highlighted row previews.
+
+        The two rows under the modes are not modes and keep the default,
+        told apart by index rather than by label for the same reason
+        :meth:`_chose` does it that way.
+        """
+        if index < len(modes.MODES):
+            return theme.palette_for(modes.MODES[index].key)
+        return theme.DEFAULT
+
+    def _build(self, selected: int) -> None:
+        """(Re)make the menu widget in one mode's colours.
+
+        Rebuilt rather than repainted: the engine's ``Menu`` takes its palette
+        at construction, and reaching in to change it afterwards would be
+        poking at somebody else's privates across the engine seam. It is a
+        small object and this happens on a keypress, not on a frame.
+
+        Arrowing down the list previewing each mode's palette is what
+        ``css/modal-difficulty.css`` does for the browser's mode buttons.
+        """
+        self.palette = self._palette_at(selected)
         self.menu = Menu(
-            app.renderer,
-            theme=_menu_theme(),
+            self.app.renderer,
+            theme=_menu_theme(self.palette),
             # Cells, not pixels. The engine's defaults (280 wide, 32-cell rows)
             # would put the whole widget off-screen here.
             menu_width=theme.MENU_W,
@@ -181,12 +211,12 @@ class MenuScene:
             title_height=theme.MENU_TITLE_H,
             item_padding=theme.MENU_PAD,
             border_pad=theme.MENU_BORDER,
-            selected_color=theme.MENU_SELECTED,
-            normal_color=theme.PANEL_VALUE,
+            selected_color=self.palette.accent,
+            normal_color=self.palette.panel_value,
         )
-        self._show()
+        self._show(selected)
 
-    def _show(self) -> None:
+    def _show(self, selected: int) -> None:
         self.menu.show(
             [self._label(mode) for mode in modes.MODES]
             + [HIGH_SCORES, HOW_TO_PLAY],
@@ -195,8 +225,14 @@ class MenuScene:
             # true when the list gained a row that is not a mode — and losing
             # it reclaims the two rows the new row cost, so the block title
             # still fits an ordinary 80x24 terminal.
-            selected=modes.MODES.index(self.app.mode),
+            selected=selected,
         )
+
+    def _moved(self) -> None:
+        """Retint, but only when the highlight crossed into another mode."""
+        index = self.menu.selected_index
+        if self._palette_at(index) is not self.palette:
+            self._build(index)
 
     @staticmethod
     def _label(mode: modes.Mode) -> str:
@@ -222,13 +258,15 @@ class MenuScene:
         ``Menu.confirm()`` hides the menu as it fires the callback, so without
         this the screen underneath comes back empty.
         """
-        self._show()
+        self._build(modes.MODES.index(self.app.mode))
 
     def handle_key(self, key: str) -> bool:
         if key in ("up", "w", "k"):
             self.menu.move_up()
+            self._moved()
         elif key in ("down", "s", "j"):
             self.menu.move_down()
+            self._moved()
         elif key in ("enter", "space"):
             self.menu.confirm()
         elif key == "q":
@@ -258,31 +296,32 @@ class MenuScene:
 
     def render(self) -> None:
         r = self.app.renderer
+        p = self.palette
         r.clear()
-        r.draw_rect(0, 0, r.width, r.height, theme.BG)
+        r.draw_rect(0, 0, r.width, r.height, p.bg)
         if _too_small(r, theme.MENU_MIN_COLS, theme.MENU_MIN_ROWS):
             r.present()
             return
 
         cx = r.width // 2
-        y = _draw_title(r, cx)
+        y = _draw_title(r, cx, p)
         # Only if there is a row left for it. The title takes what it needs
         # first — it is the bigger thing on the screen — and a strapline drawn
         # anyway would land under the menu box and be painted over, which is a
         # missing line that reads as a design choice rather than a bug.
         if y < _menu_box_top(r):
-            r.ui_text(cx, y, theme.SUBTITLE, fill=theme.DIM, anchor="n")
+            r.ui_text(cx, y, theme.SUBTITLE, fill=p.muted, anchor="n")
 
         self.menu.render()
 
         best = self.app.best_in(self.app.mode.key)
         if best:
             r.ui_text(cx, r.height - 3, f"best in {self.app.mode.name}: {best}",
-                      fill=theme.PANEL_LABEL, anchor="n")
-        r.ui_text(cx, r.height - 2, MENU_HELP, fill=theme.DIM, anchor="n")
+                      fill=p.panel_label, anchor="n")
+        r.ui_text(cx, r.height - 2, MENU_HELP, fill=p.muted, anchor="n")
         if self.app.host.seated:
             r.ui_text(cx, r.height - 1, _fit(ARCADE_HELP, r.width - 2),
-                      fill=theme.DIM, anchor="n")
+                      fill=p.muted, anchor="n")
         r.present()
 
 
@@ -301,6 +340,9 @@ class RulesScene:
     two a new player most needs, since overflow and Gauntlet are the parts that
     are not obvious from watching the board.
     """
+
+    #: How to play is not a mode, so it is not dressed as one.
+    palette = theme.DEFAULT
 
     def __init__(self, app):
         self.app = app
@@ -326,17 +368,19 @@ class RulesScene:
         Built fresh per render because the wrap depends on the width and a
         terminal is resized constantly.
         """
+        p = self.palette
         out: list[tuple[int, str, str]] = []
         for heading, paragraphs in RULES:
-            out.append((0, heading, theme.MENU_SELECTED))
+            out.append((0, heading, p.accent))
             for paragraph in paragraphs:
                 for line in textwrap.wrap(paragraph, max(10, width - 2)):
-                    out.append((2, line, theme.PANEL_VALUE))
-            out.append((0, "", theme.DIM))
-        out.append((0, "GATES", theme.MENU_SELECTED))
+                    out.append((2, line, p.panel_value))
+            out.append((0, "", p.muted))
+        out.append((0, "GATES", p.accent))
         for gate in GATE_ORDER:
+            # Each gate named in the colour it wears on the board.
             out.append((2, f"{gate_symbol(gate)}  {GATE_NAMES[gate]}",
-                        theme.GATE_FG))
+                        p.legible(p.gates[-gate - 1])))
         return out
 
     def _viewport(self) -> int:
@@ -358,8 +402,9 @@ class RulesScene:
 
     def render(self) -> None:
         r = self.app.renderer
+        p = self.palette
         r.clear()
-        r.draw_rect(0, 0, r.width, r.height, theme.BG)
+        r.draw_rect(0, 0, r.width, r.height, p.bg)
         if _too_small(r, theme.MENU_MIN_COLS, theme.MENU_MIN_ROWS):
             r.present()
             return
@@ -371,7 +416,7 @@ class RulesScene:
         # content out from under an offset that was legal a frame ago.
         self.offset = min(self.offset, max(0, len(lines) - viewport))
 
-        r.ui_text(theme.MARGIN_X, 1, "HOW TO PLAY", fill=theme.TITLE)
+        r.ui_text(theme.MARGIN_X, 1, "HOW TO PLAY", fill=p.accent)
 
         y = 3
         for indent, text, colour in lines[self.offset:self.offset + viewport]:
@@ -384,11 +429,11 @@ class RulesScene:
         more = len(lines) - (self.offset + viewport)
         hint = "↑↓ scroll    any other key goes back" if (
             more > 0 or self.offset) else "any key goes back"
-        r.ui_text(theme.MARGIN_X, r.height - 2, hint, fill=theme.DIM)
+        r.ui_text(theme.MARGIN_X, r.height - 2, hint, fill=p.muted)
         if more > 0:
             tail = f"{more} more ↓"
             r.ui_text(r.width - len(tail) - theme.MARGIN_X, r.height - 2,
-                      tail, fill=theme.MENU_SELECTED)
+                      tail, fill=p.accent)
         r.present()
 
 
@@ -403,6 +448,9 @@ class InitialsScene:
         self.mode = mode
         self.score = score
         self.typed = ""
+        # The board underneath is showing through, so the box wears that
+        # run's colours rather than sitting on it in another mode's.
+        self.palette = theme.palette_for(mode.key)
 
     def handle_key(self, key: str) -> bool:
         if key == "backspace":
@@ -424,17 +472,16 @@ class InitialsScene:
 
     def render(self) -> None:
         r = self.app.renderer
+        p = self.palette
         cx, cy = r.width // 2, r.height // 2
         box_w = min(r.width - 4, 40)
-        r.draw_rect(cx - box_w // 2, cy - 3, box_w, 7, theme.MENU_BOX)
-        r.ui_text(cx, cy - 2, "A NEW HIGH SCORE", fill=theme.MENU_SELECTED,
-                  anchor="n")
+        r.draw_rect(cx - box_w // 2, cy - 3, box_w, 7, p.menu_box)
+        r.ui_text(cx, cy - 2, "A NEW HIGH SCORE", fill=p.accent, anchor="n")
         r.ui_text(cx, cy - 1, f"{self.score} in {self.mode.name}",
-                  fill=theme.PANEL_VALUE, anchor="n")
+                  fill=p.panel_value, anchor="n")
         slots = self.typed.ljust(scoring.INITIALS_LENGTH, "_")
-        r.ui_text(cx, cy + 1, "  ".join(slots), fill=theme.MENU_SELECTED,
-                  anchor="n")
-        r.ui_text(cx, cy + 2, INITIALS_HELP, fill=theme.DIM, anchor="n")
+        r.ui_text(cx, cy + 1, "  ".join(slots), fill=p.accent, anchor="n")
+        r.ui_text(cx, cy + 2, INITIALS_HELP, fill=p.muted, anchor="n")
         r.present()
 
 
@@ -445,6 +492,9 @@ class ScoresScene:
     different games, they are the same game at different widths, and a single
     ranked list says which width somebody was brave enough to play at.
     """
+
+    #: One board for every mode, so it is dressed as none of them.
+    palette = theme.DEFAULT
 
     def __init__(self, app):
         self.app = app
@@ -470,8 +520,9 @@ class ScoresScene:
 
     def render(self) -> None:
         r = self.app.renderer
+        p = self.palette
         r.clear()
-        r.draw_rect(0, 0, r.width, r.height, theme.BG)
+        r.draw_rect(0, 0, r.width, r.height, p.bg)
         if _too_small(r, theme.MENU_MIN_COLS, theme.MENU_MIN_ROWS):
             r.present()
             return
@@ -479,14 +530,14 @@ class ScoresScene:
         entries = self.app.scores.load()
         viewport = self._viewport()
         self.offset = min(self.offset, max(0, len(entries) - viewport))
-        r.ui_text(r.width // 2, 1, "HIGH SCORES", fill=theme.TITLE, anchor="n")
+        r.ui_text(r.width // 2, 1, "HIGH SCORES", fill=p.accent, anchor="n")
 
         if not entries:
             r.ui_text(r.width // 2, r.height // 2, "no scores yet",
-                      fill=theme.DIM, anchor="n")
+                      fill=p.muted, anchor="n")
             r.ui_text(r.width // 2, r.height // 2 + 1,
-                      "play something and come back", fill=theme.DIM, anchor="n")
-            r.ui_text(2, r.height - 2, SCORES_HELP, fill=theme.DIM)
+                      "play something and come back", fill=p.muted, anchor="n")
+            r.ui_text(2, r.height - 2, SCORES_HELP, fill=p.muted)
             r.present()
             return
 
@@ -497,15 +548,15 @@ class ScoresScene:
             if y >= r.height - 2:
                 break
             mode = entry.extra.get("mode", "")
-            r.ui_text(left, y, f"{i:>3}. {entry.initials}", fill=theme.PANEL_VALUE)
-            r.ui_text(left + 10, y, f"{entry.score:>6}", fill=theme.MENU_SELECTED)
-            r.ui_text(left + 18, y, mode, fill=theme.PANEL_LABEL)
+            r.ui_text(left, y, f"{i:>3}. {entry.initials}", fill=p.panel_value)
+            r.ui_text(left + 10, y, f"{entry.score:>6}", fill=p.accent)
+            r.ui_text(left + 18, y, mode, fill=p.panel_label)
             y += 1
 
         more = len(entries) - (self.offset + viewport)
         hint = ("↑↓ scroll    any other key goes back"
                 if (more > 0 or self.offset) else SCORES_HELP)
-        r.ui_text(2, r.height - 2, _fit(hint, r.width - 2), fill=theme.DIM)
+        r.ui_text(2, r.height - 2, _fit(hint, r.width - 2), fill=p.muted)
         r.present()
 
 
@@ -522,6 +573,10 @@ class GameScene:
     def __init__(self, app, mode: modes.Mode):
         self.app = app
         self.mode = mode
+        #: The console this mode is dressed as. Read from the mode key and
+        #: never from ``board.bits``, which is what keeps Gauntlet green all
+        #: the way from 2-bit to 8-bit.
+        self.palette = theme.palette_for(mode.key)
         self.rng = random.Random(app.seed)
         self.board = Board(bits=mode.start_bits, gauntlet=mode.gauntlet)
         self.over = False
@@ -620,27 +675,30 @@ class GameScene:
     def render(self) -> None:
         r = self.app.renderer
         r.clear()
-        r.draw_rect(0, 0, r.width, r.height, theme.BG)
+        r.draw_rect(0, 0, r.width, r.height, self.palette.bg)
         if _too_small(r, theme.MIN_COLS, theme.MIN_ROWS):
             r.present()
             return
 
-        r.ui_text(theme.MARGIN_X, 0, theme.BANNER, fill=theme.TITLE)
-        self._draw_grid()
-        self._draw_panel()
-        self._draw_footer()
+        # Worked out once a frame rather than kept as constants: the block is
+        # centred, so where it lands moves with the window.
+        lay = theme.layout(r.width, r.height)
+        r.ui_text(lay.banner_x, lay.banner_y, theme.BANNER,
+                  fill=self.palette.accent)
+        self._draw_grid(lay)
+        self._draw_panel(lay)
+        self._draw_footer(lay)
         r.present()
 
-    def _draw_grid(self) -> None:
+    def _draw_grid(self, lay: theme.Layout) -> None:
         r = self.app.renderer
         board = self.board
         for row in range(BOARD_SIZE):
             for col in range(BOARD_SIZE):
-                x = theme.MARGIN_X + col * (theme.TILE_W + theme.GAP)
-                y = theme.TOP + row * (theme.TILE_H + theme.GAP)
+                x, y = lay.tile(row, col)
                 value = board.cells[row][col]
-                bg, fg = theme.tile_colors(value, board.max_value,
-                                           gate=is_gate(value))
+                bg, fg = self.palette.tile_colors(value, board.max_value,
+                                                  gate=is_gate(value))
 
                 if (row, col) == board.rainbow_at:
                     # Earned the Gauntlet promotion: cycle the hue so it reads
@@ -664,17 +722,18 @@ class GameScene:
                 r.ui_text(x + theme.TILE_W // 2, y + theme.TILE_H // 2, label,
                           fill=fg, anchor="center")
 
-    def _draw_panel(self) -> None:
+    def _draw_panel(self, lay: theme.Layout) -> None:
         r = self.app.renderer
+        p = self.palette
         board = self.board
-        x = theme.PANEL_X
-        y = theme.TOP
+        x = lay.panel_x
+        y = lay.panel_y
 
         def stat(label: str, value: str) -> None:
             nonlocal y
-            r.ui_text(x, y, label, fill=theme.PANEL_LABEL)
+            r.ui_text(x, y, label, fill=p.panel_label)
             r.ui_text(x + theme.PANEL_W - 2, y, value,
-                      fill=theme.PANEL_VALUE, anchor="ne")
+                      fill=p.panel_value, anchor="ne")
             y += 1
 
         stat("SCORE", f"{board.score}")
@@ -686,42 +745,44 @@ class GameScene:
         stat("HIGHEST", f"{board.highest_value()}")
         y += 1
 
-        r.ui_text(x, y, "GATES", fill=theme.PANEL_LABEL)
+        r.ui_text(x, y, "GATES", fill=p.panel_label)
         y += 1
         for gate in (GATE_XOR, GATE_OR, GATE_AND, GATE_NOT):
+            # Each gate named in the colour it wears on the board.
             r.ui_text(x, y, f" {gate_symbol(gate)}  {GATE_NAMES[gate]}",
-                      fill=theme.GATE_FG)
+                      fill=p.legible(p.gates[-gate - 1]))
             y += 1
 
-    def _draw_footer(self) -> None:
+    def _draw_footer(self, lay: theme.Layout) -> None:
         r = self.app.renderer
-        y = theme.FOOTER_Y
+        x = lay.banner_x
+        y = lay.footer_y
 
         if self.over:
-            r.ui_text(theme.MARGIN_X, y,
+            r.ui_text(x, y,
                       f"GAME OVER — {self.board.score} points.  "
                       f"R restart   Esc modes",
                       fill=theme.OVER_FG)
         elif self.flash:
-            r.ui_text(theme.MARGIN_X, y, self.flash, fill=theme.TITLE)
+            r.ui_text(x, y, self.flash, fill=self.palette.accent)
 
         keys = "   ".join(f"{k} {what}" for k, what in GAME_HELP)
-        r.ui_text(theme.MARGIN_X, y + 1, keys, fill=theme.DIM)
+        r.ui_text(x, y + 1, keys, fill=self.palette.muted)
 
 
-def _menu_theme():
-    """The engine's Theme, recoloured to the game's palette.
+def _menu_theme(palette: theme.Palette):
+    """The engine's Theme, recoloured to one mode's palette.
 
     ``dataclasses.replace`` because :class:`~magmacrunch.engine.ui.theme.Theme` is
     frozen — building variants that way is what its docstring asks for.
     """
     return replace(
         DEFAULT_THEME,
-        primary=theme.MENU_SELECTED,
-        text=theme.PANEL_VALUE,
-        dim_text=theme.DIM,
-        box_fill=theme.MENU_BOX,
-        box_outline=theme.PANEL_LABEL,
+        primary=palette.accent,
+        text=palette.panel_value,
+        dim_text=palette.muted,
+        box_fill=palette.menu_box,
+        box_outline=palette.panel_label,
         outline_width=1,
-        selection_fill=theme.MENU_SELECTION_BG,
+        selection_fill=palette.menu_selection_bg,
     )

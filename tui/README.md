@@ -71,8 +71,9 @@ Best scores are kept per mode for as long as the process runs, and shown on
 both screens.
 
 Needs a terminal at least 59x20 for the board, 44x18 for the menu. Below that
-it says so rather than drawing a clipped screen. Truecolor is used for the
-value ramp but not required.
+it says so rather than drawing a clipped screen. Anything roomier than the
+minimum centres the board in the window rather than pinning it to a corner.
+Truecolor is used for the tile ramps but not required.
 
 ## Launchable by an arcade
 
@@ -167,6 +168,34 @@ out, at every width, against that width's height floor.
 
 The **rainbow tile** — the tile that earned a Gauntlet promotion — is in all
 three, and takes precedence over the gold when one tile is both.
+
+### Every mode wears a console
+
+2-bit is a Game Boy, 3-bit a NES, 4-bit a SNES, then Genesis, an arcade
+cabinet, a Neo Geo and a PS1; Gauntlet is the Matrix, and stays green across
+every width it climbs through, because the mode is the throughline and not the
+bit count. Choosing a mode repaints the whole screen, and arrowing down the
+menu previews each one.
+
+The values come from `wii/source/palette.c`, which is `web/css/themes.css`
+already flattened into a table indexed by mode — the same reason the rules came
+from `wii/`. Re-deriving them from the stylesheet would have been a fourth
+opinion about what they are.
+
+Two things a terminal needs that the other ports do not:
+
+- **Ink is chosen, not declared.** The web sets a text colour per value and the
+  Wii is read from across a room; here a cell is one background with one glyph
+  on it, and the Wii's own table has tiles that come out below 2:1 taken at
+  face value — `#ffd700` on the PS1's silver ramp, `#00ff00` on the Matrix's
+  near-white NOT gate. `Palette.ink` takes the most in-family colour that
+  reads, and `tests/test_app.py` checks every tile in every mode.
+- **The bar for a tile is the large-text one**, 3:1 rather than 4.5:1. That is
+  not a loophole. The Game Boy is four shades of one green by design, and at
+  the body-text bar most of that board comes out white — off-joke, and
+  incoherent beside the two tiles that keep their green. At 3:1 it reads green
+  numerals on its dark steps and dark ones on its light steps, which is what a
+  Game Boy looks like. Sentences are still held to 4.5:1.
 
 ## Not ported
 

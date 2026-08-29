@@ -777,9 +777,14 @@ def test_scrolling_stops_at_both_ends():
 
 
 def tile_bg(app: BooleApp, row: int, col: int) -> str | None:
-    """The background of the tile at ``(row, col)``, read off the buffer."""
-    x = theme.MARGIN_X + col * (theme.TILE_W + theme.GAP)
-    y = theme.TOP + row * (theme.TILE_H + theme.GAP)
+    """The background of the tile at ``(row, col)``, read off the buffer.
+
+    Through ``theme.layout`` rather than from the constants, because the board
+    is centred and where it lands depends on the size of the window the pilot
+    happened to give us.
+    """
+    r = app.renderer
+    x, y = theme.layout(r.width, r.height).tile(row, col)
     return app.host.game.surface.buffer.get(x, y).bg
 
 
@@ -865,15 +870,170 @@ def test_the_gold_text_stays_readable_on_every_shimmer_step():
 def test_the_gold_is_never_dimmer_than_an_ordinary_tile():
     """The invariant the shimmer's range was chosen to satisfy.
 
-    The board's own ramp climbs into yellow at the top, so a personal best that
-    dipped dark would spend part of every second looking *less* important than
-    a lesser tile next to it. RAMP's very top step is exempt: reaching it takes
-    a value above nine tenths of the ceiling, and the tile holding the best
-    value ever built is the one that reaches it.
+    A ramp climbs into its theme's brightest colour at the top, so a personal
+    best that dipped dark would spend part of every second looking *less*
+    important than a lesser tile next to it. Every ramp's very top step is
+    exempt: reaching it takes a value above four fifths of the ceiling, and the
+    tile holding the best value ever built is the one that reaches it.
+
+    Checked against all eight palettes, not just the one the default mode
+    wears. PS1 is the brightest, topping out at #b0b0b0 under the exemption.
     """
-    floor = max(luminance(bg) for bg, _ in theme.RAMP[:-1])
+    floor = max(luminance(bg)
+                for palette in theme.PALETTES for bg in palette.ramp[:-1])
     for stop in theme.GOLD:
         assert luminance(stop) >= floor, stop
+
+
+# ── The palette per mode ─────────────────────────────────────────────
+
+
+def test_every_mode_has_a_palette_and_they_are_in_the_same_order():
+    # The Wii looks its palette up by index into a table kept in ModeId order.
+    # This one is a dict, so a drift here would not crash — it would silently
+    # dress a mode as the wrong console.
+    assert [p.key for p in theme.PALETTES] == [m.key for m in modes.MODES]
+    for mode in modes.MODES:
+        assert theme.palette_for(mode.key).key == mode.key
+
+
+def test_gauntlet_stays_matrix_green_all_the_way_up():
+    # The mode is the throughline, not the bit count. Same choice as the other
+    # two ports, and the reason the palette is keyed by mode and not by width.
+    app, scene = game_app("gauntlet")
+    assert scene.palette.console == "Matrix"
+    for bits in range(modes.MIN_BITS, modes.MAX_BITS + 1):
+        scene.board.bits = bits
+        assert scene.palette is theme.palette_for("gauntlet")
+
+
+def test_an_unknown_mode_key_falls_back_rather_than_raising():
+    assert theme.palette_for("no-such-mode") is theme.DEFAULT
+
+
+def test_every_ramp_climbs():
+    # A ramp that dipped would say a smaller number was worth more.
+    for palette in theme.PALETTES:
+        lums = [luminance(step) for step in palette.ramp]
+        assert lums == sorted(lums), palette.key
+        assert len(set(lums)) == len(lums), palette.key
+
+
+def test_every_tile_can_be_read():
+    """The check the other two ports do not do.
+
+    The web sets a text colour per value and the Wii is read from across a
+    room; here a cell is one background with one glyph on it, and the Wii's
+    own table has at least two tiles — PS1's silver ramp under #ffd700, and
+    Matrix's near-white NOT gate under #00ff00 — that come out below 2:1 if
+    the ink is taken at face value. `Palette.ink` is what stops that, so this
+    is the test that it is being asked.
+    """
+    for palette in theme.PALETTES:
+        for bg in palette.ramp + palette.gates + (palette.empty_tile,):
+            ink = palette.ink(bg)
+            ratio = theme.contrast(bg, ink)
+            assert ratio >= theme.TILE_READABLE, (
+                f"{palette.key} {bg} on {ink}: {ratio}")
+
+
+def test_a_tile_keeps_its_theme_colour_wherever_that_reads():
+    """The reason tile ink is held to the large-text bar and not the body one.
+
+    Game Boy is four shades of one green, and against its middle ramp steps
+    nothing in the family clears 4.5:1 — so at the body-text bar most of that
+    board came out in #ffffff, which is both off-joke and incoherent beside
+    the tiles that did keep their green. Pinned as a count rather than a list
+    of hexes so the ramp can be retuned without this becoming a transcription
+    of it.
+    """
+    for palette in theme.PALETTES:
+        tiles = palette.ramp + palette.gates
+        in_family = [bg for bg in tiles
+                     if palette.ink(bg) in (palette.tile_text, palette.bg)]
+        assert len(in_family) >= len(tiles) - 2, palette.key
+
+
+def test_the_gate_names_are_legible_where_they_are_written_as_words():
+    # Half the gate backgrounds are deliberately near-black, which is right for
+    # a tile and invisible as a word on the screen behind it.
+    for palette in theme.PALETTES:
+        for gate in palette.gates:
+            assert theme.contrast(palette.bg, palette.legible(gate)) \
+                >= theme.READABLE, palette.key
+
+
+def test_game_over_reads_on_every_background():
+    # The one colour that does not change with the console, so it has to work
+    # against all eight of them.
+    for palette in theme.PALETTES:
+        assert theme.contrast(palette.bg, theme.OVER_FG) >= theme.READABLE, \
+            palette.key
+
+
+def test_the_panel_hierarchy_holds_in_every_theme():
+    """Value brighter than label brighter than hint.
+
+    Three themes set ``.score-label`` and the value colour to the same hex,
+    which works on a page where one of them is bold and twice the size. Here
+    colour is the whole difference, which is why the label is derived rather
+    than transcribed.
+    """
+    for p in theme.PALETTES:
+        value, label, muted = (luminance(p.panel_value),
+                               luminance(p.panel_label), luminance(p.muted))
+        assert value > label > muted, p.key
+
+
+# ── The centred board ────────────────────────────────────────────────
+
+
+def test_the_smallest_terminal_is_exactly_where_it_always_was():
+    # Centring is a bonus for a roomy window, not a change to the floor. At the
+    # minimum size the board sits where it did before it could move at all.
+    lay = theme.layout(theme.MIN_COLS, theme.MIN_ROWS)
+    assert (lay.banner_x, lay.banner_y) == (theme.MARGIN_X, 0)
+    assert lay.tile(0, 0) == (theme.MARGIN_X, theme.TOP)
+    assert lay.panel_x == theme.MARGIN_X + theme.GRID_W + theme.PANEL_GAP
+    assert lay.footer_y + 1 == theme.MIN_ROWS - 1
+
+
+def test_the_board_is_centred_when_there_is_room():
+    lay = theme.layout(100, 30)
+    left = lay.banner_x
+    right = 100 - (lay.panel_x + theme.PANEL_W)
+    assert abs(left - right) <= 1, (left, right)
+    top = lay.banner_y
+    bottom = 30 - (lay.footer_y + 2)
+    assert abs(top - bottom) <= 1, (top, bottom)
+
+
+def test_the_board_never_runs_off_the_left_edge():
+    # Below the minimum the scene draws the resize message instead, but the
+    # layout is still asked for and must not go negative.
+    for cols in range(20, theme.MIN_COLS + 1):
+        assert theme.layout(cols, 24).banner_x >= theme.MARGIN_X
+    for rows in range(6, theme.MIN_ROWS + 1):
+        assert theme.layout(80, rows).banner_y >= 0
+
+
+def test_the_board_really_left_the_corner():
+    """Not just that the layout says so — that the cells moved.
+
+    The default pilot window is 80x24, which has room to spare, so the corner
+    the board used to be pinned to should now be nothing but background.
+    """
+    app, scene = game_app("nibble")
+    blank_board(scene)
+    scene.board.cells[0][0] = 3
+    scene.render()
+    r = app.renderer
+    lay = theme.layout(r.width, r.height)
+    assert lay.grid_x > theme.MARGIN_X, "pick a roomier window for this test"
+
+    buffer = app.host.game.surface.buffer
+    assert buffer.get(*lay.tile(0, 0)).bg not in (None, scene.palette.bg)
+    assert buffer.get(theme.MARGIN_X, theme.TOP).bg == scene.palette.bg
 
 
 # ── Seated under a launcher ─────────────────────────────────────────
