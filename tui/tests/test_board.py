@@ -555,3 +555,78 @@ def test_the_rules_import_without_the_engine():
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.strip() == "False False"
+
+
+# ── The gold personal-best tile ──────────────────────────────────────
+
+
+def test_the_best_value_built_is_the_one_that_is_gold():
+    b = board(4)
+    b.cells[0][0] = 5
+    b.cells[0][1] = 5
+    b.move(Direction.LEFT)          # 5 merges to 5, above the 4-bit floor
+    assert b.highest_earned == 5
+    assert b.is_personal_best(5)
+    assert not b.is_personal_best(4)
+    assert not b.is_personal_best(6)
+
+
+def test_nothing_is_gold_before_anything_has_been_earned():
+    b = board(4)
+    b.cells[0][0] = 9
+    assert not b.is_personal_best(9)
+    assert not b.is_personal_best(TILE_EMPTY)
+
+
+def test_two_bit_has_no_gold_tile_at_all():
+    # Every 2-bit value can spawn, so the mode pays no height bonus and has
+    # nothing to celebrate. The gold follows the bonus rather than being a
+    # second rule that could disagree with it.
+    b = board(2)
+    b.cells[0][0] = 1
+    b.cells[0][1] = 1
+    b.move(Direction.LEFT)
+    assert b.highest_earned == 1
+    assert not b.is_personal_best(1)
+    assert not any(b.is_personal_best(v) for v in range(1, 4))
+
+
+def test_a_value_below_the_floor_is_tracked_but_not_gilded():
+    # highest_earned advances so the bonus is not paid twice, and the tile
+    # still gets nothing — the web draws the same distinction.
+    b = board(8)
+    b.cells[0][0] = 3
+    b.cells[0][1] = 3
+    b.move(Direction.LEFT)
+    assert b.highest_earned == 3
+    assert modes.height_bonus(8, 3) == 0
+    assert not b.is_personal_best(3)
+
+
+def test_gates_and_empty_cells_are_never_gold():
+    b = board(4)
+    b.highest_earned = 9
+    assert b.is_personal_best(9)
+    for value in (TILE_EMPTY, GATE_XOR, GATE_OR, GATE_AND, GATE_NOT):
+        assert not b.is_personal_best(value)
+
+
+def test_no_spawn_can_ever_reach_the_height_floor():
+    """The reason asking about the *value* is safe.
+
+    The web tracks a specific tile instance so that a spawn landing on the
+    best value cannot steal the gold; this build asks whether the value is the
+    best one earned. The two can only disagree if a spawn is able to produce a
+    value at or above the floor — so check every value every table can hand
+    out, at every width, against that width's floor. Exhaustive rather than
+    sampled: it is 100 rolls across 8 widths and it is the whole argument.
+    """
+    for bits in range(2, modes.MAX_BITS + 1):
+        floor = modes.height_threshold(bits)
+        for highest_on_board in range(0, modes.max_value(bits) + 1):
+            for roll in range(100):
+                spawned = modes.spawn_value(bits, highest_on_board, roll)
+                assert spawned < floor, (
+                    f"{bits}-bit spawns {spawned}, at or above the {floor} "
+                    f"floor — a spawned tile could be gilded"
+                )

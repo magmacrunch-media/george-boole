@@ -771,3 +771,106 @@ def test_scrolling_stops_at_both_ends():
         rules.handle_key("down")
     assert rules.offset == rules._max_offset()
     assert isinstance(app.host.scene, scenes.RulesScene), "still on the rules"
+
+
+# ── The gold personal-best tile ──────────────────────────────────────
+
+
+def tile_bg(app: BooleApp, row: int, col: int) -> str | None:
+    """The background of the tile at ``(row, col)``, read off the buffer."""
+    x = theme.MARGIN_X + col * (theme.TILE_W + theme.GAP)
+    y = theme.TOP + row * (theme.TILE_H + theme.GAP)
+    return app.host.game.surface.buffer.get(x, y).bg
+
+
+def test_the_best_tile_is_gold_and_the_others_are_not():
+    app, scene = game_app("nibble")
+    blank_board(scene)
+    scene.board.cells[0][0] = 5
+    scene.board.cells[0][1] = 5
+    scene.do_move(Direction.LEFT)      # 5 merges to 5: above the 4-bit floor
+    assert scene.board.highest_earned == 5
+    blank_board(scene)                 # drop the spawn, keep what was earned
+    scene.board.cells[0][0] = 5
+    scene.board.cells[1][1] = 3
+    scene.frame = 0
+    scene.render()
+    assert tile_bg(app, 0, 0) == theme.GOLD[0]
+    assert tile_bg(app, 1, 1) not in theme.GOLD
+
+
+def test_the_gold_shimmers_rather_than_sitting_still():
+    # The web plates it with a gradient that sweeps across itself. A terminal
+    # cell has one colour, so the sweep becomes the cell changing colour, and
+    # motion is what tells the tile apart from a merely high-valued one.
+    app, scene = game_app("nibble")
+    blank_board(scene)
+    scene.board.highest_earned = 9
+    scene.board.cells[0][0] = 9
+    seen = []
+    for step in range(len(theme.GOLD)):
+        scene.frame = step * theme.GOLD_PERIOD
+        scene.render()
+        seen.append(tile_bg(app, 0, 0))
+    assert seen == list(theme.GOLD)
+
+
+def test_the_rainbow_wins_when_a_tile_is_both():
+    # The tile that earns a Gauntlet promotion is almost always the best value
+    # too, so gold would swallow the rainbow if it went first. The Wii resolves
+    # it the same way round.
+    app, scene = game_app("gauntlet", seed=3)
+    blank_board(scene)
+    scene.board.cells[0][0] = 1
+    scene.board.cells[0][1] = GATE_OR
+    scene.board.cells[0][2] = 2         # 1 OR 2 = 3, the 2-bit ceiling
+    scene.do_move(Direction.LEFT)
+    assert scene.board.rainbow_at == (0, 0)
+    scene.frame = 0
+    scene.render()
+    assert tile_bg(app, 0, 0) == theme.RAINBOW[0]
+
+
+def test_gold_never_appears_in_crumb():
+    # 2-bit pays no height bonus, so it has no personal best to plate.
+    app, scene = game_app("crumb")
+    blank_board(scene)
+    scene.board.cells[0][0] = 1
+    scene.board.cells[0][1] = 1
+    scene.do_move(Direction.LEFT)
+    assert scene.board.highest_earned == 1
+    scene.render()
+    grid = [tile_bg(app, r, c) for r in range(4) for c in range(4)]
+    assert not any(bg in theme.GOLD for bg in grid)
+
+
+def _channel(v: float) -> float:
+    return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+
+def luminance(colour: str) -> float:
+    """Relative luminance of ``#rrggbb``, per WCAG."""
+    r, g, b = (int(colour[i:i + 2], 16) / 255 for i in (1, 3, 5))
+    return 0.2126 * _channel(r) + 0.7152 * _channel(g) + 0.0722 * _channel(b)
+
+
+def test_the_gold_text_stays_readable_on_every_shimmer_step():
+    # Pinned as a ratio rather than a set of hex values, so the palette can be
+    # retuned without quietly going dark.
+    for stop in theme.GOLD:
+        lo, hi = sorted((luminance(stop), luminance(theme.GOLD_FG)))
+        assert (hi + 0.05) / (lo + 0.05) >= 7.0, stop
+
+
+def test_the_gold_is_never_dimmer_than_an_ordinary_tile():
+    """The invariant the shimmer's range was chosen to satisfy.
+
+    The board's own ramp climbs into yellow at the top, so a personal best that
+    dipped dark would spend part of every second looking *less* important than
+    a lesser tile next to it. RAMP's very top step is exempt: reaching it takes
+    a value above nine tenths of the ceiling, and the tile holding the best
+    value ever built is the one that reaches it.
+    """
+    floor = max(luminance(bg) for bg, _ in theme.RAMP[:-1])
+    for stop in theme.GOLD:
+        assert luminance(stop) >= floor, stop

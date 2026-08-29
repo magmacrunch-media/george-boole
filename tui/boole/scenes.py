@@ -71,6 +71,9 @@ RULES = (
     ("SCORING", (
         "An operation scores its result. Land one above the halfway mark and "
         "it scores double.",
+        "That doubling pays once per value, the first time you reach it. The "
+        "tile that got there wears a gold plate for as long as it is the best "
+        "you have built.",
         "Overflowing the ceiling scores three times the maximum value.",
     )),
     ("OVERFLOW", (
@@ -630,6 +633,14 @@ class GameScene:
                     # as different in kind, not just a bright number.
                     bg = theme.RAINBOW[(self.frame // 3) % len(theme.RAINBOW)]
                     fg = "#1c1917"
+                elif board.is_personal_best(value):
+                    # The best value built this run. Rainbow first, as on the
+                    # Wii: promoting is the rarer thing, and the tile that did
+                    # it is usually the best value too, so gold would otherwise
+                    # swallow it.
+                    bg = theme.GOLD[(self.frame // theme.GOLD_PERIOD)
+                                    % len(theme.GOLD)]
+                    fg = theme.GOLD_FG
 
                 r.ui_rect(x, y, theme.TILE_W, theme.TILE_H, fill=bg)
                 if value == TILE_EMPTY:

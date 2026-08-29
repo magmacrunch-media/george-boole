@@ -136,17 +136,29 @@ All three builds have to agree on every one of these or the same game plays
 differently in three places, and that divergence is invisible until a player
 notices.
 
-### One known difference from `web/`
+### The gold personal-best tile, and how it differs from `web/`
 
-The web build has a **gold "personal best" tile** (`personalBestBoard` in
-`game.js`, 14 references). The Wii build does not have it, and neither does
-this one — it was not in the source these rules were ported from. That is a
-pre-existing divergence between `web/` and `wii/`, not something introduced
-here; per the repo's `AGENTS.md` rule that a gameplay change lands in every
-version, it is worth resolving in one direction or the other.
+The tile holding the best value ever built by merging is plated gold, and it
+shimmers — the web sweeps a gradient across it every 2.5s, and a cell that can
+only be one colour at a time does the same sweep by changing colour. Only the
+bright half of the web's gradient is used: its dark stops are corner shading
+that is never the whole tile there, and here they would be, which both makes
+the number hard to read and leaves the best tile on the board looking duller
+than a lesser one beside it. `tests/test_app.py` pins both as ratios.
 
-The **rainbow tile** — the tile that earned a Gauntlet promotion — is in both
-`web/` and `wii/`, and is here too.
+Which tile gets it is asked of the **value** — `Board.is_personal_best` — the
+way `wii/source/render.c` asks it, rather than tracked as a parallel board of
+booleans that slides and merges alongside the values the way `web/js/game.js`
+does. So the web golds whichever tile reached the value first, and this golds
+every tile holding it. Cosmetic: the height bonus is the same in all three.
+
+Asking about the value cannot accidentally gild a *spawned* tile, which is the
+case the web's implementation is careful about. `tests/test_board.py` checks it
+exhaustively rather than by argument: every value every spawn table can hand
+out, at every width, against that width's height floor.
+
+The **rainbow tile** — the tile that earned a Gauntlet promotion — is in all
+three, and takes precedence over the gold when one tile is both.
 
 ## Not ported
 

@@ -76,6 +76,33 @@ RAMP = (
 #: Cycled for the Gauntlet tile that earned a promotion.
 RAINBOW = ("#ff5f5f", "#ffaf5f", "#ffff5f", "#5fff87", "#5fd7ff", "#af87ff")
 
+# The personal-best tile: the one holding the best value ever built by merging.
+#
+# The web plates it with a 135° gradient that sweeps across itself every 2.5s;
+# the Wii, which has no shimmer, settles for a flat #ffd700. A terminal can
+# move, so it takes the web's treatment rather than the Wii's — a sweeping
+# background-position, seen from one tile, is the tile changing colour.
+#
+# Only the gradient's *bright* half is used, and that is deliberate. The web's
+# dark stops (#8b6914) are shading at the corners of a gradient and are never
+# the whole tile; a cell has one colour, so here a dark stop would be the whole
+# tile for a quarter of every cycle. Two things break when it is:
+#
+#   - #3a2000 on #8b6914 is 3.0:1, and the number stops being readable;
+#   - #8b6914 is dimmer than most of RAMP, so the best tile on the board spends
+#     part of each second looking duller than a lesser one beside it. Same
+#     mistake as a starfield louder than the ship it is behind.
+#
+# So the sweep runs #ffd700 -> #ffe87c and back, both the web's own stops, with
+# one interpolated step to keep it from reading as a blink. Every stop clears
+# 10:1 against the text and outshines every tile colour except RAMP's very top
+# step, which in practice this tile is the one wearing.
+GOLD = ("#ffd700", "#ffdd3f", "#ffe87c", "#ffdd3f")
+GOLD_FG = "#3a2000"
+#: Frames per shimmer step. Four steps at 20fps is 2.4s, the web's 2.5s as
+#: near as a whole number of frames gets.
+GOLD_PERIOD = 12
+
 #: The plain title, and the last fallback when no block face will fit.
 BANNER = "GEORGE BOOLE HAS ENTERED THE CHAT"
 SUBTITLE = "a command-line-only Boolean puzzle"

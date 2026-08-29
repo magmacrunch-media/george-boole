@@ -105,6 +105,32 @@ class Board:
     def is_full(self) -> bool:
         return all(v != TILE_EMPTY for row in self.cells for v in row)
 
+    def is_personal_best(self, value: int) -> bool:
+        """Whether a tile holding ``value`` wears the gold plate.
+
+        The web build tracks the marker as a parallel 4x4 boolean board that
+        slides, merges and rotates alongside the values, so that exactly one
+        *tile instance* is gold. The Wii asks this question of the value
+        instead (``render.c``), and this is that predicate — a method rather
+        than three copies of the expression, which is the only thing that
+        differs from the C.
+
+        Asking about the value cannot accidentally gild a spawn, which is the
+        thing the web comments are careful about. A spawn can never reach
+        :func:`modes.height_threshold`: the highest a table hands out is 5 at
+        3-bit (floor 6), 4 at 4-bit (floor 5), 8 at 6-bit (floor 31) and 12
+        from ``spawn_late`` (floor 42 at 7-bit, 85 at 8-bit). So requiring a
+        bonus to have been paid already restricts this to values built by
+        merging.
+
+        It is not identical to the web: two tiles that both hold the best value
+        are both gold here, and the web golds whichever one got there first.
+        Written down in the repo's ``AGENTS.md`` rather than papered over.
+        """
+        return (value == self.highest_earned
+                and self.highest_earned > 0
+                and modes.height_bonus(self.bits, self.highest_earned) > 0)
+
     # ── Gates ───────────────────────────────────────────────────────
 
     def apply_gate(self, gate: int, lhs: int, rhs: int = 0) -> int:

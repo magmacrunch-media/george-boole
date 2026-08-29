@@ -32,20 +32,36 @@ The assertion table exists three times and must agree everywhere:
 `web/tests/test-game-logic.js` → `wii/tests/test_board.c` → `tui/tests/test_board.py`.
 Adding a rule means adding it to all three.
 
-## Known divergence — the gold "personal best" tile
+## The gold "personal best" tile — how the three builds differ
 
-`web/js/game.js` has a `personalBestBoard` marking the tile that first reached a
-new personal-best value (14 references). **`wii/` does not have it, and neither
-does `tui/`.** This predates the TUI port — it was already missing from the Wii
-version, so the TUI inherited the gap by porting from `board.c`.
+All three plate the tile holding the best value ever built by merging, and all
+three pay the same height bonus for reaching it (`mode_height_bonus`,
+`modes.height_bonus`, the `heightBonus` in `moveLeft`). What differs is only
+*which tile* gets the plate when more than one holds that value:
 
-Per the rule above this should be resolved in one direction: either port it to
-`wii/` and `tui/`, or drop it from `web/`. It is flagged here so it is not
-rediscovered a fourth time.
+| | how the tile is identified |
+|---|---|
+| `web/` | a parallel 4x4 boolean board (`personalBestBoard`, 14 references) that slides, merges and rotates alongside the values, so exactly one *instance* is gold |
+| `wii/` | `value == b->highest_earned`, asked at draw time (`render.c`) |
+| `tui/` | `Board.is_personal_best(value)`, the same predicate as one method instead of three copies |
 
-The **rainbow tile** (the tile that earned a Gauntlet promotion) *is* in all
-three. Note it only appears when a *merge* lands on the ceiling — NOT-of-ceiling
-also promotes, but clears the tile, so there is nothing left to mark.
+So the web golds whichever tile got there first; the other two gold every tile
+holding that value. The difference is visible only when a value is built twice,
+and it is cosmetic — nothing about scoring depends on it.
+
+**Asking about the value cannot gild a spawn**, which is the thing the web's
+comments are careful about. `tui/tests/test_board.py` checks it exhaustively:
+every value every spawn table can hand out, at every width, against that
+width's height floor. Nothing spawns within reach of a floor.
+
+This section used to say the Wii did not have the tile at all and that the TUI
+had inherited the gap. That was wrong about the Wii — `render.c` has drawn it
+since the repo was restructured — and is now wrong about the TUI too.
+
+The **rainbow tile** (the tile that earned a Gauntlet promotion) is in all
+three, and wins over the gold in all three when one tile is both. Note it only
+appears when a *merge* lands on the ceiling — NOT-of-ceiling also promotes, but
+clears the tile, so there is nothing left to mark.
 
 ## `tui/LICENSE` and `tui/NOTICE` are copies
 
