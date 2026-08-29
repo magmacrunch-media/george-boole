@@ -41,6 +41,13 @@ the gates are in the HUD during a game, but the HUD is not where you go to
 find out what they mean. It scrolls, because the rules are longer than a
 standard terminal is tall.
 
+**High scores** are kept on disk, so a record outlives the session. One board
+for the whole game with the mode on each row, rather than eight — crumb and
+byte are not different games, they are the same game at different widths, and a
+single ranked list says which width somebody was brave enough to play at. Filed
+under `george-boole`, the same key the browser build posts to. Reach it from the
+menu or with `B`.
+
 **On the title screen**
 
 | key | |

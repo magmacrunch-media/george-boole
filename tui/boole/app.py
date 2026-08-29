@@ -18,6 +18,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from texastoast.scores import ScoreBook
+
 from boole import modes
 from boole.scenes import GameScene, MenuScene
 
@@ -25,13 +27,28 @@ from boole.scenes import GameScene, MenuScene
 class BooleApp:
     """A session of George Boole, drawing on somebody else's terminal."""
 
+    #: The key the browser build posts under, so a shared board later is a
+    #: shared board and not two boards with the same name.
+    SCORE_KEY = "george-boole"
+
     def __init__(self, host: Any, mode_key: str = "nibble",
-                 seed: int | None = None):
+                 seed: int | None = None, scores: ScoreBook | None = None):
         self.host = host
         self.seed = seed
         self.mode = modes.MODES_BY_KEY.get(mode_key, modes.MODES_BY_KEY["nibble"])
-        #: Best score per mode key, for as long as this session lasts.
-        self.best: dict[str, int] = {}
+
+        #: The high score table, on disk and outliving the session.
+        #:
+        #: One board for the whole game rather than eight, with the mode kept
+        #: in each entry. Eight boards would fragment a table nobody fills —
+        #: crumb and byte are not different games, they are the same game at
+        #: different widths, and a single ranked list says which width somebody
+        #: was brave enough to play at.
+        self.scores = scores or ScoreBook(self.SCORE_KEY)
+        #: What the player last typed, so a second run does not ask again.
+        self.initials = "AAA"
+        #: Where the last recorded run landed, for the game-over screen.
+        self.last_rank: int | None = None
 
         #: The mode menu. The caller pushes it — a game that pushed its own
         #: scene would take that decision away from whatever is seating it.
@@ -77,9 +94,39 @@ class BooleApp:
         """
         self.host.pop_scene()
 
-    def record_best(self, mode: modes.Mode, score: int) -> None:
-        if score > self.best.get(mode.key, 0):
-            self.best[mode.key] = score
+    def best_in(self, mode_key: str) -> int:
+        """The best score on record in one mode.
+
+        Filtered out of the single board rather than read from a per-mode one.
+        Read from the file each time rather than cached: the file is the truth,
+        and a cache goes stale the moment anything else writes to it.
+        """
+        scores = [e.score for e in self.scores.load()
+                  if e.extra.get("mode") == mode_key]
+        return max(scores, default=0)
+
+    def qualifies(self, score: int) -> bool:
+        """Whether a score is worth asking for initials over."""
+        return score > 0 and self.scores.qualifies(score)
+
+    def record(self, mode: modes.Mode, score: int, initials: str | None = None):
+        """Put a score on the board, under the mode it was set in."""
+        self.initials = initials or self.initials
+        result = self.scores.save(self.initials, score, mode=mode.key)
+        self.last_rank = result.rank
+        return result
+
+    def show_scores(self) -> None:
+        """The high score table, over the mode menu."""
+        from boole.scenes import ScoresScene
+
+        self.host.push_scene(ScoresScene(self))
+
+    def enter_initials(self, mode: modes.Mode, score: int) -> None:
+        """Ask who just did that, over the finished board."""
+        from boole.scenes import InitialsScene
+
+        self.host.push_scene(InitialsScene(self, mode, score))
 
     # ── Introspection, for tests ────────────────────────────────────
 

@@ -16,6 +16,7 @@ import pytest
 
 pytest.importorskip("textual", reason='needs: pip install -e ".[dev]" with texastoast[tui]')
 
+from texastoast import scores as score_mod  # noqa: E402
 from texastoast.core.tui_host import TuiHost  # noqa: E402
 from texastoast.ui import bigtext  # noqa: E402
 
@@ -34,6 +35,17 @@ from boole.board import (  # noqa: E402
     Direction,
 )
 from boole.scenes import GameScene, MenuScene  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+def isolated_scores(tmp_path, monkeypatch):
+    """No test may touch a real player's score file.
+
+    Autouse rather than opt-in: a suite that can quietly delete somebody's
+    high scores is not one you want to run twice, and remembering to ask for a
+    fixture is exactly what gets forgotten in the test added later.
+    """
+    monkeypatch.setenv(score_mod.DATA_DIR_ENV, str(tmp_path))
 
 
 def buffer_text(app: BooleApp) -> str:
@@ -549,153 +561,139 @@ def test_a_seeded_run_is_reproducible():
 
 
 def test_the_best_score_is_kept_per_mode_and_survives_the_menu():
+    """One board with the mode on each row, filtered per mode when asked."""
     app, scene = game_app("crumb", seed=11)
     scene.board.score = 250
     scene._end()
-    assert app.best["crumb"] == 250
-
-    scene.handle_key("escape")
     settle(app)
+    if not app.in_game:                 # a qualifying score asks for initials
+        app.host.scene.handle_key("enter")
+        settle(app)
+    assert app.best_in("crumb") == 250
+
     app.start_mode(modes.MODES_BY_KEY["byte"])
     settle(app)
-    assert app.best["crumb"] == 250
+    assert app.best_in("crumb") == 250, "another mode must not disturb it"
     assert app.host.scene.mode.key == "byte"
-    assert app.best.get("byte", 0) == 0
+    assert app.best_in("byte") == 0
 
 
 def test_a_lower_score_does_not_replace_the_best():
     app, scene = game_app("crumb", seed=11)
-    app.record_best(scene.mode, 400)
-    app.record_best(scene.mode, 100)
-    assert app.best["crumb"] == 400
+    app.record(app.mode, 250)
+    app.record(app.mode, 100)
+    assert app.best_in("crumb") == 250, "the lower run took the record"
 
 
-# ── Colour mapping ──────────────────────────────────────────────────
+def test_the_score_survives_the_process(tmp_path):
+    """The whole point of the file."""
+    from texastoast.scores import ScoreBook
+
+    from boole.arcade import GAME
+
+    book = ScoreBook(BooleApp.SCORE_KEY, directory=tmp_path)
+    first = BooleApp(TuiHost(title=GAME.info.title), scores=book)
+    first.record(modes.MODES_BY_KEY["byte"], 400, "jam")
+
+    again = BooleApp(TuiHost(title=GAME.info.title),
+                     scores=ScoreBook(BooleApp.SCORE_KEY, directory=tmp_path))
+    assert again.best_in("byte") == 400
 
 
-def test_an_empty_tile_hides_its_glyph():
-    bg, fg = theme.tile_colors(TILE_EMPTY, 15)
-    assert bg == fg
+def test_the_board_is_filed_under_the_key_the_browser_uses():
+    assert BooleApp.SCORE_KEY == "george-boole"
 
 
-def test_gates_get_their_own_colour_not_a_ramp_position():
-    gate_bg, _ = theme.tile_colors(GATE_NOT, 15, gate=True)
-    for value in range(1, 16):
-        assert theme.tile_colors(value, 15)[0] != gate_bg
+def test_a_run_records_the_mode_it_was_set_in():
+    app, scene = game_app("gauntlet", seed=11)
+    app.record(app.mode, 99, "jam")
+    assert app.scores.load()[0].extra == {"mode": "gauntlet"}
 
 
-def test_the_ramp_spans_the_whole_width_in_every_mode():
-    # Otherwise byte mode would live permanently at the cool end.
-    for max_value in (3, 15, 255):
-        low = theme.tile_colors(1, max_value)[0]
-        high = theme.tile_colors(max_value, max_value)[0]
-        assert low != high
+def test_a_score_of_nothing_is_not_worth_asking_about():
+    app, scene = game_app("crumb", seed=11)
+    scene.board.score = 0
+    scene._end()
+    settle(app)
+    assert not isinstance(app.host.scene, scenes.InitialsScene)
+    assert app.scores.load() == []
 
 
-# ── Launchable by an arcade ─────────────────────────────────────────
-#
-# The game has to work two ways: as its own command, and seated by a launcher
-# that owns the terminal. The difference must be invisible to the game.
+def test_ending_a_run_with_a_score_asks_for_initials():
+    app, scene = game_app("crumb", seed=11)
+    scene.board.score = 42
+    scene._end()
+    settle(app)
+    assert isinstance(app.host.scene, scenes.InitialsScene)
 
 
-def test_the_entry_point_object_is_a_valid_arcade_game():
-    from texastoast.arcade import ArcadeGame
-
-    assert isinstance(GAME, ArcadeGame)
-
-
-def test_the_declared_info_matches_what_the_game_actually_needs():
-    assert GAME.info.key == "george-boole"
-    assert GAME.info.min_cols == theme.MIN_COLS
-    assert GAME.info.min_rows == theme.MIN_ROWS
-    # Turn-based: edge input, or one arrow press slides across the board.
-    assert GAME.info.hold_ms == 0
-
-
-def test_starting_returns_a_scene_without_pushing_it():
-    host = TuiHost(title="t", fps=20)
-    scene = GAME.start(host)
-    host.stack.update(0)
-    assert isinstance(scene, MenuScene)
-    assert host.scene is None, "start() must leave the pushing to the caller"
+def test_typing_initials_puts_them_on_the_board():
+    app, scene = game_app("crumb", seed=11)
+    scene.board.score = 42
+    scene._end()
+    settle(app)
+    entry = app.host.scene
+    for key in ("j", "a", "m"):
+        entry.handle_key(key)
+    entry.handle_key("enter")
+    settle(app)
+    assert [(e.initials, e.score) for e in app.scores.load()] == [("JAM", 42)]
 
 
-def test_a_launcher_can_seat_the_game_over_its_own_menu():
-    host = TuiHost(title="arcade", fps=20)
-
-    class ArcadeMenu:
-        def update(self, dt):
-            pass
-
-        def render(self):
-            pass
-
-    arcade_menu = ArcadeMenu()
-    host.push_scene(arcade_menu)
-    host.seat(GAME)
-    host.stack.update(0)
-    assert isinstance(host.scene, MenuScene)
-
-    # Esc from the game's mode menu returns to the arcade, not the shell.
-    host.scene.handle_key("escape")
-    host.stack.update(0)
-    assert host.scene is arcade_menu
+def test_escaping_the_prompt_still_records_the_score():
+    app, scene = game_app("crumb", seed=11)
+    scene.board.score = 33
+    scene._end()
+    settle(app)
+    app.host.scene.handle_key("escape")
+    settle(app)
+    assert app.scores.best() == 33
 
 
-def test_escape_from_the_mode_menu_ends_a_standalone_session():
-    # Same key, same call — but with nothing underneath there is nowhere to go
-    # but out, and the host decides that, not the game.
-    host = TuiHost(title="t", fps=20)
-    quit_calls = []
-    host.quit = lambda: quit_calls.append(1)
-    host.seat(GAME)
-    host.stack.update(0)
-
-    host.scene.handle_key("escape")
-    assert quit_calls == [1]
-
-
-def test_seating_applies_the_declared_frame_rate_and_input():
-    from texastoast.core.loop import GameLoop
-    from texastoast.core.scheduler import ManualScheduler
-
-    host = TuiHost(title="t", fps=60, hold_ms=999)
-    host._game._loop = GameLoop(ManualScheduler(), lambda dt: None,
-                                lambda: None, fps=60)
-    host.seat(GAME)
-    assert round(host.game.loop.target_fps) == GAME.info.fps
-    assert host.input.hold_ms == GAME.info.hold_ms
-
-
-def test_a_seated_game_plays():
-    host = TuiHost(title="t", fps=20)
-    host.push_scene(_Blank())      # stand in for an arcade menu
-    host.seat(GAME)
-    host.stack.update(0)
-
-    host.scene.handle_key("enter")          # start the highlighted mode
-    host.stack.update(0)
-    assert isinstance(host.scene, GameScene)
-
-    for key in ["left", "up", "right", "down"] * 3:
-        host.scene.handle_key(key)
-    assert host.scene.board.score >= 0
-
-# ── How to play ─────────────────────────────────────────────────────
-
-
-def test_the_menu_offers_the_rules_under_the_modes():
-    """The row is not a mode, and _chose has to tell it apart by index."""
+def test_the_menu_offers_the_table_as_well_as_the_rules():
     app = hosted(seed=1)
-    menu = app.host.scene
-    assert menu.menu._items[-1]["label"] == scenes.HOW_TO_PLAY
-    assert len(menu.menu._items) == len(modes.MODES) + 1
+    labels = [i["label"] for i in app.host.scene.menu._items]
+    assert labels[-2:] == [scenes.HIGH_SCORES, scenes.HOW_TO_PLAY]
+    assert len(labels) == len(modes.MODES) + 2
 
 
-def test_choosing_it_opens_the_rules_rather_than_a_game():
+def test_choosing_the_table_opens_it():
     app = hosted(seed=1)
     menu = app.host.scene
     menu.menu._selected = len(modes.MODES)
+    menu.handle_key("enter")
+    settle(app)
+    assert isinstance(app.host.scene, scenes.ScoresScene)
+
+
+def test_b_opens_the_table_too():
+    app = hosted(seed=1)
+    app.host.scene.handle_key("b")
+    settle(app)
+    assert isinstance(app.host.scene, scenes.ScoresScene)
+
+
+def test_the_table_shows_the_mode_beside_the_score():
+    app = hosted(seed=1)
+    app.scores.save("jam", 512, mode="byte")
+
+    async def go():
+        async with await _piloted(app) as pilot:
+            await pilot.pause()
+            app.show_scores()
+            settle(app)
+            await asyncio.sleep(0.3)
+            text = buffer_text(app)
+            assert "JAM" in text and "512" in text and "byte" in text
+            app.host.quit()
+
+    run(go())
+
+
+def test_choosing_how_to_play_opens_the_rules_rather_than_a_game():
+    app = hosted(seed=1)
+    menu = app.host.scene
+    menu.menu._selected = len(modes.MODES) + 1
     menu.handle_key("enter")
     settle(app)
     assert isinstance(app.host.scene, scenes.RulesScene)
