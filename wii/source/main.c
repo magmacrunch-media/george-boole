@@ -383,8 +383,6 @@ static void update_playing(GameStateMachine *gs, const Palette *p) {
     if (anim_t >= 1.0f && board_game_over(&board)) {
         printf("run over: mode=%s score=%d bits=%d\n",
                mode_name(mode), scoring_get(), board.bits);
-        gs->moves = total_moves;
-        gs->highest_earned = board.highest_earned;
         gamestate_end_run(gs, scoring_get());
         sfx(gs->is_high_score ? SFX_HIGHSCORE : SFX_GAMEOVER);
     }
