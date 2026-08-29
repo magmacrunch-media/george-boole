@@ -874,3 +874,55 @@ def test_the_gold_is_never_dimmer_than_an_ordinary_tile():
     floor = max(luminance(bg) for bg, _ in theme.RAMP[:-1])
     for stop in theme.GOLD:
         assert luminance(stop) >= floor, stop
+
+
+# ── Seated under a launcher ─────────────────────────────────────────
+
+
+def seated() -> tuple[TuiHost, object]:
+    """The cabinet seated over a floor, the way the arcade does it."""
+    host = TuiHost(title=GAME.info.title, fps=GAME.info.fps,
+                   hold_ms=GAME.info.hold_ms)
+    host.push_scene(_Blank())        # whatever the launcher had showing
+    host.stack.update(0.0)
+    scene = host.seat(GAME)
+    host.stack.update(0.0)
+    return host, scene
+
+
+def screen(host: TuiHost) -> str:
+    return host.game.surface.buffer.to_text()
+
+
+def test_a_seated_cabinet_says_how_to_get_back():
+    host, scene = seated()
+    scene.render()
+    assert scenes.ARCADE_HELP in screen(host)
+
+
+def test_a_game_launched_on_its_own_does_not_promise_an_arcade():
+    # The same screen, the same key, a different truth: Esc ends the session
+    # here, and Q already says so.
+    app = hosted()
+    app.host.scene.render()
+    assert scenes.ARCADE_HELP not in buffer_text(app)
+
+
+def test_the_hint_is_the_only_difference_between_the_two():
+    # Everything else on the title screen is the same, so the hint cannot be
+    # hiding a second behaviour change.
+    host, scene = seated()
+    scene.render()
+    launched = hosted()
+    launched.host.scene.render()
+
+    seated_rows = [ln for ln in screen(host).splitlines()
+                   if scenes.ARCADE_HELP not in ln]
+    assert seated_rows == buffer_text(launched).splitlines()
+
+
+def test_esc_from_a_seated_cabinet_returns_instead_of_quitting():
+    host, scene = seated()
+    scene.handle_key("escape")
+    host.stack.update(0.0)
+    assert isinstance(host.scene, _Blank), "should be back on the floor"

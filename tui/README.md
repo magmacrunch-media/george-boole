@@ -55,6 +55,7 @@ menu or with `B`.
 | ↑ ↓ / W S | choose a mode |
 | Enter | start |
 | `2`–`8`, `G` | jump straight to a mode |
+| `Esc` | back to the arcade, when the arcade started this |
 | `Q` | quit |
 
 **In a game**

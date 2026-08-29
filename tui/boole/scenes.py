@@ -48,6 +48,15 @@ GATE_ORDER = (GATE_XOR, GATE_OR, GATE_AND, GATE_NOT)
 
 MENU_HELP = "↑↓ choose    Enter start    H how to play    Q quit"
 
+#: Shown under the key hints, and only when a launcher seated this game.
+#:
+#: Esc at this screen calls the same "take me back" as ever — what changes is
+#: where back is. Seated, it is the arcade floor; launched on its own, it ends
+#: the session, which Q already says. So the key needs describing in exactly
+#: one of the two situations, and until this line existed a player under the
+#: arcade had no way to discover the route back at all.
+ARCADE_HELP = "Esc  back to the arcade"
+
 #: The label the mode menu carries under the eight modes. It is not a mode, so
 #: MenuScene._chose has to tell it apart by index rather than by name.
 HOW_TO_PLAY = "how to play"
@@ -271,6 +280,9 @@ class MenuScene:
             r.ui_text(cx, r.height - 3, f"best in {self.app.mode.name}: {best}",
                       fill=theme.PANEL_LABEL, anchor="n")
         r.ui_text(cx, r.height - 2, MENU_HELP, fill=theme.DIM, anchor="n")
+        if self.app.host.seated:
+            r.ui_text(cx, r.height - 1, _fit(ARCADE_HELP, r.width - 2),
+                      fill=theme.DIM, anchor="n")
         r.present()
 
 
