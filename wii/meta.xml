@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <app version="1">
-  <name>george-boole</name>
+  <name>George Boole Has Entered The Chat</name>
   <coder>magmacrunch media</coder>
   <version>0.1.0</version>
-  <release_date>20260820</release_date>
-  <short_description>A magnolia game</short_description>
-  <long_description>Built with magnolia, a Wii homebrew game engine by magmacrunch.</long_description>
+  <release_date>20260820000000</release_date>
+  <short_description>Slide numbers through logic gates</short_description>
+  <long_description>Slide numbered tiles into XOR, OR, AND and NOT gates, and the gate does what it says to them. Every mode is a bit width: a crumb holds 0 to 3, a nibble 0 to 15, a byte 0 to 255. NOT of the ceiling overflows to nothing, which clears the tile and pays out. Seven fixed widths and a gauntlet that promotes you a bit at a time, each with its own leaderboard.
+
+Built with magnolia, a Wii homebrew game engine by magmacrunch.</long_description>
 </app>
