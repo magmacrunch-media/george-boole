@@ -121,7 +121,7 @@ def _draw_title(renderer, cx: int) -> int:
     drawn in block letters rather than typed, and the last rung is the plain
     banner, because the mode menu is eight rows of list inside a box and a
     title that pushed it off a short terminal would be one nobody could get
-    past. See :mod:`texastoast.ui.bigtext`.
+    past. See :mod:`magmacrunch.engine.ui.bigtext`.
     """
     budget = _menu_box_top(renderer) - 1
     for big, rest in theme.TITLE_LADDER:
@@ -700,7 +700,7 @@ class GameScene:
 def _menu_theme():
     """The engine's Theme, recoloured to the game's palette.
 
-    ``dataclasses.replace`` because :class:`~texastoast.ui.theme.Theme` is
+    ``dataclasses.replace`` because :class:`~magmacrunch.engine.ui.theme.Theme` is
     frozen — building variants that way is what its docstring asks for.
     """
     return replace(

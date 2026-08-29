@@ -6,7 +6,7 @@ Logic-gate puzzle game. One repo, every version of the game.
 |---------|--------|--------|---------------|
 | Browser | [`web/`](web/) | [adenosine](https://github.com/magmacrunchmedia/adenosine) | [magmacrunch.com/arcade/george-boole](https://magmacrunch.com/arcade/george-boole/) |
 | Wii | [`wii/`](wii/) | [magnolia](https://github.com/magmacrunchmedia/magnolia) | Homebrew Channel |
-| Terminal | [`tui/`](tui/) | [texastoast](https://pypi.org/project/texastoast/) | any terminal |
+| Terminal | [`tui/`](tui/) | [magmacrunch.engine](https://pypi.org/project/magmacrunch/) | any terminal |
 
 ## Layout
 
@@ -17,7 +17,7 @@ Logic-gate puzzle game. One repo, every version of the game.
   checked out beside this repo (`../../magnolia` from inside `wii/`). See
   [`wii/README.md`](wii/README.md).
 - `tui/` — the terminal version. Runs on the
-  [texastoast](https://pypi.org/project/texastoast/) engine's terminal backend.
+  [magmacrunch.engine](https://pypi.org/project/magmacrunch/) engine's terminal backend.
   Install with `pipx install magmacrunch-george-boole` and launch with
   `george-boole`. Also available as part of the
   [magmacrunch](https://pypi.org/project/magmacrunch/) arcade.

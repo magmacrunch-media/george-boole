@@ -1,5 +1,16 @@
 # Publishing the terminal games
 
+> **Historical.** Written before any of it existed, and kept because the
+> reasoning is still the reasoning — why distribution names carry a prefix and
+> import packages do not, why the launcher is the point, and how a
+> Noncommercial package may depend on a permissive one but not the reverse.
+>
+> The status columns and the blockers below are all spent. All four packages
+> are published, all three games are written, and the engine is no longer
+> `texastoast`: it was extracted into `magmacrunch.engine`, so the games now
+> depend on `magmacrunch` and not on a third package at all. Read this for the
+> decisions, not for the state of anything.
+
 Notes toward `pip install magmacrunch` — a terminal arcade. Nothing here is
 built yet; this records the decisions so they are not re-litigated, and the
 blockers so they are not tripped over.

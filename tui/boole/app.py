@@ -4,7 +4,7 @@ Everything that draws lives in :mod:`boole.scenes`; everything that decides
 lives in :mod:`boole.board`. This holds them together.
 
 **The terminal is not owned here.** It belongs to a
-:class:`~texastoast.core.tui_host.TuiHost`, which this is handed. That is what
+:class:`~magmacrunch.engine.core.tui_host.TuiHost`, which this is handed. That is what
 lets the game run as its own command *and* be seated by a launcher without
 knowing which happened: building the terminal, holding the scene stack and
 routing keys is identical either way, so the engine does it and the game does

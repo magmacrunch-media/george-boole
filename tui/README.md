@@ -83,7 +83,8 @@ The game declares itself through an entry point, so anything enumerating
 george-boole = "boole.arcade:GAME"
 ```
 
-It does not own the terminal. A `texastoast.core.tui_host.TuiHost` does, and
+It does not own the terminal. A `magmacrunch.engine.core.tui_host.TuiHost`
+does, and
 `BooleApp` is handed one — which is what lets the same code run as its own
 command and be seated by a launcher without knowing which happened. Esc from
 the mode menu ends a standalone session and returns to the arcade menu under a
@@ -92,11 +93,16 @@ and the host decides what that means.
 
 ## How it is built
 
-The engine is [texastoast](../../texastoast) with its terminal backend
-(`pip install "texastoast[tui]"`, which this package depends on). The game
-draws through texastoast's `Renderer`/`UISurface` protocols and never touches a
-terminal library directly, so the planned hand-written ANSI backend will be a
-swap rather than a rewrite.
+The engine is `magmacrunch.engine`, which arrives with the
+[magmacrunch](https://pypi.org/project/magmacrunch/) package this one depends
+on — so installing the game installs the engine, and installing the arcade
+installs both. The game draws through the engine's `Renderer`/`UISurface`
+protocols and never touches a terminal library directly, so the planned
+hand-written ANSI backend will be a swap rather than a rewrite.
+
+The engine used to be [texastoast](../../texastoast) and its `[tui]` extra.
+It was extracted into `magmacrunch.engine` and the dependency now runs the
+other way: the games depend on the arcade rather than on a third package.
 
 ```
 boole/
@@ -119,7 +125,8 @@ Nothing anywhere holds an `in_menu` boolean — a game that has been popped
 stops receiving frames because the stack does not call it, which is the rule
 the engine's `scene.py` exists to enforce.
 
-The mode menu is the engine's own `texastoast.ui.Menu`, given layout metrics
+The mode menu is the engine's own `magmacrunch.engine.ui.menu.Menu`, given
+layout metrics
 in cells instead of its pixel defaults. Navigation, selection and the callbacks
 are the widget's; only the numbers and the palette are the game's.
 

@@ -28,7 +28,7 @@ INFO = GameInfo(
 
 
 class BooleGame:
-    """Satisfies :class:`texastoast.arcade.ArcadeGame`."""
+    """Satisfies :class:`magmacrunch.engine.arcade.ArcadeGame`."""
 
     info = INFO
 

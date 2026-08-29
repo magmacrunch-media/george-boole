@@ -5,7 +5,7 @@ Ported from ``wii/tests/test_board.c``, which was itself ported from
 of these or the same game plays differently in three places, and that
 divergence is invisible until a player notices.
 
-Nothing here imports texastoast or Textual: the rules are pure Python, which is
+Nothing here imports the engine or Textual: the rules are pure Python, which is
 the property that makes them testable in under a second.
 """
 
@@ -550,7 +550,7 @@ def test_the_rules_import_without_the_engine():
         [sys.executable, "-c",
          "import sys; from boole.board import Board; "
          "b = Board(bits=4); b.spawn(1); "
-         "print('texastoast' in sys.modules, 'textual' in sys.modules)"],
+         "print('magmacrunch' in sys.modules, 'textual' in sys.modules)"],
         capture_output=True, text=True, timeout=60,
     )
     assert result.returncode == 0, result.stderr
