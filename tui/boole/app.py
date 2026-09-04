@@ -140,14 +140,20 @@ class BooleApp:
 
 
 def run(mode_key: str = "nibble", seed: int | None = None,
-        skip_menu: bool = False) -> None:
+        skip_menu: bool = False, ascii_only: bool = False) -> None:
     """Play George Boole as its own command."""
     from magmacrunch.engine.core.tui_host import TuiHost
+    from magmacrunch.engine.ui.glyphs import Glyphs
 
     from boole.arcade import GAME
 
+    # This game needs it more than its siblings do. The gate glyphs are
+    # the board rather than its decoration, and neither Windows codepage
+    # can encode AND, OR or XOR -- so an undetected terminal here is not
+    # an untidy game, it is an unplayable one.
     host = TuiHost(title=GAME.info.title, fps=GAME.info.fps,
-                   hold_ms=GAME.info.hold_ms)
+                   hold_ms=GAME.info.hold_ms,
+                   glyphs=Glyphs.detect(ascii_only=ascii_only))
     app = BooleApp(host, mode_key, seed)
     host.push_scene(app.root_scene)
     if skip_menu:

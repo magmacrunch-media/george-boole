@@ -11,7 +11,7 @@ build-backend = "hatchling.build"
 # The distribution is namespaced; the import package stays plain `boole`,
 # because that is what you type in code and it is not competing for anything.
 name = "magmacrunch-george-boole"
-version = "0.5.0"
+version = "0.6.0"
 description = "George Boole Has Entered The Chat — terminal version"
 readme = "README.md"
 license = "PolyForm-Noncommercial-1.0.0"
@@ -20,7 +20,10 @@ authors = [{ name = "magmacrunch media" }]
 
 # The engine, with its terminal backend. The rules in boole/board.py and
 # boole/modes.py depend on neither and are importable on their own.
-dependencies = ["magmacrunch>=0.4.0"]
+# 0.6.0 is where magmacrunch.engine.ui.glyphs arrived, and this game
+# imports it in run(). Resolved against 0.5.0 the install succeeds and the
+# game dies on launch, which is the worst place to learn about a pin.
+dependencies = ["magmacrunch>=0.6.0"]
 
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "ruff>=0.6"]

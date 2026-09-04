@@ -75,6 +75,45 @@ it says so rather than drawing a clipped screen. Anything roomier than the
 minimum centres the board in the window rather than pinning it to a corner.
 Truecolor is used for the tile ramps but not required.
 
+## When the terminal cannot draw the glyphs
+
+Not every console can encode what these games draw. Windows' two common
+codepages are the ones that bite: cp1252 has none of the block elements,
+arrows or suits, and cp437 has the blocks and none of the arrows, stars or
+suits. The engine asks the terminal what it can encode and substitutes what it
+cannot, one **group** at a time -- so a set of related glyphs never comes back
+half translated, and a terminal that can draw the blocks keeps them even
+though it has lost the arrows.
+
+Detection is automatic. Two ways to override it, for the case no probe can
+see -- an encoding that accepts the character in a font that has no picture
+for it:
+
+```
+boole --ascii              this game, this run
+MAGMACRUNCH_ASCII=1      every cabinet, always
+```
+
+Every substitute is exactly one cell wide, so a plain screen has the same
+layout as a fancy one rather than a reflowed approximation of it.
+
+This game needs that more than its siblings do. The gate glyphs are the
+board rather than its decoration, and **neither Windows codepage can
+encode AND, OR or XOR** -- so an unhandled terminal here is not an untidy
+game, it is an unplayable one. The plain forms are the ones a programmer
+already reads:
+
+| | | |
+|---|---|---|
+| NOT | `¬` | `!` |
+| AND | `∧` | `&` |
+| OR | `∨` | `\|` |
+| XOR | `⊕` | `^` |
+
+All four move together even where the terminal could manage `¬` -- which
+both codepages can. One set of operators in two alphabets is harder to
+read than either alphabet alone.
+
 ## Launchable by an arcade
 
 The game declares itself through an entry point, so anything enumerating

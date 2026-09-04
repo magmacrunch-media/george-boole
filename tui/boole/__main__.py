@@ -22,6 +22,14 @@ def main() -> None:
         "--seed", type=int, default=None,
         help="fix the spawn sequence, for a reproducible run",
     )
+    parser.add_argument(
+        "--ascii", action="store_true", dest="ascii_only",
+        help="draw with plain ASCII instead of block, arrow and suit "
+             "glyphs. Detected automatically from the terminal's "
+             "encoding; this forces it, for a font that lacks the "
+             "pictures. MAGMACRUNCH_ASCII=1 says the same for every "
+             "cabinet at once.",
+    )
     args = parser.parse_args()
 
     # Imported here, not at module scope, so --help works without the engine
@@ -30,7 +38,8 @@ def main() -> None:
 
     # Naming a mode is an instruction to play it, so the menu would be in the
     # way. Esc still reaches it.
-    run(args.mode or "nibble", args.seed, skip_menu=args.mode is not None)
+    run(args.mode or "nibble", args.seed,
+        skip_menu=args.mode is not None, ascii_only=args.ascii_only)
 
 
 if __name__ == "__main__":
