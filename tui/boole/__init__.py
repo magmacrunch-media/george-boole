@@ -12,4 +12,4 @@ web one.
 # behind — the release workflow compares the git tag against pyproject and
 # never looks here, and nothing reads this — so the check now lives in
 # ``tests/test_packaging.py``, and bumping one without the other fails there.
-__version__ = "0.5.0"
+__version__ = "0.5.1"
