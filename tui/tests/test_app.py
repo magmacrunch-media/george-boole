@@ -1091,7 +1091,7 @@ def test_esc_from_a_seated_cabinet_returns_instead_of_quitting():
 def test_the_version_is_the_one_the_package_declares():
     """``__version__`` and pyproject must agree.
 
-    They did not: the literal sat at 0.1.0 while 0.6.0 shipped, four releases
+    They did not: the literal sat at 0.1.0 while 0.5.0 shipped, four releases
     behind. The same rot the arcade repo found in itself, and for the same
     reason -- nothing reads ``__version__``, so nothing notices. This is the
     reader that would have.

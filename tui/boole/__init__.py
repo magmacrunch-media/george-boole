@@ -6,4 +6,4 @@ built on the `magmacrunch.engine` terminal backend. The rules are a port of
 web one.
 """
 
-__version__ = "0.6.0"
+__version__ = "0.5.0"
