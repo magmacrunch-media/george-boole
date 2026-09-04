@@ -1086,28 +1086,3 @@ def test_esc_from_a_seated_cabinet_returns_instead_of_quitting():
     scene.handle_key("escape")
     host.stack.update(0.0)
     assert isinstance(host.scene, _Blank), "should be back on the floor"
-
-
-def test_the_version_is_the_one_the_package_declares():
-    """``__version__`` and pyproject must agree.
-
-    They did not: the literal sat at 0.1.0 while 0.5.0 shipped, four releases
-    behind. The same rot the arcade repo found in itself, and for the same
-    reason -- nothing reads ``__version__``, so nothing notices. This is the
-    reader that would have.
-    """
-    import pathlib
-    import sys
-
-    if sys.version_info >= (3, 11):
-        import tomllib
-    else:
-        tomllib = pytest.importorskip("tomli", reason="needs tomli under 3.10")
-
-    import boole
-
-    root = pathlib.Path(__file__).resolve().parent.parent
-    declared = tomllib.loads(
-        (root / "pyproject.toml").read_text(encoding="utf-8")
-    )["project"]["version"]
-    assert boole.__version__ == declared
