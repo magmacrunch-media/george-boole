@@ -16,19 +16,28 @@ let returnToLoreScreen = false;
 // Binary display mode - enabled by default
 let binaryDisplayMode = true;
 
+// iOS has no Ogg Vorbis decoder, and every browser on iOS is WebKit, so Chrome
+// and Firefox there fail identically - the audio was simply silent on every
+// iPhone and iPad. Each clip now ships as .ogg and .mp3; pick whichever this
+// browser can actually decode. Ogg stays preferred where it works, since the
+// mp3 is a transcode of it.
+const AUDIO_EXT = document.createElement('audio')
+    .canPlayType('audio/ogg; codecs="vorbis"') ? '.ogg' : '.mp3';
+const audioSrc = (path) => path.replace(/\.ogg$/, AUDIO_EXT);
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         // Initialize adenosine-audio
         await AdAudio.init({
-            music: { url: 'audio/game-loop.ogg', volume: 0.3, fadeIn: 2.0 },
+            music: { url: audioSrc('audio/game-loop.ogg'), volume: 0.3, fadeIn: 2.0 },
             sfx: {
-                spawn:    { url: 'audio/sfx/spawn.ogg',    volume: 0.3, pool: 3 },
-                merge:    { url: 'audio/sfx/merge.ogg',     volume: 0.3, pool: 3 },
-                victory:  { url: 'audio/sfx/victory.ogg',   volume: 0.3, pool: 3 },
-                gameOver: { url: 'audio/sfx/gameover.ogg',  volume: 0.3, pool: 3 },
-                move:     { url: 'audio/sfx/move.ogg',      volume: 0.3, pool: 3 },
-                highScore:{ url: 'audio/sfx/highscore.ogg',  volume: 0.3, pool: 3 },
+                spawn:    { url: audioSrc('audio/sfx/spawn.ogg'),     volume: 0.3, pool: 3 },
+                merge:    { url: audioSrc('audio/sfx/merge.ogg'),     volume: 0.3, pool: 3 },
+                victory:  { url: audioSrc('audio/sfx/victory.ogg'),   volume: 0.3, pool: 3 },
+                gameOver: { url: audioSrc('audio/sfx/gameover.ogg'),  volume: 0.3, pool: 3 },
+                move:     { url: audioSrc('audio/sfx/move.ogg'),      volume: 0.3, pool: 3 },
+                highScore:{ url: audioSrc('audio/sfx/highscore.ogg'), volume: 0.3, pool: 3 },
             },
         });
         AdAudio.handleVisibility({ pauseMusic: true });
