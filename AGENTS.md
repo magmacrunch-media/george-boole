@@ -41,6 +41,48 @@ node scripts/check-cache-busters.mjs --digest arcade/shared/adenosine-audio.js
 npm run check:cachebust
 ```
 
+## Audio needs both `.ogg` and `.mp3`
+
+`web/js/main.js` picks the extension at load time and hands it to `AdAudio`:
+
+```js
+const AUDIO_EXT = document.createElement('audio')
+    .canPlayType('audio/ogg; codecs="vorbis"') ? '.ogg' : '.mp3';
+const audioSrc = (path) => path.replace(/\.ogg$/, AUDIO_EXT);
+```
+
+Every clip in `web/audio/` exists twice. Adding one means adding both:
+
+```
+ffmpeg -i web/audio/sfx/new.ogg -c:a libmp3lame -q:a 2 web/audio/sfx/new.mp3
+```
+
+Check the result against the source size rather than reaching for `-q:a 0`.
+`game-loop.ogg` is 3:50 of roughly 93kbps Vorbis: V0 inflated it from 2.7MB to
+4MB, which is the wrong trade for background music over mobile data, and V2
+brought it back to 2.86MB.
+
+iOS has no Ogg Vorbis decoder, and every browser on iOS is WebKit, so Chrome
+and Firefox there fail exactly as Safari does. Ogg-only audio is not quieter on
+an iPhone, it is **silent** — and silent without an error, because the failed
+decode lands in the same do-nothing path the loader already swallows on
+purpose. This game shipped that way and it went unreported for as long as it
+existed.
+
+Both formats are committed, and `web/` is copied into the website's `arcade/`
+verbatim by `make sync-<repo>`, so **the fix belongs in this repo** — an mp3
+added on the website side is deleted by the next sync, exactly like a corrected
+`?v=` stamp.
+
+Two things worth knowing before this looks broken:
+
+- `adenosine-audio` loops music through a decoded Web Audio buffer, and mp3
+  carries encoder delay and padding **inside** that buffer, so the loop seams
+  slightly on iOS where the ogg does not. A faint seam beats silence; the
+  alternative is a gapless format far too large to serve.
+- Keep the `.ogg`. It stays the file almost everyone receives, and the mp3 is a
+  second-generation transcode of it.
+
 ## Where the rules live in each version
 
 | | rules | rendering |
