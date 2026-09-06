@@ -111,6 +111,23 @@ Then run the `.dol` and read the log. For `printf` to reach Dolphin's log, its
 `Logger.ini` needs `OSREPORT = True` and `WriteToFile = True` -- both default to
 False, which makes a working trace look like a dead one.
 
+**This needs magnolia 0.3.0 or newer.** The engine side is
+`SYS_STDIO_Report(true)`, which `magnolia_init()` now calls; without it libogc
+leaves stdout attached to nothing, and until that landed **every `printf` in
+this game was discarded** -- the five in `source/main.c`, the `autostart:` trace
+above included. The symptom was a 0-byte `dolphin.log` whatever Logger.ini said,
+which reads as logging being switched off rather than as nothing having been
+sent. Verified working: booting this game now logs
+`run: mode=crumb bits=2 max=3`.
+
+**Nothing can press a button for you.** Dolphin's emulated Wiimote reads the
+keyboard through DirectInput, which does not observe injected keystrokes, so
+neither `SendInput` nor `keybd_event` reaches the game, and nothing reports an
+error. The mouse is the exception -- `Buttons/A` defaults to `Click 0` -- so a
+script can click through a title screen and then find nothing else responds,
+which looks exactly like a broken input mapping. That is what the autostart
+define above is for.
+
 Dolphin also reuses an already-running instance, so kill it between runs or you
 will read the previous run's log and debug a binary that is not running.
 
