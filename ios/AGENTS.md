@@ -132,11 +132,27 @@ no good answer.
 
 The build is real and the output runs. These are the open pieces:
 
-- **Game Center.** The leaderboard is `localStorage` only. `tui/boole/modes.py`
-  already defines eight modes with stable keys, and says in its own docstring
-  that the key *is* the leaderboard id — so the eight GameKit leaderboards are
-  a data-entry job, not a design one. The seam is `scoreClient`, whose whole
-  surface is `load(game)` and `save(game, initials, score, extra)`.
+- **Game Center: the JavaScript half is done, the native half is not.**
+  `shim/gamekit-scores.js` patches `scoreClient.save` to also submit to a
+  leaderboard, maps all eight web difficulties to ids taken from
+  `tui/boole/modes.py` (whose docstring already promised those keys would stay
+  stable), and degrades to exactly today's behaviour when nothing answers.
+
+  What is missing is a Capacitor plugin registered as `GameCenter` providing
+  `signIn()`, `submitScore({leaderboardId, score})` and
+  `showLeaderboard({leaderboardId})` — Swift, so macOS. Then the eight
+  leaderboards have to be created in App Store Connect under exactly those ids.
+
+  Two things the shim decides that are worth knowing. Reading stays local:
+  Game Center has no scores-query worth rendering into this game's own
+  scoreboard, and it has a full-screen UI instead, which is what
+  `showLeaderboard` is for. And the local write happens first and
+  unconditionally, so a declined sign-in never costs a player their score.
+
+- **Achievements are not wired.** The obvious set is already in the design —
+  first overflow at each bit width, first gauntlet clear — but hooking them
+  means touching `web/js/game.js`, which is the site's source too, so it is a
+  decision rather than a detail.
 - **`adenosine_scores__pending` grows forever.** `ScoreClient.save()` queues
   every unsynced score for a later flush that, unconnected, never comes.
   Harmless but unbounded; whatever replaces the backend should drain or ignore

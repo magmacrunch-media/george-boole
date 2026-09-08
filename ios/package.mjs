@@ -91,6 +91,16 @@ const SHARED = {
 
 const FONTS = ['PressStart2P-Regular.woff2', 'PressStart2P-Regular.ttf'];
 
+/**
+ * Files from `ios/shim/`, copied to `www/shim/` and loaded in this order
+ * immediately after the ScoreClient bootstrap.
+ *
+ * A shim is the app-only half of something the site has no use for. It goes
+ * here rather than in `web/` for the same reason `css/ios.css` does: the
+ * browser version should not carry code about a store it will never be in.
+ */
+const SHIMS = ['gamekit-scores.js'];
+
 function die(msg, detail) {
   console.error(`\npackage.mjs: ${msg}`);
   if (detail) console.error(detail);
@@ -180,6 +190,14 @@ edit(state, 'unconnect ScoreClient', (html) =>
   )
 );
 
+edit(state, 'load the app-only shims', (html) =>
+  html.replace(
+    /(<script>const scoreClient = new AdScore\.ScoreClient\(\)[^<]*<\/script>)/,
+    (_, bootstrap) =>
+      `${bootstrap}\n` + SHIMS.map((f) => `<script src="shim/${f}"></script>`).join('\n')
+  )
+);
+
 edit(state, 'remove the arcade back-link', (html) =>
   html.replace(/[ \t]*<a href="\.\.\/puzzles\/"[^>]*>.*?<\/a>\r?\n/, '')
 );
@@ -231,6 +249,13 @@ for (const f of vendored) {
   const src = join(shared, f);
   if (!existsSync(src)) die(`shared asset missing from the website checkout: ${src}`);
   cpSync(src, join(OUT, 'shared', f));
+}
+
+mkdirSync(join(OUT, 'shim'), { recursive: true });
+for (const f of SHIMS) {
+  const src = join(IOS, 'shim', f);
+  if (!existsSync(src)) die(`shim missing: ${src}`);
+  cpSync(src, join(OUT, 'shim', f));
 }
 
 mkdirSync(join(OUT, 'fonts'), { recursive: true });
@@ -325,5 +350,6 @@ for (const t of state.applied) console.log(`      - ${t}`);
 console.log(`  vendored           ${vendored.join(', ')}`);
 console.log(`  dropped            ${dropped.join(', ')}`);
 console.log(`  fonts              ${FONTS.join(', ')}`);
+console.log(`  shims              ${SHIMS.join(', ')}`);
 console.log(`  self-contained     yes (no ../ paths, no network assets)`);
 console.log(`\nLeaderboard is localStorage-only. GameKit is not wired yet -- see ios/AGENTS.md.`);
