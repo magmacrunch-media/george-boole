@@ -3,11 +3,11 @@
 # arcade/george-boole/.
 www/
 
-# Capacitor / Xcode, once the project exists.
-App/Pods/
-App/App/public/
-App/build/
-DerivedData/
-*.xcuserstate
-xcuserdata/
 node_modules/
+
+# App/ is the native project and IS committed. What is generated inside it --
+# the copied www, the derived capacitor.config.json, build output, Pods,
+# DerivedData, xcuserdata -- is handled by App/.gitignore, which `cap add`
+# wrote and keeps correct across Capacitor versions. Do not restate those
+# paths here: they are relative to App/, and a second copy that drifts would
+# start tracking generated files without anyone noticing.

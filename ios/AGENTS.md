@@ -79,6 +79,55 @@ on any `<script>`/`<link>`/`<img>` fetching over `http(s)`. That is the actual
 claim being made — the bundle runs with the network off — checked rather than
 asserted.
 
+## The native project
+
+Capacitor 8, in `App/`. Two commands:
+
+```
+npm run build   # web/ -> www/          (package.mjs alone)
+npm run sync    # web/ -> www/ -> App/  (package.mjs, then cap sync)
+```
+
+`npm run sync` is the one to use. `cap copy` alone would push a stale `www/`
+into the project, which looks like the build not taking effect.
+
+| | |
+|---|---|
+| Bundle id | `com.magmacrunch.georgeboole` |
+| Display name | George Boole |
+| `webDir` | `www` |
+| Platform path | `App` (set in `capacitor.config.json`; the default would have made `ios/ios/`) |
+
+**The bundle id is trivial to change now and permanent after the first
+submission** — it is the app's identity on the App Store and in Game Center,
+and it cannot be reused or renamed afterwards. Change it before submitting or
+not at all.
+
+**`App/` is committed; what is generated inside it is not.** `cap add` wrote
+`App/.gitignore`, which already covers the copied `public/`, the derived
+`capacitor.config.json`, build output, Pods, DerivedData and xcuserdata. Those
+paths are relative to `App/`, so do not restate them in `ios/.gitignore` — a
+second copy that drifts would quietly start tracking generated files.
+
+Capacitor 8 uses Swift Package Manager (`App/App/CapApp-SPM/`), not CocoaPods,
+so there is no `Podfile` and nothing to `pod install`.
+
+Two edits to the stock `Info.plist`, both deliberate:
+
+- `UIRequiredDeviceCapabilities` is `arm64`, not the template's `armv7`. 32-bit
+  ARM has not been a thing since iOS 11.
+- **iPhone is portrait-only.** `web/css/responsive.css` breaks at 600px, so a
+  landscape phone — 812 points wide — falls into the *desktop* layout, side
+  panels and all, with 375 points of height to draw it in. Offering the
+  orientation before there is a landscape design just ships a broken one. iPad
+  keeps all four: its narrowest side is 768, so it wants the desktop layout
+  either way.
+
+There is no `NSAppTransportSecurity` block and there should never be one. The
+bundle makes no network requests at all, so the strict default costs nothing —
+and an ATS exception in a fully offline app is a question at review time with
+no good answer.
+
 ## Not done yet
 
 The build is real and the output runs. These are the open pieces:
@@ -98,8 +147,15 @@ The build is real and the output runs. These are the open pieces:
 - **Safe-area values are untested on a real device.** `css/ios.css` pads the
   body by the insets, which is the conservative default and not necessarily the
   right design once there is a notch to look at.
-- **The Capacitor/Xcode project itself.** `www/` is ready for one; nothing has
-  been generated.
+- **Nothing has been built or run.** `cap add ios` scaffolds the project fine
+  on Windows — that is all it did here — but compiling it, running a simulator
+  and archiving for submission need macOS and Xcode. Nothing in `App/` has been
+  opened by Xcode yet, so treat the project as generated-and-unverified rather
+  than known-good.
+- **App icon and launch screen are Capacitor's placeholders.**
+  `Assets.xcassets/AppIcon.appiconset` holds the stock 1024px square, and
+  `Splash.imageset` three stock splashes. The game already has real art to draw
+  from — `web/apple-touch-icon.png` and `web/title-card.html`.
 - **`class Game2048` in `web/js/game.js:3`.** The mechanic is genuinely not
   2048 — that is the argument for shipping this game at all — but the name is
   in the bundle, and Guideline 4.3 is decided by what a reviewer sees. Rename

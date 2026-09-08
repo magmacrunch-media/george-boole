@@ -1,0 +1,11 @@
+{
+  "appId": "com.magmacrunch.georgeboole",
+  "appName": "George Boole",
+  "webDir": "www",
+  "ios": {
+    "path": "App",
+    "contentInset": "never",
+    "scrollEnabled": false,
+    "backgroundColor": "#1a1a2e"
+  }
+}
