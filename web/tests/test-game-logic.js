@@ -6,7 +6,7 @@
  */
 
 // ── Extracted Pure Functions ──────────────────────────────────────────────────
-// These are the core logic functions extracted from Game2048 for testing.
+// These are the core logic functions extracted from BooleBoard for testing.
 
 function isGate(val) {
     return val === -1 || val === -2 || val === -3 || val === -4;
@@ -43,7 +43,7 @@ function writeResult(cells, i, count, result) {
     }
 }
 
-// Mirrors Game2048.moveLeft() row processing: one mutable array, re-scanned
+// Mirrors BooleBoard.moveLeft() row processing: one mutable array, re-scanned
 // from the same index after every operation, so a result can feed the next one.
 function advanceRow(row, maxValue) {
     // Returns { mergedRow, mergeOccurred }

@@ -257,7 +257,7 @@ if (row[j] === row[j + 1]) {
     mergeOccurred = true;
 }
 
-// Add this method to Game2048 class:
+// Add this method to BooleBoard class:
 playMergeSound(tileValue) {
     // Map tile value to pitch multiplier
     const pitchMap = {

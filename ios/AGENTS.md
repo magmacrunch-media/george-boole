@@ -156,10 +156,14 @@ The build is real and the output runs. These are the open pieces:
   `Assets.xcassets/AppIcon.appiconset` holds the stock 1024px square, and
   `Splash.imageset` three stock splashes. The game already has real art to draw
   from — `web/apple-touch-icon.png` and `web/title-card.html`.
-- **`class Game2048` in `web/js/game.js:3`.** The mechanic is genuinely not
-  2048 — that is the argument for shipping this game at all — but the name is
-  in the bundle, and Guideline 4.3 is decided by what a reviewer sees. Rename
-  it in `web/`, where all three versions get it.
+- **Three lines of visible copy still name 2048**, in `web/index.html`: the
+  how-to-play ("Just as in *2048*…"), a cross-promo for the arcade's own 2^N,
+  and the credits. The credits line — "inspired by Gabriele Cirulli's *2048*
+  (2014), reimagined with Boolean logic" — should **stay**: guideline 4.3 is
+  about undisclosed clones, and stating the lineage is the opposite of that.
+  The other two are worth a look, the cross-promo especially, since it points
+  App Store users at a web game. Not touched, because they are the site's copy
+  as much as the app's.
 
 ## AI Attribution
 

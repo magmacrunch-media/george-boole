@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 difficultyModal.classList.remove('active');
                 
                 // Start game with selected difficulty
-                currentGame = new Game2048(difficulty, target);
+                currentGame = new BooleBoard(difficulty, target);
             });
         });
 

@@ -1,6 +1,6 @@
 // game.js - BOOLEAN LOGIC VERSION - Pure bitwise operations
 
-class Game2048 {
+class BooleBoard {
     constructor(difficulty = '11', target = 2048) {
         this.size = 4;
         this.board = [];

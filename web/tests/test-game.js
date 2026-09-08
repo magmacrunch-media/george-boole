@@ -1,12 +1,12 @@
 /**
- * test-game.js — Smoke tests for George Boole Game2048 class.
+ * test-game.js — Smoke tests for George Boole BooleBoard class.
  * Tests the full game with minimal DOM mocking.
  * 
  * Run: node test-game.js
  */
 
 // ── Minimal DOM shim ─────────────────────────────────────────────────────────
-// Provide just enough DOM to let Game2048 constructor run without errors.
+// Provide just enough DOM to let BooleBoard constructor run without errors.
 
 function createMockEl() {
     const el = {
@@ -84,7 +84,7 @@ global.scoreClient = {
     load() { return Promise.resolve([]); },
 };
 
-// ── Load Game2048 ────────────────────────────────────────────────────────────
+// ── Load BooleBoard ────────────────────────────────────────────────────────────
 const fs = require('fs');
 const vm = require('vm');
 const gameCode = fs.readFileSync(__dirname + '/../js/game.js', 'utf8');
@@ -117,13 +117,13 @@ function assertEqual(actual, expected, message) {
     }
 }
 
-console.log('=== George Boole Game2048 Smoke Tests ===\n');
+console.log('=== George Boole BooleBoard Smoke Tests ===\n');
 
 // ── Constructor ──────────────────────────────────────────────────────────────
 
 console.log('Constructor:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     assert(game.size === 4, 'Board size is 4');
     assert(game.board.length === 4, 'Board has 4 rows');
     assert(game.score === 0, 'Initial score is 0');
@@ -140,7 +140,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('updateGateSpawnRate:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     
     game.bitMode = 2;
     game.updateGateSpawnRate();
@@ -171,7 +171,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('moveLeft:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     
     // Test 1: No merge possible
     game.board = [
@@ -208,7 +208,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('Idempotent merge:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     game.board = [
         [1, 1, 0, 0],
         [0, 0, 0, 0],
@@ -230,7 +230,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('Gate operation:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     game.board = [
         [1, -1, 2, 0],
         [0, 0, 0, 0],
@@ -252,7 +252,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('Game over detection:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     
     // Fill board with no valid moves
     game.board = [
@@ -270,7 +270,7 @@ try {
 }
 
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     
     // Board with a valid move available
     game.board = [
@@ -292,7 +292,7 @@ console.log(`  ${passed} passed\n`);
 
 console.log('Game over preserves state:');
 try {
-    const game = new Game2048('2', 'test');
+    const game = new BooleBoard('2', 'test');
     game.score = 100;
     game.moves = 50;
     game.highestValueEver = 3;
@@ -326,14 +326,14 @@ try {
     const only = (cells) => [cells, [0,0,0,0], [0,0,0,0], [0,0,0,0]];
 
     // 3-bit: NOT 7 = 0, the overflow move (+21). The gate and the 4 both survive.
-    let game = new Game2048('3', 'test');
+    let game = new BooleBoard('3', 'test');
     game.board = only([7, -4, -2, 4]);
     game.score = 0;
     game.moveLeft();
     assertEqual(game.board[0], [-2, 4, 0, 0], 'overflow leaves the OR gate and the 4');
     assertEqual(game.score, 21, 'overflow scores 21, not 25');
 
-    game = new Game2048('3', 'test');
+    game = new BooleBoard('3', 'test');
     game.board = only([7, -4, -3, 4]);
     game.score = 0;
     game.moveLeft();
@@ -341,7 +341,7 @@ try {
     assertEqual(game.score, 21, 'overflow scores 21');
 
     // Same shape without an overflow: a real two-step resolution, unchanged.
-    game = new Game2048('3', 'test');
+    game = new BooleBoard('3', 'test');
     game.board = only([6, -4, -2, 4]);
     game.score = 0;
     game.moveLeft();
@@ -349,14 +349,14 @@ try {
     assertEqual(game.score, 6, 'two-step resolution scores 1 + 5');
 
     // A binary gate cancelling to zero also leaves nothing.
-    game = new Game2048('3', 'test');
+    game = new BooleBoard('3', 'test');
     game.board = only([1, -3, 2, 0]);
     game.score = 0;
     game.moveLeft();
     assertEqual(game.board[0], [0, 0, 0, 0], '1 AND 2 = 0 clears the row');
 
     // A NOT chain resolves once, and is billed once.
-    game = new Game2048('7', 'test');
+    game = new BooleBoard('7', 'test');
     game.board = only([114, -4, -4, -4]);
     game.score = 0;
     game.moveLeft();
@@ -365,7 +365,7 @@ try {
     assertEqual(game.highestValueEver, 13, 'no intermediate 114 in highestValueEver');
 
     // The documented cancellation fires with a number to the left of the pair.
-    game = new Game2048('3', 'test');
+    game = new BooleBoard('3', 'test');
     game.board = only([3, -4, -4, 0]);
     game.score = 0;
     const cancelled = game.moveLeft();
