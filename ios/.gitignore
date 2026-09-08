@@ -11,3 +11,6 @@ node_modules/
 # wrote and keeps correct across Capacitor versions. Do not restate those
 # paths here: they are relative to App/, and a second copy that drifts would
 # start tracking generated files without anyone noticing.
+
+# Byte-compiled tools/
+__pycache__/
