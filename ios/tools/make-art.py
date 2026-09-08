@@ -255,6 +255,17 @@ def main():
     icon.save(icon_dir / "AppIcon-512@2x.png")
     print(f"wrote {icon_dir.name}/AppIcon-512@2x.png  {icon.size[0]}x{icon.size[1]}")
 
+    # The same icon at 180px, for package.mjs to put over the one copied from
+    # web/. That one is Boole in sunglasses -- correct on magmacrunch.com, and
+    # wrong for anything calling itself this app, because the app's icon is the
+    # gates. It also makes the only test available without a Mac honest: adding
+    # the bundle to an iPhone home screen from Safari shows apple-touch-icon,
+    # so with the web one in place you would be checking the wrong picture.
+    assets = IOS / "assets"
+    assets.mkdir(exist_ok=True)
+    icon.resize((180, 180), Image.LANCZOS).save(assets / "apple-touch-icon.png")
+    print(f"wrote assets/apple-touch-icon.png  180x180")
+
     splash = build_splash()
     # Capacitor registers the same image at 1x, 2x and 3x.
     for name in ("splash-2732x2732.png", "splash-2732x2732-1.png", "splash-2732x2732-2.png"):
