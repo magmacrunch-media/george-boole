@@ -7,6 +7,11 @@ Logic-gate puzzle game. One repo, every version of the game.
 | Browser | [`web/`](web/) | [adenosine](https://github.com/magmacrunch-media/adenosine) | [magmacrunch.com/arcade/george-boole](https://magmacrunch.com/arcade/george-boole/) |
 | Wii | [`wii/`](wii/) | [magnolia](https://github.com/magmacrunch-media/magnolia) | Homebrew Channel |
 | Terminal | [`tui/`](tui/) | [magmacrunch.engine](https://pypi.org/project/magmacrunch/) | any terminal |
+| iOS | [`ios/`](ios/) | generated from `web/` | not submitted yet |
+
+The iOS build is a derivation, not a port: `node ios/package.mjs` rewrites
+`web/` into an offline bundle. See [`ios/AGENTS.md`](ios/AGENTS.md) for what
+it changes and why.
 
 ## Layout
 

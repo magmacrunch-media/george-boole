@@ -1,6 +1,6 @@
 # George Boole — agent brief
 
-One game, three versions, one repo:
+One game, three versions and one derived build, all in one repo:
 
 - `web/` — browser version (adenosine engine, plain JS). Source of truth for
   rules and balance. Deployed by the website repo: run
@@ -10,10 +10,16 @@ One game, three versions, one repo:
   and porting detail. Expects magnolia checked out beside this repo.
 - `tui/` — terminal version (the `magmacrunch.engine` TUI engine, Python).
   `python -m boole`. Has its own `README.md`.
+- `ios/` — the App Store build, **generated from `web/`** by
+  `node ios/package.mjs`. Not a fourth version and not a place to edit the
+  game: it is the list of differences between a page served from the arcade
+  and a bundle that has to run offline without a chat widget. Has its own
+  `AGENTS.md`.
 
 A gameplay change is not done until all three versions have it (or the commit
 says why one is skipped). `web/js/` is the reference the Wii port was checked
-against.
+against. `ios/` is exempt because it is derived — it picks the change up at
+the next build, which is the whole reason it is derived.
 
 ## Cache-buster stamps in `web/index.html`
 
