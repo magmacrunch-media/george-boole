@@ -76,8 +76,9 @@ void screens_draw_howto(const Palette *p, int page) {
                 BODY_SIZE, p->gate_bg, 20);
             y += 16;
             y = ui_draw_text_wrapped(BODY_X, y, BODY_W,
-                "Gates take up space like tiles do. A gate stranded in a corner "
-                "has nothing to work on.",
+                "A gate whose result is 0 clears its tiles for no points: 3 XOR 3, "
+                "1 AND 2. Gates take up space like tiles do, and one stranded in a "
+                "corner has nothing to work on.",
                 BODY_SIZE, p->gate_bg, 20);
             break;
 
@@ -143,7 +144,9 @@ void screens_draw_credits(const Palette *p) {
     int y = 84;
     y = ui_draw_text_wrapped(BODY_X, y, BODY_W,
         "\"No general method for the solution of questions in the theory of "
-        "probabilities can be established.\"",
+        "probabilities can be established which does not explicitly recognize "
+        "... those universal laws of thought which are the basis of all "
+        "reasoning.\"",
         BODY_SIZE, p->gate_bg, 20);
     y += 6;
     ui_draw_text_shadow(BODY_X, y, "-- George Boole, The Laws of Thought, 1854",

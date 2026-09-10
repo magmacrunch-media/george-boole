@@ -51,6 +51,7 @@ Same shape as the Wii Makefile's `MAGNOLIA=` and the website's `GAME_SRC=`.
 | self-host Press Start 2P | `web/index.html` pulls it from `fonts.googleapis.com`. An app that needs the network to render text is not offline-capable, and it is a third-party connection to declare on the privacy label. |
 | `../shared/*` → `shared/*`, vendored | Those paths resolve to the arcade, which is not in the bundle. |
 | remove the `../puzzles/` back-link | Points at a page that does not exist here. |
+| remove the "As a warm up, play 2048 (actually, 2^N)" paragraph | Sends App Store users to a web game. The site keeps it. |
 | strip `?v=` stamps | Cache-busters for a CDN. Meaningless in a bundle, and the root `AGENTS.md` already calls them a standing maintenance hazard. |
 | `viewport-fit=cover` + `css/ios.css` | Safe-area insets, no rubber-banding, no tap highlight, no long-press callout. The site has no reason to carry any of it. |
 | outbound `<a href="http…">` gets `target="_blank" rel="noopener"` | So the credits link opens in the system browser instead of navigating the app away from itself. |
@@ -172,14 +173,13 @@ The build is real and the output runs. These are the open pieces:
   `Assets.xcassets/AppIcon.appiconset` holds the stock 1024px square, and
   `Splash.imageset` three stock splashes. The game already has real art to draw
   from — `web/apple-touch-icon.png` and `web/title-card.html`.
-- **Three lines of visible copy still name 2048**, in `web/index.html`: the
-  how-to-play ("Just as in *2048*…"), a cross-promo for the arcade's own 2^N,
-  and the credits. The credits line — "inspired by Gabriele Cirulli's *2048*
-  (2014), reimagined with Boolean logic" — should **stay**: guideline 4.3 is
-  about undisclosed clones, and stating the lineage is the opposite of that.
-  The other two are worth a look, the cross-promo especially, since it points
-  App Store users at a web game. Not touched, because they are the site's copy
-  as much as the app's.
+- **Two lines of visible copy still name 2048**, in `web/index.html`: the
+  how-to-play ("Just as in *2048*…") and the credits. The credits line —
+  "inspired by Gabriele Cirulli's *2048* (2014), reimagined with Boolean
+  logic" — should **stay**: guideline 4.3 is about undisclosed clones, and
+  stating the lineage is the opposite of that. The cross-promo for the
+  arcade's own 2^N is dropped by `package.mjs` since 2026-09-09; the site
+  keeps it.
 
 ## AI Attribution
 

@@ -198,6 +198,10 @@ edit(state, 'load the app-only shims', (html) =>
   )
 );
 
+edit(state, 'remove the arcade cross-promo', (html) =>
+  html.replace(/[ \t]*<p[^>]*>\s*As a warm up, play[\s\S]*?<\/p>\r?\n/, '')
+);
+
 edit(state, 'remove the arcade back-link', (html) =>
   html.replace(/[ \t]*<a href="\.\.\/puzzles\/"[^>]*>.*?<\/a>\r?\n/, '')
 );

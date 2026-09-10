@@ -9,7 +9,9 @@ typedef struct {
 
 static const ModeInfo modes[MODE_COUNT] = {
     { "crumb",    "crumb",    2, 0 },
-    { "trit",     "trit",     3, 0 },
+    /* Displayed as "tribit" (a 3-bit group); the id stays "trit" because it
+       names the leaderboard file on the SD card. */
+    { "tribit",   "trit",     3, 0 },
     { "nibble",   "nibble",   4, 0 },
     { "pentad",   "pentad",   5, 0 },
     { "hexad",    "hexad",    6, 0 },

@@ -36,33 +36,42 @@ Must use: 1 [OR] 2 = 3
 
 ---
 
-## 🔄 Rollover Mechanic
+## 🔄 Overflow Mechanic
 
-Each bit mode has a **maximum value** (2ⁿ - 1):
+Each bit mode has a **maximum value** (2ⁿ - 1). Bitwise AND, OR and XOR of two
+in-range values can never exceed it, and NOT is masked to the width — so nothing
+ever "exceeds the max". The one result the board cannot hold is **0**, and the one
+way to make it from a single tile is `NOT max` (all ones inverted). The game calls
+that overflow: the tile clears and a bonus of 3× max is paid.
 
 | Mode | Max Value | What Happens |
 |------|-----------|--------------|
-| 2-BIT | 3 | Operations exceeding 3 → **OVERFLOW! +9 bonus pts** |
-| 3-BIT | 7 | Operations exceeding 7 → **OVERFLOW! +21 bonus pts** |
-| 4-BIT | 15 | Operations exceeding 15 → **OVERFLOW! +45 bonus pts** |
-| 5-BIT | 31 | Operations exceeding 31 → **OVERFLOW! +93 bonus pts** |
-| 6-BIT | 63 | Operations exceeding 63 → **OVERFLOW! +189 bonus pts** |
-| 7-BIT | 127 | Operations exceeding 127 → **OVERFLOW! +381 bonus pts** |
-| 8-BIT | 255 | Operations exceeding 255 → **OVERFLOW! +765 bonus pts** |
+| 2-BIT | 3 | `NOT 3 = 0` → **OVERFLOW! +9 bonus pts** |
+| 3-BIT | 7 | `NOT 7 = 0` → **OVERFLOW! +21 bonus pts** |
+| 4-BIT | 15 | `NOT 15 = 0` → **OVERFLOW! +45 bonus pts** |
+| 5-BIT | 31 | `NOT 31 = 0` → **OVERFLOW! +93 bonus pts** |
+| 6-BIT | 63 | `NOT 63 = 0` → **OVERFLOW! +189 bonus pts** |
+| 7-BIT | 127 | `NOT 127 = 0` → **OVERFLOW! +381 bonus pts** |
+| 8-BIT | 255 | `NOT 255 = 0` → **OVERFLOW! +765 bonus pts** |
 | GAUNTLET | ∞ | Progressive — survive all modes! |
 
 **Strategic choice:** Overflow clears the tile (frees space) AND awards big bonus points!
+
+A binary gate can also come out to 0 — `3 XOR 3`, `1 AND 2` — which clears both
+operand tiles for no points and no bonus. Only `NOT max` pays.
 
 ---
 
 ## 🎮 Game Modes
 
-Modes are named after real bit-culture terminology:
+Modes are named with bit-culture terms — crumb, nibble and byte are established,
+tribit comes from modem encoding, ASCII is a 7-bit code; pentad and hexad are
+this game's own:
 
 | Mode | Name | Max Value | Theme |
 |------|------|-----------|-------|
 | 2-BIT | crumb | 3 | Game Boy green |
-| 3-BIT | trit | 7 | NES red/orange |
+| 3-BIT | tribit | 7 | NES red/orange |
 | 4-BIT | nibble | 15 | SNES blue/purple |
 | 5-BIT | pentad | 31 | Genesis blue/cyan |
 | 6-BIT | hexad | 63 | Arcade red/gold |
@@ -145,7 +154,7 @@ Teaches:
 - **Boolean algebra** (A∨A = A, idempotence)
 - **Bitwise operations** (XOR, OR, AND, NOT)
 - **Binary representation** (see the bits!)
-- **Overflow arithmetic** (modulo behavior)
+- **n-bit complement** (NOT flips only the bits the mode has, so `NOT max = 0`)
 - **Strategic thinking** (risk management)
 
 Perfect for CS students, programmers, or anyone curious about how computers work!
@@ -210,7 +219,7 @@ This would also be a natural point to introduce a **hex display toggle** in Sett
 
 ### ✅ Completed Features:
 - Boolean logic core (idempotence)
-- Rollover/overflow mechanics with bonuses
+- Overflow mechanic (`NOT max` clears the tile) with bonuses
 - Progressive tile spawning (scales with progress)
 - Height bonus system (rewards milestones)
 - Points-based scoring
@@ -223,7 +232,7 @@ This would also be a natural point to introduce a **hex display toggle** in Sett
 - **NOT gate as unary operation** (no sandwich required!)
 - **2-bit Gauntlet fix**: max value (3) never spawns — must be earned
 - Custom dropdown selector with retro styling
-- Bit-culture mode names (crumb, tribt, nibble, pentad, hexad, ascii, byte)
+- Bit-culture mode names (crumb, tribit, nibble, pentad, hexad, ascii, byte)
 - Unique theme per mode (including new arcade red/gold for 6-bit)
 - Improved "How to Play" window with better readability
 - Unified navigation (High Scores & Settings buttons)
@@ -265,7 +274,7 @@ All core systems working and balanced! Fully optimized for performance.
 .
 ├── index.html          # Main page (difficulty selector, modals)
 ├── js/
-│   ├── game.js        # Core game logic (Boolean ops, rollover, scoring)
+│   ├── game.js        # Core game logic (Boolean ops, overflow, scoring)
 │   ├── scoring.js     # Leaderboard system
 │   ├── main.js        # UI management, sound, settings
 │   └── config.js      # API keys, configuration

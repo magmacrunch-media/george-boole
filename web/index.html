@@ -79,6 +79,7 @@
                     <div class="rule-item">different #s need a <span class="rule-highlight">gate</span> between them</div>
                     <div class="rule-item">gates: <span class="rule-highlight">&oplus; &or; &and;</span> sandwich</div>
                     <div class="rule-item"><span class="rule-highlight">&not;</span> slides into any number</div>
+                    <div class="rule-item">a result of <span class="rule-highlight">0</span> clears the tiles (3&oplus;3, 1&and;2)</div>
                 </div>
 
                 <div class="rule-section">
@@ -99,8 +100,8 @@
 
                 <div class="overflow-box">
                     <div class="overflow-box-title">OVERFLOW</div>
-                    <div>exceeding max value awards <span class="rule-bonus">bonus points</span> &amp; clears the tile</div>
-                    <div style="margin-top: 4px;"><span class="rule-warn">&not;max</span> &rarr; overflow!</div>
+                    <div><span class="rule-warn">&not;max</span> = 0, and no tile can hold 0</div>
+                    <div style="margin-top: 4px;">the tile clears &amp; awards <span class="rule-bonus">bonus points</span></div>
                 </div>
 
                 <div class="rule-section rule-section-gauntlet" style="margin-top: 12px;">
@@ -148,7 +149,7 @@
                 <div class="gate-ref" data-gate="xor">
                     <div class="gate-ref-symbol">&#x2295;</div>
                     <div class="gate-ref-name">XOR</div>
-                    <div class="gate-ref-desc">exclusive or &mdash; flips bits where inputs differ</div>
+                    <div class="gate-ref-desc">exclusive or &mdash; sets each bit where the inputs differ</div>
                     <div class="gate-ref-example">1 &oplus; 2 = 3<br>2 &oplus; 3 = 1</div>
                     <div class="gate-ref-usage">sandwich: [num][&oplus;][num]</div>
                 </div>
@@ -200,7 +201,7 @@
             
             <!-- 
             <div class="boolean-quote">
-                "No general method for the solution of<br>questions in the theory of probabilities<br>can be established."
+                "No general method for the solution of<br>questions in the theory of probabilities<br>can be established which does not<br>explicitly recognize [&hellip;] those universal<br>laws of thought which are the basis<br>of all reasoning."
                 <div class="quote-author">— George Boole, 1854</div>
             </div>
             -->
@@ -211,7 +212,7 @@
     <div class="lore-screen" id="loreScreen">
         <div class="lore-content">
             <div class="lore-flavor">
-                <div class="lore-quote">"No general method for the solution of<br>questions in the theory of probabilities<br>can be established."</div>
+                <div class="lore-quote">"No general method for the solution of<br>questions in the theory of probabilities<br>can be established which does not<br>explicitly recognize [&hellip;] those universal<br>laws of thought which are the basis<br>of all reasoning."</div>
                 <div class="lore-attribution">— George Boole, <em>The Laws of Thought</em>, 1854</div>
             </div>
 
@@ -236,7 +237,7 @@
                     <span class="lore-rule-text">sandwich binary gates, &#172;NOT slides into any tile</span>
                 </div>
                 <div class="lore-rule">
-                    <span class="lore-rule-text">reach max value &rarr; overflow bonus</span>
+                    <span class="lore-rule-text">&#172;NOT the max value &rarr; overflow bonus</span>
                     <span class="lore-rule-highlight">3&times; max</span>
                 </div>
             </div>
@@ -419,12 +420,12 @@
             <div class="gates-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                 <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
                     <div style="font-size: 11px; color: #00ffff; margin-bottom: 4px;"><strong>⊕ XOR</strong></div>
-                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">flips bits where different</div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">sets bits where inputs differ</div>
                     <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">1⊕2=3, 2⊕3=1</div>
                 </div>
                 <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
                     <div style="font-size: 11px; color: #00ffff; margin-bottom: 4px;"><strong>∨ OR</strong></div>
-                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">effectively combines values</div>
+                    <div style="font-size: 9px; line-height: 1.5; color: rgba(255, 255, 255, 0.9);">sets any bit that is 1 in either</div>
                     <div style="font-size: 9px; color: #00ff00; margin-top: 4px;">1∨2=3, 4∨3=7</div>
                 </div>
                 <div class="gate-card" style="background: rgba(0, 255, 255, 0.08); padding: 10px; border: 2px solid rgba(0, 255, 255, 0.3);">
@@ -445,6 +446,7 @@
                 <ul style="font-size: 10px; line-height: 1.7; margin: 0; margin-left: 15px; padding: 0; list-style: none; color: rgba(255, 255, 255, 0.95);">
                     <li style="margin-bottom: 4px;"><strong style="color: #ffd700;">¬ NOT:</strong> slide into any number! <span style="color: #00ff00;">[¬][num]</span> or <span style="color: #00ff00;">[num][¬]</span></li>
                     <li style="margin-bottom: 4px;"><strong style="color: #00ffff;">⊕ ∨ ∧:</strong> sandwich between two numbers! <span style="color: #00ff00;">[num][gate][num]</span></li>
+                    <li style="margin-bottom: 4px;"><strong style="color: #ff4444;">result 0:</strong> a gate that comes out to 0 clears its tiles for no points — <span style="color: #00ff00;">3⊕3 = 0, 1∧2 = 0</span></li>
                 </ul>
             </div>
             
@@ -467,11 +469,11 @@
                     <div><strong style="color: #00ffff;">GAUNTLET:</strong> progressive</div>
                 </div>
                 <div style="background: rgba(255, 100, 100, 0.15); padding: 10px; border: 2px dashed #ff4444; margin-top: 10px;">
-                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #ff4444;"><strong>EXCEEDING MAX = OVERFLOW BONUS!</strong></p>
+                    <p style="margin: 0 0 8px 0; font-size: 11px; color: #ff4444;"><strong>¬ MAX = OVERFLOW BONUS!</strong></p>
                     <p style="margin: 0; font-size: 10px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);">
-                        • operations that exceed the maximum are awarded a <strong style="color: #ffff00;">3× max value bonus</strong><br>
-                        • the resulting tile disappears (clears space)<br>
-                        • OVERFLOW mainly happens when <strong style="color: #ffd700;">¬ NOT is applied to the max value</strong><br>
+                        • bitwise operations never exceed the maximum — but <strong style="color: #ffd700;">¬ NOT of the max value is 0</strong>, and no tile can hold 0<br>
+                        • that tile disappears (clears space) and awards a <strong style="color: #ffff00;">3× max value bonus</strong><br>
+                        • this is the only way to overflow<br>
                         • e.g., in 2-bit: ¬3 → <strong style="color: #00ff00;">overflow! +9 pts</strong><br>
                         • e.g., in 4-bit: ¬15 → <strong style="color: #00ff00;">overflow! +45 pts</strong>
                     </p>
@@ -531,7 +533,7 @@
             
             <div class="quote-box" style="background: rgba(26, 26, 46, 0.3); padding: 15px; margin-top: 20px; border: 2px solid rgba(138, 43, 226, 0.3); text-align: center;">
                 <p style="margin: 0 0 10px 0; font-size: 9px; line-height: 1.7; color: #00ff00; text-shadow: 1px 1px 0px #006600;">
-                    "No general method for the solution of<br>questions in the theory of probabilities<br>can be established."
+                    "No general method for the solution of<br>questions in the theory of probabilities<br>can be established which does not<br>explicitly recognize [&hellip;] those universal<br>laws of thought which are the basis<br>of all reasoning."
                 </p>
                 <p style="margin: 0; font-size: 8px; color: #00ffff; text-shadow: 1px 1px 0px #006699;">
                     — George Boole, 1854
@@ -621,7 +623,7 @@
             
             <p><strong>cheapness impact factor:</strong><br>2.4</p>
 
-            <p><strong>last updated:</strong><br>July 14, 2026</p>
+            <p><strong>last updated:</strong><br>September 9, 2026</p>
             
             <div class="modal-btn-row" style="margin-top: 25px; display: flex; gap: 10px;">
                 <button id="closeCredits">close</button>

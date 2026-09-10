@@ -41,7 +41,9 @@ class Mode:
 
 MODES: tuple[Mode, ...] = (
     Mode("crumb", "crumb", 2),
-    Mode("trit", "trit", 3),
+    # Displayed as "tribit" (a 3-bit group); the key stays "trit" because it
+    # names saved scores and Game Center leaderboards, which cannot be renamed.
+    Mode("trit", "tribit", 3),
     Mode("nibble", "nibble", 4),
     Mode("pentad", "pentad", 5),
     Mode("hexad", "hexad", 6),

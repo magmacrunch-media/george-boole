@@ -43,7 +43,7 @@ GAME_HELP = (
 )
 
 #: The order the gate table is drawn in: the three that combine two
-#: numbers, then the one that sandwiches.
+#: numbers, then the unary one.
 GATE_ORDER = (GATE_XOR, GATE_OR, GATE_AND, GATE_NOT)
 
 MENU_HELP = "↑↓ choose    Enter start    H how to play    Q quit"
@@ -76,21 +76,25 @@ RULES = (
         "merges with itself and stays put, which is idempotence.",
         "Two different numbers will not merge on their own. They need a gate "
         "between them, and the gate decides what comes out.",
-        "NOT is the exception: it sandwiches, sliding into any single number "
-        "and inverting it.",
+        "NOT is the exception: it does not sandwich. Slide it into any single "
+        "number from either side and it inverts that number.",
+        "A gate whose result is 0 clears its tiles for no points: 3 XOR 3, "
+        "1 AND 2.",
     )),
     ("SCORING", (
-        "An operation scores its result. Land one above the halfway mark and "
-        "it scores double.",
-        "That doubling pays once per value, the first time you reach it. The "
+        "An operation scores its result. Building a high value for the first "
+        "time pays a bonus of twice that value on top. High means past a floor "
+        "set per mode: 6 at 3-bit, 5 at 4-bit, half the ceiling at 5 and 6 "
+        "bits, a third of it at 7 and 8. 2-bit pays no height bonus.",
+        "That bonus pays once per value, the first time you reach it. The "
         "tile that got there wears a gold plate for as long as it is the best "
         "you have built.",
         "Overflowing the ceiling scores three times the maximum value.",
     )),
     ("OVERFLOW", (
-        "Exceeding the mode's maximum awards the bonus and clears the tile "
-        "rather than leaving something impossible on the board.",
-        "NOT of the maximum is an overflow too — it comes out as zero.",
+        "Bitwise operations on values within the width can never exceed the "
+        "ceiling. The one way out is NOT of the ceiling itself: it comes out as "
+        "zero, which no tile can hold, so the tile clears and the bonus pays.",
     )),
     ("GAUNTLET", (
         "Starts at 2-bit and upgrades the whole board every time you reach "

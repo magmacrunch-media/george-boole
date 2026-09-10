@@ -297,7 +297,7 @@ def test_the_selection_marker_follows_the_arrow_keys():
 
             await pilot.press("down")
             await asyncio.sleep(0.15)
-            assert "> trit" in buffer_text(app)
+            assert "> tribit" in buffer_text(app)
 
             await pilot.press("up")
             await asyncio.sleep(0.15)
