@@ -573,3 +573,65 @@ body[data-theme="matrix"] .tile.gauntlet-max-earned {
     50% { transform: scale(1.15); }
     100% { transform: scale(1); }
 }
+
+
+.mobile-rules-strip {
+    margin-top: 10px;
+    padding: 8px 6px;
+    background: rgba(15, 15, 30, 0.6);
+    border: 2px solid rgba(138, 43, 226, 0.3);
+    font-family: 'Press Start 2P', cursive;
+}
+
+.rules-row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.rules-row:last-child {
+    margin-bottom: 0;
+}
+
+.rule-tag {
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.5px;
+    padding: 3px 6px;
+    background: rgba(138, 43, 226, 0.15);
+    border: 1px solid rgba(138, 43, 226, 0.3);
+}
+
+.gate-tag {
+    font-size: 7px;
+    color: #00ffff;
+    letter-spacing: 0.5px;
+    padding: 3px 8px;
+    border: 1px solid rgba(0, 255, 255, 0.3);
+}
+
+.gate-tag[data-gate="xor"] { border-color: rgba(0, 255, 255, 0.4); }
+.gate-tag[data-gate="or"] { color: #ffe03a; border-color: rgba(255, 224, 58, 0.4); }
+.gate-tag[data-gate="and"] { color: #39ff6e; border-color: rgba(57, 255, 110, 0.4); }
+.gate-tag[data-gate="not"] { color: #ffd700; border-color: rgba(255, 215, 0, 0.4); }
+
+.rule-link {
+    font-size: 7px;
+    color: rgba(0, 255, 255, 0.7);
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: color 0.2s;
+}
+
+.rule-link:hover {
+    color: #00ffff;
+    text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
+}
+
+@media (min-width: 960px) {
+    .mobile-rules-strip {
+        display: none;
+    }
+}

@@ -383,3 +383,27 @@
     border: 1px solid #ffd700;
     text-shadow: 1px 1px 0px #8b4513;
 }
+
+
+.difficulty-back-btn {
+    background: linear-gradient(180deg, #2d2d44 0%, #1a1a2e 100%) !important;
+    border: 3px solid #8a2be2 !important;
+    color: #00ffff !important;
+    padding: 10px 20px;
+    font-size: 10px;
+    margin-top: 16px;
+    width: 100%;
+    box-shadow: 
+        0 3px 0 #0f0f1e,
+        0 0 10px rgba(138, 43, 226, 0.4) !important;
+    font-family: 'Press Start 2P', cursive;
+    letter-spacing: 1px;
+}
+
+.difficulty-back-btn:hover {
+    background: linear-gradient(180deg, #3d3d54 0%, #2a2a3e 100%) !important;
+    border-color: #00ffff !important;
+    box-shadow: 
+        0 3px 0 #0f0f1e,
+        0 0 20px rgba(0, 255, 255, 0.7) !important;
+}

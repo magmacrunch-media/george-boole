@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>George Boole has entered the chat</title>
+    <title>George Boole</title>
     
     <!-- Favicons -->
     <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -133,12 +133,27 @@
             </div>
             
             <div class="controls">
+                <button id="toggleScoreboard">scores</button>
                 <button id="newGame">new game</button>
-                <button id="toggleScoreboard">high scores</button>
                 <button id="toggleSettings">settings</button>
             </div>
             
             <div class="game-board" id="gameBoard"></div>
+            
+            <div class="mobile-rules-strip" id="mobileRulesStrip">
+                <div class="rules-row">
+                    <span class="rule-tag">same+same=same</span>
+                    <span class="rule-tag">num+gate+num</span>
+                    <span class="rule-tag">NOT slides in</span>
+                </div>
+                <div class="rules-row gates-row">
+                    <span class="gate-tag" data-gate="xor"><b>&oplus;</b> XOR</span>
+                    <span class="gate-tag" data-gate="or"><b>&or;</b> OR</span>
+                    <span class="gate-tag" data-gate="and"><b>&and;</b> AND</span>
+                    <span class="gate-tag" data-gate="not"><b>&not;</b> NOT</span>
+                </div>
+                <div class="rules-row"><span class="rule-link" id="howToPlayLink">full rules &rarr;</span></div>
+            </div>
         </div>
 
         <!-- RIGHT PANEL: Logic Gate Reference -->
@@ -319,6 +334,7 @@
                     <span class="diff-label">GAUNTLET</span>
                     <span class="diff-subtitle">progressive</span>
                 </button>
+                <button class="difficulty-back-btn" id="difficultyBack">&larr; BACK</button>
             </div>
         </div>
     </div>
@@ -606,7 +622,7 @@
             
             <p><strong>game design & development:</strong><br>Jake A. McCoy</p>
             
-            <p><strong>music:</strong><br>"George Boole has entered the chat" by Juanito Thompson</p>
+            <p><strong>music:</strong><br>"George Boole" by Juanito Thompson</p>
             
             <p><strong>original concept:</strong><br>This game is inspired by Gabriele Cirulli's <em>2048</em> (2014), reimagined with Boolean logic and bitwise operations instead of simple addition.</p>
             

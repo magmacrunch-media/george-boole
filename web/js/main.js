@@ -171,6 +171,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
+        // Back button: difficulty modal -> lore screen
+        const difficultyBack = document.getElementById('difficultyBack');
+        if (difficultyBack) {
+            difficultyBack.addEventListener('click', () => {
+                difficultyModal.classList.remove('active');
+                loreScreen.classList.add('active');
+            });
+        }
+        
+        // How to play link in mobile rules strip
+        const howToPlayLink = document.getElementById('howToPlayLink');
+        if (howToPlayLink) {
+            howToPlayLink.addEventListener('click', () => {
+                const instructionsModal = document.getElementById('instructionsModal');
+                instructionsModal.classList.add('active');
+                const instructionsContent = instructionsModal.querySelector('.instructions-content');
+                if (instructionsContent) {
+                    instructionsContent.scrollTop = 0;
+                }
+            });
+        }
+
         let scoreboardOpen = false;
 
         // Scoreboard modal controls
