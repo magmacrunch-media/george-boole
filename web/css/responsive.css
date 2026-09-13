@@ -100,6 +100,15 @@
         padding: 15px 30px;
         letter-spacing: 0.5px;
     }
+    .title-portrait {
+        width: 96px;
+        height: 96px;
+    }
+
+    .title-portrait-wrapper {
+        margin-bottom: 16px;
+    }
+
     
     .boolean-quote {
         font-size: 8px;

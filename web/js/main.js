@@ -52,6 +52,70 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingScreen.style.display = 'none';
         }, 500);
 
+
+        // ---- Binary rain background ----
+        const rainCanvas = document.getElementById('binaryRain');
+        if (rainCanvas) {
+            const ctx = rainCanvas.getContext('2d');
+            let rainCols, rainDrops;
+            const CHAR_SET = ['0', '1'];
+
+            function initRain() {
+                rainCanvas.width = window.innerWidth;
+                rainCanvas.height = window.innerHeight;
+                const fontSize = 14;
+                rainCols = Math.floor(rainCanvas.width / fontSize);
+                rainDrops = Array(rainCols).fill(0).map(() => Math.random() * -100);
+            }
+
+            function drawRain() {
+                ctx.fillStyle = 'rgba(10, 10, 20, 0.15)';
+                ctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
+                ctx.font = '14px "Press Start 2P", monospace';
+                for (let i = 0; i < rainCols; i++) {
+                    const char = CHAR_SET[Math.floor(Math.random() * 2)];
+                    const x = i * 14;
+                    const y = rainDrops[i] * 14;
+                    if (i % 3 === 0) ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
+                    else if (i % 3 === 1) ctx.fillStyle = 'rgba(255, 0, 255, 0.4)';
+                    else ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
+                    ctx.fillText(char, x, y);
+                    if (y > rainCanvas.height && Math.random() > 0.98) {
+                        rainDrops[i] = 0;
+                    }
+                    rainDrops[i]++;
+                }
+                requestAnimationFrame(drawRain);
+            }
+
+            initRain();
+            drawRain();
+            window.addEventListener('resize', initRain);
+        }
+
+        // ---- Floating gate tiles ----
+        const gatesContainer = document.getElementById('floatingGates');
+        if (gatesContainer) {
+            const gateSymbols = [
+                { symbol: '\u2295', gate: 'xor' },
+                { symbol: '\u2228', gate: 'or' },
+                { symbol: '\u2227', gate: 'and' },
+                { symbol: '\u00AC', gate: 'not' },
+            ];
+            for (let i = 0; i < 8; i++) {
+                const g = gateSymbols[i % gateSymbols.length];
+                const el = document.createElement('span');
+                el.className = 'floating-gate';
+                el.setAttribute('data-gate', g.gate);
+                el.textContent = g.symbol;
+                el.style.left = (10 + Math.random() * 80) + '%';
+                el.style.animationDuration = (12 + Math.random() * 18) + 's';
+                el.style.animationDelay = (Math.random() * 20) + 's';
+                el.style.fontSize = (12 + Math.random() * 10) + 'px';
+                gatesContainer.appendChild(el);
+            }
+        }
+
         // Title screen navigation
         const titleScreen = document.getElementById('titleScreen');
         const loreScreen = document.getElementById('loreScreen');

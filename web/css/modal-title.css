@@ -178,3 +178,113 @@
     font-size: 8px;
     text-shadow: 1px 1px 0px #006699;
 }
+
+/* ---- PORTRAIT ---- */
+.title-portrait-wrapper {
+    position: relative;
+    display: inline-block;
+    margin-bottom: 24px;
+    animation: titleFloat 4s ease-in-out infinite;
+}
+
+.title-portrait {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    width: 128px;
+    height: 128px;
+    filter: drop-shadow(0 0 12px rgba(0, 255, 255, 0.6))
+            drop-shadow(0 0 30px rgba(138, 43, 226, 0.4));
+}
+
+/* Sunglasses glint */
+.sunglasses-glint {
+    position: absolute;
+    top: 42%;
+    left: 25%;
+    width: 50%;
+    height: 8%;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        transparent 30%,
+        rgba(255, 255, 255, 0.9) 48%,
+        rgba(0, 255, 255, 1) 50%,
+        rgba(255, 255, 255, 0.9) 52%,
+        transparent 70%,
+        transparent 100%
+    );
+    opacity: 0;
+    pointer-events: none;
+    animation: glint 4s ease-in-out infinite;
+}
+
+@keyframes glint {
+    0%, 85%, 100% { opacity: 0; transform: translateX(-30%); }
+    90% { opacity: 1; transform: translateX(30%); }
+    95% { opacity: 0; transform: translateX(50%); }
+}
+
+/* ---- BINARY RAIN CANVAS ---- */
+.binary-rain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.15;
+}
+
+/* ---- FLOATING GATES ---- */
+.floating-gates {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.floating-gate {
+    position: absolute;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    opacity: 0;
+    animation: floatGate linear infinite;
+    pointer-events: none;
+    text-shadow: 0 0 8px currentColor;
+}
+
+.floating-gate[data-gate="xor"] { color: rgba(0, 255, 255, 0.3); }
+.floating-gate[data-gate="or"]  { color: rgba(255, 224, 58, 0.3); }
+.floating-gate[data-gate="and"] { color: rgba(57, 255, 110, 0.3); }
+.floating-gate[data-gate="not"] { color: rgba(255, 215, 0, 0.3); }
+
+@keyframes floatGate {
+    0% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(0deg);
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20vh) rotate(360deg);
+    }
+}
+
+/* Loading portrait */
+.loading-portrait {
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    width: 96px;
+    height: 96px;
+    margin-bottom: 16px;
+    filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.5));
+}
