@@ -5,9 +5,12 @@
 # One checkout, unlike Moonlight Drift's: this game's tests link only its own
 # sources, so the engine is not needed here.
 #
-# The devkitPPC build is not included, matching magnolia and Moonlight Drift:
-# it needs the self-hosted runner, and that job stays out until its label is
-# confirmed.
+# The devkitPPC build below needs neither. It was held out of CI waiting on a
+# self-hosted runner, which turned out to be a false lead: devkitPro publish the
+# toolchain as a container, so the console build runs on a GitHub-hosted runner
+# too. magnolia reached the same conclusion first; this is its engine-build job
+# with the engine checked out beside the game, in the layout the Makefile
+# already documents.
 
 name: CI
 
@@ -32,6 +35,54 @@ jobs:
       - name: make test
         working-directory: wii
         run: make test
+
+  # What `make test` cannot reach: everything bound to GRRLIB and libogc. The
+  # host suite links this game's own sources and skips the engine entirely — by
+  # design, so it stays runnable without a cross-compiler — which leaves the
+  # console build with no automated check of any kind until this job.
+  #
+  # It is also the only thing that catches a game published against an engine
+  # commit that was never pushed. That state builds perfectly on the dev box,
+  # where both halves sit in one tree, and not at all from a fresh clone.
+  wii-build:
+    name: wii build
+    runs-on: ubuntu-latest
+    container: devkitpro/devkitppc:latest
+    steps:
+      # Checked out into a subdirectory so the engine can sit beside it. That
+      # is the layout the Makefile documents and a flat clone produces, and it
+      # means `make` here resolves the engine through its own first default
+      # rather than through a MAGNOLIA= override this job would have to keep
+      # correct. CI exercising the documented arrangement is the point.
+      - name: Check out the game
+        uses: actions/checkout@v7
+        with:
+          path: george-boole
+
+      # Tracks main rather than a pinned ref, deliberately. An engine change
+      # that breaks this game should redden this repo on the day it lands.
+      - name: Check out the engine beside it
+        uses: actions/checkout@v7
+        with:
+          repository: magmacrunch-media/magnolia
+          path: magnolia
+
+      # GRRLIB is not a dkp-pacman package — it is built from source into the
+      # portlibs tree. Its own dependencies (freetype, libpng, libjpeg-turbo)
+      # come with the image's ppc-portlibs and wii-portlibs groups. Pinned, so
+      # an upstream commit cannot turn this red on a day nobody touched it;
+      # v4.6.1 matches what magnolia's own CI installs.
+      - name: install GRRLIB
+        run: |
+          git clone --depth 1 --branch v4.6.1 https://github.com/GRRLIB/GRRLIB.git /tmp/grrlib
+          make -C /tmp/grrlib/GRRLIB clean all install
+
+      - name: make
+        working-directory: george-boole/wii
+        run: make
+
+      - name: The .dol exists
+        run: test -f george-boole/wii/build/george-boole.dol
 
   # The same rules again, in the terminal port's Python. Deliberately a job with
   # no engine installed: boole/board.py and boole/modes.py claim to import
