@@ -61,9 +61,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const CHAR_SET = ['0', '1'];
 
             function initRain() {
-                rainCanvas.width = window.innerWidth;
-                rainCanvas.height = window.innerHeight;
-                const fontSize = 48;
+                const rect = rainCanvas.getBoundingClientRect();
+                rainCanvas.width = rect.width;
+                rainCanvas.height = rect.height;
+                const fontSize = 36;
                 rainCols = Math.floor(rainCanvas.width / fontSize);
                 rainDrops = Array(rainCols).fill(0).map(() => Math.random() * -100);
             }
@@ -71,11 +72,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             function drawRain() {
                 ctx.fillStyle = 'rgba(10, 10, 20, 0.15)';
                 ctx.fillRect(0, 0, rainCanvas.width, rainCanvas.height);
-                ctx.font = '48px "Press Start 2P", monospace';
+                ctx.font = '36px "Press Start 2P", monospace';
                 for (let i = 0; i < rainCols; i++) {
                     const char = CHAR_SET[Math.floor(Math.random() * 2)];
-                    const x = i * 48;
-                    const y = rainDrops[i] * 48;
+                    const x = i * 36;
+                    const y = rainDrops[i] * 36;
                     if (i % 3 === 0) ctx.fillStyle = 'rgba(0, 255, 255, 0.6)';
                     else if (i % 3 === 1) ctx.fillStyle = 'rgba(255, 0, 255, 0.4)';
                     else ctx.fillStyle = 'rgba(0, 255, 0, 0.4)';
@@ -83,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (y > rainCanvas.height && Math.random() > 0.995) {
                         rainDrops[i] = 0;
                     }
-                    rainDrops[i] += 0.2;
+                    rainDrops[i] += 0.3;
                 }
                 requestAnimationFrame(drawRain);
             }
