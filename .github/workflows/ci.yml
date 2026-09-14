@@ -24,7 +24,7 @@ jobs:
     name: host tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The board, the gate rules and the mode tables — ported from the web
       # game and checked against the suite that came with it. The rules are what
@@ -41,8 +41,8 @@ jobs:
     name: tui rules (no engine)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -61,8 +61,8 @@ jobs:
     name: tui screens
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
