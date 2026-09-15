@@ -206,9 +206,28 @@ The build is real and the output runs. These are the open pieces:
   `boole:move`, `boole:overflow`, `boole:height-bonus`, `boole:promotion`,
   `boole:game-over` — each carrying `difficulty` and `bits`. They are named for
   the game rather than for a platform, the site dispatches them into a document
-  with no listeners, and `ios/shim/haptics.js` already consumes them. What is
-  left is a shim that maps `boole:overflow` to an achievement id per bit width
-  plus a Gauntlet clear, and the eight achievements in App Store Connect.
+  with no listeners, and `ios/shim/haptics.js` already consumes them.
+
+  `ios/shim/gamekit-achievements.js` is the rest of the JavaScript half: seven
+  overflow achievements, one per bit width, plus a Gauntlet clear. It needs one
+  method beyond the three `gamekit-scores.js` documents —
+  `reportAchievement({ achievementId, percent })`. What is left is that native
+  method and the eight achievements in App Store Connect.
+
+  Three decisions in it worth not re-litigating. They are keyed on bit *width*
+  rather than mode, so the same achievement is reachable by picking that
+  difficulty or by climbing to it in Gauntlet — `bitMode` is what makes an
+  overflow hard, not which menu entry you came in through. The Gauntlet clear
+  is *overflowing at 8-bit while in Gauntlet*, because every promotion is
+  guarded by `if (this.bitMode < 8)` so there is no ninth promotion to observe,
+  and "promoted to 8-bit" would be the easier thing wearing the harder one's
+  name. And an achievement earned while no plugin answers is **not** recorded
+  as reported: the player earned it, and when the native half lands they should
+  get it on their next overflow rather than having it written off in advance.
+
+  Seven at 100 plus 300 is 1000 exactly, which is App Store Connect's per-app
+  cap — so a ninth achievement means re-pointing all of them. Decide before
+  creating any; 80 and 240 would leave 200 spare.
 
   **Do not replace this with a shim that patches the game from outside.** It
   does not work and it would be wrong twice over. `AdAudio`'s exports are

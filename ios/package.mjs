@@ -99,7 +99,7 @@ const FONTS = ['PressStart2P-Regular.woff2', 'PressStart2P-Regular.ttf'];
  * here rather than in `web/` for the same reason `css/ios.css` does: the
  * browser version should not carry code about a store it will never be in.
  */
-const SHIMS = ['gamekit-scores.js', 'haptics.js'];
+const SHIMS = ['gamekit-scores.js', 'gamekit-achievements.js', 'haptics.js'];
 
 function die(msg, detail) {
   console.error(`\npackage.mjs: ${msg}`);
