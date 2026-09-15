@@ -25,6 +25,196 @@ const AUDIO_EXT = document.createElement('audio')
     .canPlayType('audio/ogg; codecs="vorbis"') ? '.ogg' : '.mp3';
 const audioSrc = (path) => path.replace(/\.ogg$/, AUDIO_EXT);
 
+// How many glyphs trail behind each falling head.
+const RAIN_TRAIL = 14;
+
+/**
+ * Binary rain behind the title screen.
+ *
+ * Returns { start, stop }. Nothing runs until start() is called, and stop()
+ * is real -- the first version of this left a requestAnimationFrame loop
+ * running behind the board for the whole session, which on a phone is a
+ * background render loop nobody asked for.
+ *
+ * Three things here are deliberate, because the first attempt got each of
+ * them wrong and the result was invisible rather than obviously broken:
+ *
+ *  - The canvas is cleared each frame, not veiled with a translucent fill.
+ *    The veil is the classic trail technique and it only works when the
+ *    canvas IS the background; composited over the title screen's gradient
+ *    it converges towards opaque and flattens the glow underneath, so the
+ *    effect fights itself at every opacity.
+ *  - Column width is measured from the font, once, rather than assumed equal
+ *    to the font size in three separate places.
+ *  - The glyphs stay put and the trail moves across them. Re-rolling every
+ *    character every frame reads as television static.
+ */
+function createBinaryRain(canvas) {
+    if (!canvas || !canvas.getContext) return { start() {}, stop() {} };
+
+    const ctx = canvas.getContext('2d');
+    const reduce = window.matchMedia
+        ? window.matchMedia('(prefers-reduced-motion: reduce)')
+        : null;
+
+    let cols = [];
+    let cellW = 18;
+    let cellH = 24;
+    let rows = 0;
+    let cssW = 0;
+    let cssH = 0;
+    let raf = 0;
+    let running = false;
+
+    const glyph = () => (Math.random() < 0.5 ? '0' : '1');
+
+    function newColumn(scatter) {
+        const chars = [];
+        for (let i = 0; i < RAIN_TRAIL; i++) chars.push(glyph());
+        return {
+            // On the first fill, heads are scattered across the whole height
+            // so the field is already running when the title screen appears.
+            // A recycled column re-enters from above the top edge.
+            head: scatter
+                ? Math.random() * (rows + RAIN_TRAIL) - RAIN_TRAIL
+                : -RAIN_TRAIL - Math.random() * rows * 0.5,
+            speed: 0.4 + Math.random() * 0.8,
+            chars,
+        };
+    }
+
+    function measure() {
+        const rect = canvas.getBoundingClientRect();
+        if (!rect.width || !rect.height) return false;
+
+        cssW = rect.width;
+        cssH = rect.height;
+
+        // Without this the buffer is in CSS pixels and the browser upscales
+        // it, which on a 3x iPhone is visibly soft.
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(cssW * dpr);
+        canvas.height = Math.round(cssH * dpr);
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const size = parseFloat(
+            getComputedStyle(canvas).getPropertyValue('--rain-size')
+        ) || 18;
+        ctx.font = size + 'px "Press Start 2P", monospace';
+        ctx.textBaseline = 'top';
+
+        cellW = Math.max(1, Math.ceil(ctx.measureText('0').width)) + 2;
+        cellH = Math.max(1, Math.round(size * 1.35));
+        rows = Math.ceil(cssH / cellH);
+
+        const count = Math.ceil(cssW / cellW);
+        cols = [];
+        for (let i = 0; i < count; i++) cols.push(newColumn(true));
+        return true;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, cssW, cssH);
+
+        for (let i = 0; i < cols.length; i++) {
+            const col = cols[i];
+            const before = Math.floor(col.head);
+            col.head += col.speed;
+            const row = Math.floor(col.head);
+
+            for (let n = before; n < row; n++) {
+                col.chars.pop();
+                col.chars.unshift(glyph());
+            }
+
+            const x = i * cellW;
+            for (let t = 0; t < RAIN_TRAIL; t++) {
+                const y = (row - t) * cellH;
+                if (y < -cellH || y > cssH) continue;
+                ctx.fillStyle = t === 0
+                    ? 'rgba(224, 255, 255, 0.95)'
+                    : 'rgba(0, 255, 255, ' + ((1 - t / RAIN_TRAIL) * 0.55).toFixed(3) + ')';
+                ctx.fillText(col.chars[t], x, y);
+            }
+
+            // Recycle the moment the tail clears the bottom. The first version
+            // waited on a 0.5%-per-frame coin flip, so columns died off and
+            // the field thinned out the longer you looked at it.
+            if ((row - RAIN_TRAIL) * cellH > cssH) {
+                cols[i] = newColumn(false);
+            }
+        }
+
+        raf = requestAnimationFrame(draw);
+    }
+
+    function stop() {
+        running = false;
+        if (raf) {
+            cancelAnimationFrame(raf);
+            raf = 0;
+        }
+        if (cssW && cssH) ctx.clearRect(0, 0, cssW, cssH);
+    }
+
+    function start() {
+        if (running) return;
+        // Someone who has asked their device for less motion gets none of
+        // this. It carries no information, so there is nothing to replace it
+        // with -- the stylesheet stills the other six animations.
+        if (reduce && reduce.matches) return;
+        if (!measure()) return;
+        running = true;
+        raf = requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', () => {
+        if (running) measure();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            if (raf) {
+                cancelAnimationFrame(raf);
+                raf = 0;
+            }
+        } else if (running && !raf) {
+            raf = requestAnimationFrame(draw);
+        }
+    });
+
+    if (reduce && reduce.addEventListener) {
+        reduce.addEventListener('change', () => {
+            if (reduce.matches) stop();
+        });
+    }
+
+    return { start, stop };
+}
+
+/** The gate glyphs drifting up behind the title. Pure CSS once placed. */
+function createFloatingGates(container) {
+    if (!container || container.childElementCount) return;
+    const gates = [
+        { symbol: '⊕', gate: 'xor' },
+        { symbol: '∨', gate: 'or' },
+        { symbol: '∧', gate: 'and' },
+        { symbol: '¬', gate: 'not' },
+    ];
+    for (let i = 0; i < 8; i++) {
+        const g = gates[i % gates.length];
+        const el = document.createElement('span');
+        el.className = 'floating-gate';
+        el.setAttribute('data-gate', g.gate);
+        el.textContent = g.symbol;
+        el.style.left = (10 + Math.random() * 80) + '%';
+        el.style.animationDuration = (12 + Math.random() * 18) + 's';
+        el.style.animationDelay = (Math.random() * 20) + 's';
+        el.style.fontSize = (12 + Math.random() * 10) + 'px';
+        container.appendChild(el);
+    }
+}
+
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
@@ -52,6 +242,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingScreen.style.display = 'none';
         }, 500);
 
+        // ---- Title screen background ----
+        const rain = createBinaryRain(document.getElementById('binaryRain'));
+        createFloatingGates(document.getElementById('floatingGates'));
+
+        // Wait for Press Start 2P before measuring: the column width comes
+        // from the font's own advance, and the fallback's is different, so
+        // starting early would lay out the field twice. Not awaited -- the
+        // title screen is interactive without it.
+        const fontsReady = document.fonts && document.fonts.ready
+            ? document.fonts.ready
+            : Promise.resolve();
+        fontsReady.then(() => rain.start());
 
         // Title screen navigation
         const titleScreen = document.getElementById('titleScreen');
@@ -62,7 +264,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         const startGame = () => {
             titleScreen.classList.remove('active');
             loreScreen.classList.add('active');
-            
+
+            // The title screen is gone for the rest of the session, so the
+            // canvas loop has nothing left to draw. Leaving it running is a
+            // render loop behind the board, which matters on a phone.
+            rain.stop();
+
             // Start music with fade-in
             AdAudio.playMusic();
         };

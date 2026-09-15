@@ -20,6 +20,37 @@
     display: flex;
 }
 
+/* Both layers sit between the ::before glow and .title-screen-content, which
+   is position:relative z-index:1. position:absolute keeps them out of the flex
+   layout entirely, so they need no help from the markup to stay clear of it.
+   --rain-size is the glyph size the canvas measures its column width from;
+   responsive.css steps it down with the rest of the title. */
+.title-screen {
+    --rain-size: 18px;
+}
+
+.title-screen .binary-rain {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.55;
+}
+
+.title-screen .floating-gates {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+}
+
 .title-screen::before {
     content: '';
     position: absolute;
@@ -223,6 +254,48 @@
     95% { opacity: 0; transform: translateX(50%); }
 }
 
+/* ---- FLOATING GATES ---- */
+
+.floating-gate {
+    position: absolute;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 16px;
+    opacity: 0;
+    animation: floatGate linear infinite;
+    pointer-events: none;
+    text-shadow: 0 0 8px currentColor;
+    will-change: transform;
+}
+
+.floating-gate[data-gate="xor"] { color: rgba(0, 255, 255, 0.3); }
+.floating-gate[data-gate="or"]  { color: rgba(255, 224, 58, 0.3); }
+.floating-gate[data-gate="and"] { color: rgba(57, 255, 110, 0.3); }
+.floating-gate[data-gate="not"] { color: rgba(255, 215, 0, 0.3); }
+
+/* vh rather than a percentage, deliberately: a percentage in translateY is a
+   percentage of the ELEMENT's own box, which for a 16px glyph is 16px of
+   travel. vh is the container's height here, because .floating-gates fills a
+   position:fixed .title-screen. Where iOS's large-viewport vh overshoots the
+   visible area the glyph merely starts further off-screen, and the parent's
+   overflow:hidden absorbs it. Container query units would be exact but land
+   above the iOS 15 deployment target. */
+@keyframes floatGate {
+    0% {
+        opacity: 0;
+        transform: translateY(100vh) rotate(0deg);
+    }
+    10% {
+        opacity: 0.3;
+    }
+    90% {
+        opacity: 0.3;
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-20vh) rotate(360deg);
+    }
+}
+
 /* Loading portrait */
 .loading-portrait {
     image-rendering: pixelated;
@@ -231,4 +304,28 @@
     height: 96px;
     margin-bottom: 16px;
     filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.5));
+}
+
+/* ---- REDUCED MOTION ----
+   The title screen runs seven infinite animations at once, which is a lot to
+   ask of anyone who has told their device they would rather it did not. Every
+   one of these is decoration: nothing here conveys state, so stilling them
+   costs no information. The rain stops in main.js, which checks the same
+   query -- a canvas loop cannot be stopped from a stylesheet. */
+@media (prefers-reduced-motion: reduce) {
+    .title-screen::before,
+    .title-main,
+    .title-portrait-wrapper,
+    .title-large,
+    .start-button,
+    .start-text,
+    .sunglasses-glint,
+    .floating-gate {
+        animation: none;
+    }
+
+    /* Both of these are mid-animation values that the keyframes would
+       otherwise have been responsible for setting. */
+    .title-screen::before { opacity: 0.65; }
+    .floating-gate { opacity: 0.3; }
 }
