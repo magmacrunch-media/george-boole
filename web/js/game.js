@@ -65,7 +65,10 @@ class BooleBoard {
         
         // Track pending timeouts for cleanup (prevent stale callbacks)
         this._pendingTimeouts = [];
-        
+
+        // Suppresses _emit while checkGameOver() probes the board. See _emit.
+        this._silent = false;
+
         this.init();
         this.setupEventListeners();
         
@@ -103,6 +106,37 @@ class BooleBoard {
         this.eventListeners.push({ element, event, handler });
     }
     
+    /**
+     * Announce a game moment on the document.
+     *
+     * A seam for builds that want to react to what just happened. The browser
+     * version has no listener, so on magmacrunch.com this allocates a
+     * CustomEvent at moments that were already doing a DOM write and playing a
+     * sound, and nothing else happens. That is the point: the App Store
+     * build's haptics and Game Center achievements hang off these events, and
+     * none of that code has to live in web/ or be named here. The events
+     * describe the game, not a platform.
+     *
+     * `difficulty` and `bits` ride along on every event so no call site has to
+     * remember which listener wanted them.
+     *
+     * The _silent guard is not optional. checkGameOver() decides whether the
+     * board is dead by running moveLeft() for real, four times, and restoring
+     * the score, both flag boards, highestValueEver and any queued timeouts
+     * afterwards. A dispatched event cannot be taken back. Without the guard,
+     * filling the board would buzz the phone four times and hand out
+     * achievements nobody earned.
+     */
+    _emit(name, detail) {
+        if (this._silent) return;
+        document.dispatchEvent(new CustomEvent('boole:' + name, {
+            detail: Object.assign(
+                { difficulty: this.difficulty, bits: this.bitMode },
+                detail
+            ),
+        }));
+    }
+
     // Helper to register timeouts that auto-cancel on destroy
     _setTimeout(fn, delay) {
         const id = setTimeout(() => {
@@ -409,6 +443,7 @@ class BooleBoard {
             } else {
                 AdAudio.playSfx('move');
             }
+            this._emit('move', { direction, merged: mergeOccurred });
         }
         
         return boardChanged;
@@ -605,6 +640,7 @@ class BooleBoard {
     
     // Show overflow notification
     showOverflowNotification(bonus) {
+        this._emit('overflow', { bonus });
         const notification = document.getElementById('overflowNotification');
         if (!notification) return;
         
@@ -630,6 +666,7 @@ class BooleBoard {
     
     // Show height bonus notification (new personal best!)
     showHeightBonus(value, bonus) {
+        this._emit('height-bonus', { value, bonus });
         const notification = document.getElementById('overflowNotification');
         if (!notification) return;
         
@@ -655,6 +692,7 @@ class BooleBoard {
     
     // Show upgrade notification for endless mode progression!
     showUpgradeNotification(newBitMode) {
+        this._emit('promotion', { bits: newBitMode });
         const notification = document.getElementById('overflowNotification');
         if (!notification) return;
         
@@ -886,6 +924,14 @@ class BooleBoard {
         const savedHasReached = this.hasReachedMaxInCurrentMode;
         const savedTimeouts = this._pendingTimeouts.slice();
 
+        // These are real moveLeft() calls on a copy of the board, so everything
+        // a move can announce is about to be announced four times for moves
+        // nobody made. The score and the flag boards are snapshotted above and
+        // restored below; an event is not restorable, so it must not be sent.
+        // try/finally rather than a reset after the loop: there is an early
+        // `return false` inside it, and that path has to clear the flag too.
+        this._silent = true;
+        try {
         // Try each direction
         for (const direction of ['left', 'right', 'up', 'down']) {
             // Temporarily set board for testing
@@ -926,7 +972,10 @@ class BooleBoard {
                 return false;
             }
         }
-        
+        } finally {
+            this._silent = false;
+        }
+
         // Restore original board and all simulation side-effects
         this.board = testBoard;
         this.highestValueEver = savedHighest;
@@ -1008,6 +1057,13 @@ class BooleBoard {
     }
     
     handleGameOver() {
+        this._emit('game-over', {
+            score: this.score,
+            moves: this.moves,
+            highest: this.highestValueEver,
+            victory: this.wasVictory,
+        });
+
         // Play game over sound (only if not victory)
         if (!this.wasVictory) {
             AdAudio.playSfx('gameOver');

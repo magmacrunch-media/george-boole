@@ -99,7 +99,7 @@ const FONTS = ['PressStart2P-Regular.woff2', 'PressStart2P-Regular.ttf'];
  * here rather than in `web/` for the same reason `css/ios.css` does: the
  * browser version should not carry code about a store it will never be in.
  */
-const SHIMS = ['gamekit-scores.js'];
+const SHIMS = ['gamekit-scores.js', 'haptics.js'];
 
 function die(msg, detail) {
   console.error(`\npackage.mjs: ${msg}`);
@@ -128,6 +128,25 @@ function findWebsite() {
   return found;
 }
 
+/**
+ * Apply one named edit to a file in `www/` other than the page, with the same
+ * no-op-is-fatal rule as `edit()`.
+ */
+function editFile(rel, name, fn) {
+  const p = join(OUT, rel);
+  if (!existsSync(p)) die(`the "${name}" step has nothing to edit: ${rel} is not in the bundle.`);
+  const before = readFileSync(p, 'utf8');
+  const after = fn(before);
+  if (after === before) {
+    die(
+      `the "${name}" step matched nothing.`,
+      `web/${rel} no longer looks the way this script expects. That is not\nnecessarily a problem with the file -- but it means the bundle would be\nbuilt on an assumption that has stopped being true, so it stops here.`
+    );
+  }
+  writeFileSync(p, after);
+  return name;
+}
+
 /** Apply one named edit, and fail if it changed nothing. */
 function edit(state, name, fn) {
   const next = fn(state.html);
@@ -149,13 +168,54 @@ const siteFonts = join(website, 'fonts');
 
 rmSync(OUT, { recursive: true, force: true });
 mkdirSync(OUT, { recursive: true });
+
+// Every clip in web/audio/ exists twice, .ogg and .mp3. iOS has no Ogg Vorbis
+// decoder and every browser on iOS is WebKit, so `web/js/main.js` -- which
+// picks the extension from canPlayType('audio/ogg; codecs="vorbis"') -- always
+// resolves to .mp3 here. The .ogg files are therefore bytes this bundle can
+// never decode, and game-loop.ogg alone is 2.6MB of them.
+//
+// Safe to drop *only* in the bundle, and only because the runtime is WebKit by
+// definition. web/ keeps both: it is served to Firefox too, where the ogg is
+// the file almost everyone receives and the mp3 is a transcode of it.
+let oggDropped = 0;
 cpSync(WEB, OUT, {
   recursive: true,
   filter: (src) => {
     const rel = relative(WEB, src).split('\\').join('/');
+    if (rel.endsWith('.ogg')) {
+      oggDropped += 1;
+      return false;
+    }
     return rel === '' || !EXCLUDE.has(rel);
   },
 });
+
+// Same reasoning as the no-op transforms below: if this stops matching, the
+// bundle silently regains a couple of megabytes of undecodable audio and the
+// build still says it succeeded.
+if (!oggDropped) {
+  die(
+    'no .ogg files were dropped from the bundle.',
+    'web/audio/ is supposed to carry both .ogg and .mp3 for every clip, and the\niOS bundle only ever plays the .mp3. Finding none means the audio layout\nchanged -- check that the .mp3 files are still there before assuming this\nstep is simply obsolete.'
+  );
+}
+
+// Removing the files is only half of it: main.js still ASKS for them, from a
+// canPlayType() test that is false on WebKit and true almost everywhere else.
+// So the bundle worked on a phone and 404'd in any other browser, where the
+// failed decode takes AdAudio.init down and the loading screen never lifts.
+// That breaks the one way this bundle can be tested without a Mac, and it
+// breaks it in the direction that looks like the audio work being wrong.
+//
+// Pinning the extension rather than keeping the probe: a bundle that ships no
+// .ogg has no business testing for an .ogg decoder.
+editFile('js/main.js', 'pin the audio extension to mp3', (js) =>
+  js.replace(
+    /const AUDIO_EXT = document\.createElement\('audio'\)\r?\n?\s*\.canPlayType\([^)]*\) \? '\.ogg' : '\.mp3';/,
+    "const AUDIO_EXT = '.mp3'; // ios/package.mjs: this bundle ships no .ogg"
+  )
+);
 
 const indexPath = join(OUT, 'index.html');
 const state = { html: readFileSync(indexPath, 'utf8'), applied: [] };
@@ -309,6 +369,36 @@ body {
     overscroll-behavior: none;
 }
 
+/* Padding the body reaches .container, which is in normal flow. It does not
+   reach any of these: they are position:fixed with inset 0, so they are laid
+   out against the viewport and the body's padding is invisible to them. On a
+   notched phone that puts the title screen's start button under the home
+   indicator and the top of every modal under the Dynamic Island.
+
+   Padding rather than insetting the box, so the gradients and the binary rain
+   still run edge to edge behind the notch -- the point of viewport-fit=cover
+   is that the background reaches the corners and the content does not.
+
+   This is every inset-0 overlay in web/css/, and deliberately not every
+   position:fixed rule: body::before and body::after are the CRT scanline and
+   pixel-grid layers, which are meant to reach the corners, and
+   .game-notification and .initials-prompt are centred on top:50% rather than
+   pinned to the edges. */
+.title-screen,
+.lore-screen,
+.difficulty-modal,
+.scoreboard-modal,
+.settings-modal,
+.instructions-modal,
+.credits-modal,
+.game-over,
+.loading-screen {
+    padding:
+        var(--safe-top) var(--safe-right)
+        var(--safe-bottom) var(--safe-left);
+    box-sizing: border-box;
+}
+
 /* The board already sets these; everything else in the app wants them too, or
    a mistimed second tap zooms the page and a long press offers to copy a tile. */
 * {
@@ -371,5 +461,6 @@ console.log(`  vendored           ${vendored.join(', ')}`);
 console.log(`  dropped            ${dropped.join(', ')}`);
 console.log(`  fonts              ${FONTS.join(', ')}`);
 console.log(`  shims              ${SHIMS.join(', ')}`);
+console.log(`  ogg left out       ${oggDropped} file(s) -- iOS decodes the mp3`);
 console.log(`  self-contained     yes (no ../ paths, no network assets)`);
 console.log(`\nLeaderboard is localStorage-only. GameKit is not wired yet -- see ios/AGENTS.md.`);
