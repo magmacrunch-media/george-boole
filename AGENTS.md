@@ -32,8 +32,22 @@ loads.
 to watch: they name files that do not exist in this repo at all. They resolve
 only once `web/` has been copied into the website's `arcade/`, and they go
 stale when *that* repo updates the shared bundles — which nothing here can
-notice. This page's own stamps drift too, though: `css/modal-misc.css` and
-`js/game.js` were each edited with the stamp beside them left alone.
+notice. This page's own stamps drift too, and they drift in **both**
+directions. All six local stamps were stale on 2026-09-14 and are now
+recomputed, but three of them — `css/game.css`, `css/modal-difficulty.css`,
+`css/modal-settings.css` — were wrong the *other* way round: `6b5b329` bumped
+their stamps while reverting nothing in the files, so the page advertised a
+version of each file that had never existed. That direction is harmless, since
+it only busts a cache that did not need busting. It is worth knowing anyway,
+because it means a stamp not matching its file is not by itself evidence that
+readers are being served stale bytes — and because it breaks the invariant the
+check relies on, so the next genuinely-stale stamp hides in the noise.
+
+Recompute them all rather than reasoning about which ones matter:
+
+```
+node -e 'const fs=require("fs"),c=require("crypto");let h=fs.readFileSync("web/index.html","utf8");h=h.replace(/((?:href|src)=")((?:css|js)\/[^"?]+)\?v=([0-9a-f]{8})(")/g,(a,p,f,o,q)=>{const b=fs.readFileSync("web/"+f,"utf8").replace(/\r\n/g,"\n");const d=c.createHash("sha256").update(b).digest("hex").slice(0,8);if(d!==o)console.log(f+": "+o+" -> "+d);return p+f+"?v="+d+q});fs.writeFileSync("web/index.html",h)'
+```
 
 The website's `.githooks/pre-commit` recomputes stale stamps in its copy of
 this page, but that repair never travels back here, and
