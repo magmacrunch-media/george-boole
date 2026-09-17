@@ -256,9 +256,34 @@ The build is real and the output runs. These are the open pieces:
   every unsynced score for a later flush that, unconnected, never comes.
   Harmless but unbounded; whatever replaces the backend should drain or ignore
   it.
-- **Touch is swipe-only.** `adenosine-puzzle.js` binds `touchstart`/`touchend`
-  with no `touchmove`, so tiles do not follow a finger. Playable, but it is the
-  thing that will make the app read as a port.
+- **Touch-drag is wired here and waiting on an npm release.** The engine half
+  already exists: adenosine's `createInput` gained opt-in `onDrag` /
+  `onDragEnd` in `@magmacrunch/adenosine-puzzle` **0.4.0** (PR #18, merged
+  2026-09-12). `web/js/game.js` now passes both, so occupied tiles lean after
+  the finger along the drag's axis, capped at 0.22 of the measured cell pitch
+  with a `tanh` soft stop, and glide home on lift.
+
+  **It does nothing yet, and correctly so.** 0.4.0 was merged and never
+  published — npm stops at 0.3.0 — and the chain from engine to app is
+  adenosine → npm → the website's `node_modules` → `sync-adenosine.mjs` →
+  `arcade/shared/` → `package.mjs`. A 0.3.0 bundle reads only `onMove` and
+  `isActive`, so the new callbacks are ignored and swiping behaves exactly as
+  before. Verified both ways against the bundle: with a locally built 0.4.0 the
+  tiles follow and cap, empty cells stay put, a tap is not hijacked,
+  `touchcancel` settles without moving, and one swipe emits one `boole:move`;
+  with the shipping 0.3.0, nothing leans and every swipe still moves. What turns
+  it on is a GitHub Release on adenosine (which is what `publish.yml` fires on),
+  then `npm update` and `sync-adenosine.mjs` in the website.
+
+  It is a rubber band, not a preview of the move. Tiles are sixteen fixed cells
+  whose contents change in place, so sliding each tile to where it will land
+  means knowing the move's result first — by copying the merge rules into the
+  renderer, a fourth implementation in all but name, or by simulating the move,
+  which plays real sounds and shows real popups. Every occupied tile leans the
+  same way instead.
+
+  The engine does not listen for `touchcancel`, which iOS fires when a system
+  gesture takes the touch; `game.js` settles on it itself.
 - **Safe-area values are untested on a real device.** `css/ios.css` pads the
   body by the insets, which is the conservative default and not necessarily the
   right design once there is a notch to look at.

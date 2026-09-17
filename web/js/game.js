@@ -69,6 +69,10 @@ class BooleBoard {
         // Suppresses _emit while checkGameOver() probes the board. See _emit.
         this._silent = false;
 
+        // Touch-drag feedback. See _dragTiles.
+        this._dragging = false;
+        this._settleTimer = 0;
+
         this.init();
         this.setupEventListeners();
         
@@ -87,7 +91,96 @@ class BooleBoard {
                 }
             },
             isActive: () => !this.gameOver && !this.waitingForInitials,
+            // adenosine-puzzle 0.4.0 and later. An older bundle reads only
+            // onMove and isActive, so these are ignored there and the board
+            // behaves exactly as it did.
+            onDrag: (state) => this._dragTiles(state),
+            onDragEnd: () => this._settleTiles(),
         }, document.getElementById('gameBoard'));
+
+        // The engine settles on touchend but does not listen for touchcancel,
+        // which iOS fires instead when a system gesture takes the touch -- the
+        // notification shade, an incoming call. Without this the tiles would
+        // stay nudged sideways until the next drag.
+        this.addListener(this.gameBoardElement, 'touchcancel', () => this._settleTiles());
+    }
+
+    /**
+     * Nudge the occupied tiles after the finger, along the drag's axis.
+     *
+     * A rubber band, deliberately not a prediction. Tiles here are sixteen
+     * fixed cells whose contents change in place, so showing each tile sliding
+     * to where it will land would mean knowing the result of the move before
+     * making it. That leaves two ways to find out, and both are wrong: copy the
+     * merge rules into the renderer, which is a fourth implementation of them
+     * in all but name, or simulate the move, which plays real sounds and shows
+     * real popups -- checkGameOver() already does that by accident. So every
+     * occupied tile leans the same way, capped at a fraction of a cell, which
+     * says "the board heard you" without pretending to say what happens next.
+     */
+    _dragTiles({ dx, dy, direction }) {
+        if (this.gameOver || this.waitingForInitials) return;
+        const size = this.size;
+        const first = this.tiles[0];
+        if (!first || !this.tiles[1] || !this.tiles[size]) return;
+
+        // Before the threshold there is no committed direction yet, so follow
+        // whichever axis the finger is mostly on; once there is one, lock to
+        // it so a slightly diagonal swipe does not wobble.
+        const horizontal = direction
+            ? direction === 'left' || direction === 'right'
+            : Math.abs(dx) >= Math.abs(dy);
+        const distance = horizontal ? dx : dy;
+
+        // Measured, not assumed: the cell pitch changes at both responsive
+        // breakpoints, and it includes the grid gap.
+        const pitch = horizontal
+            ? this.tiles[1].offsetLeft - first.offsetLeft
+            : this.tiles[size].offsetTop - first.offsetTop;
+        const reach = Math.max(1, pitch * 0.22);
+
+        // tanh gives a soft stop: near-linear for a small drag, flattening
+        // towards `reach` however far the finger goes.
+        const offset = reach * Math.tanh(distance / reach);
+        const transform = horizontal
+            ? `translate3d(${offset.toFixed(1)}px, 0, 0)`
+            : `translate3d(0, ${offset.toFixed(1)}px, 0)`;
+
+        for (let i = 0; i < size; i++) {
+            for (let j = 0; j < size; j++) {
+                const tile = this.tiles[i * size + j];
+                if (this.board[i][j] === 0) {
+                    tile.style.transform = '';
+                    continue;
+                }
+                // The tile's own `transition: all 0.15s` would make it trail
+                // the finger by a sixth of a second.
+                tile.style.transition = 'none';
+                tile.style.transform = transform;
+            }
+        }
+        this._dragging = true;
+    }
+
+    /** Let whatever _dragTiles moved glide back into its cell. */
+    _settleTiles() {
+        if (!this._dragging) return;
+        this._dragging = false;
+
+        for (const tile of this.tiles) {
+            tile.style.transition = 'transform 0.12s ease-out';
+            tile.style.transform = '';
+        }
+
+        // Hand the transition back to the stylesheet afterwards. A plain
+        // setTimeout rather than _setTimeout: checkGameOver() clears the
+        // pending-timeout list when it probes a full board, and losing this
+        // one would leave every tile on a transform-only transition, silently
+        // dropping the colour fades.
+        clearTimeout(this._settleTimer);
+        this._settleTimer = setTimeout(() => {
+            for (const tile of this.tiles) tile.style.transition = '';
+        }, 140);
     }
     
     // Clean up event listeners and timeouts to prevent memory leaks
@@ -98,8 +191,9 @@ class BooleBoard {
         this.eventListeners = [];
         this._pendingTimeouts.forEach(id => clearTimeout(id));
         this._pendingTimeouts = [];
+        clearTimeout(this._settleTimer);
     }
-    
+
     // Helper to register event listeners for later cleanup
     addListener(element, event, handler, options) {
         element.addEventListener(event, handler, options);
