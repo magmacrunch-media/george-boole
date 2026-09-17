@@ -1,0 +1,434 @@
+/* =============================================
+   GATE CODEX AND DISCOVERIES
+   Drawn by js/codex.js. Gate colours are the rules strip's and the side
+   panel's (game.css .gate-tag), so a gate reads the same everywhere it is
+   named: XOR cyan, OR yellow, AND green, NOT gold.
+   ============================================= */
+
+.codex-modal {
+    position: fixed;
+    inset: 0;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.85);
+    /* Above the how-to-play screen (3000), which it opens from, so that screen
+       can stay where it is underneath. */
+    z-index: 3200;
+}
+
+.codex-modal.active {
+    display: flex;
+}
+
+.codex-content {
+    position: relative;
+    width: 92%;
+    max-width: 560px;
+    max-height: 88vh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0 20px 24px;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+    border: 4px solid #0f0f1e;
+    box-shadow: 0 0 0 4px #8a2be2, 0 0 0 8px #00ffff, 0 0 40px rgba(138, 43, 226, 0.9);
+    font-family: 'Press Start 2P', monospace;
+    color: #ffffff;
+}
+
+/* Pinned, like the full rules' back bar: the panel scrolls under it. */
+.codex-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 0 12px;
+    margin-bottom: 8px;
+    background: #1c1c31;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.45);
+}
+
+.codex-title {
+    margin: 0;
+    font-size: 13px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    color: #00ffff;
+    text-shadow: 2px 2px 0 #0066cc;
+}
+
+/* A dark tile, like every secondary button since the redesign. container.css
+   gives every <button> a purple gradient, glow and hover lift; all cleared. */
+.codex-back {
+    padding: 9px 12px;
+    background: #2a2a4a;
+    border: 0;
+    color: #00ffff;
+    font-family: inherit;
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: inset 3px 3px 0 #4a4a78, inset -3px -3px 0 #16162a, 0 0 0 3px #0a0a14, 0 4px 0 3px #0a0a14;
+    transition: transform 0.08s steps(2);
+}
+
+.codex-back:hover {
+    background: #34345a;
+    transform: none;
+    box-shadow: inset 3px 3px 0 #4a4a78, inset -3px -3px 0 #16162a, 0 0 0 3px #0a0a14, 0 4px 0 3px #0a0a14;
+}
+
+.codex-back:active {
+    transform: translateY(4px);
+    box-shadow: inset 3px 3px 0 #16162a, inset -3px -3px 0 #4a4a78, 0 0 0 3px #0a0a14, 0 0 0 3px #0a0a14;
+}
+
+.codex-progress {
+    margin: 4px 0 14px;
+    font-size: 8px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.65);
+    text-align: center;
+}
+
+/* ---- gate cards ---- */
+
+.codex-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+}
+
+@media (min-width: 560px) {
+    .codex-cards {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* Explicit rgba pairs rather than color-mix(): the app targets iOS 15, and
+   color-mix() arrived in Safari 16.2 -- before that the whole declaration is
+   dropped, so the borders and the seen-row highlight would silently vanish. */
+.codex-card {
+    --gate: #00ffff;
+    --gate-line: rgba(0, 255, 255, 0.45);
+    --gate-soft: rgba(0, 255, 255, 0.12);
+    padding: 12px;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 0 2px var(--gate-line);
+}
+
+.codex-card[data-gate="xor"] { --gate: #00ffff; --gate-line: rgba(0, 255, 255, 0.45);  --gate-soft: rgba(0, 255, 255, 0.12); }
+.codex-card[data-gate="or"]  { --gate: #ffe03a; --gate-line: rgba(255, 224, 58, 0.45); --gate-soft: rgba(255, 224, 58, 0.12); }
+.codex-card[data-gate="and"] { --gate: #39ff6e; --gate-line: rgba(57, 255, 110, 0.45); --gate-soft: rgba(57, 255, 110, 0.12); }
+.codex-card[data-gate="not"] { --gate: #ffd700; --gate-line: rgba(255, 215, 0, 0.45);  --gate-soft: rgba(255, 215, 0, 0.12); }
+
+.codex-card.is-locked {
+    --gate: #6a6a88;
+    --gate-line: rgba(106, 106, 136, 0.45);
+    --gate-soft: rgba(106, 106, 136, 0.12);
+    opacity: 0.75;
+}
+
+.codex-card-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.codex-symbol {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+    font-size: 20px;
+    color: #0a0a14;
+    background: var(--gate);
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.4), inset -2px -2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.codex-card.is-locked .codex-symbol {
+    color: #2a2a4a;
+}
+
+.codex-card-name {
+    margin: 0 0 4px;
+    font-size: 11px;
+    font-weight: normal;
+    color: var(--gate);
+    letter-spacing: 1px;
+}
+
+.codex-card-sub {
+    font-size: 7px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.codex-meaning,
+.codex-hint {
+    margin: 0 0 10px;
+    font-size: 8px;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.codex-hint {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* ---- truth table ---- */
+
+.codex-table {
+    margin-bottom: 10px;
+    font-size: 9px;
+}
+
+.codex-table-row {
+    display: grid;
+    grid-template-columns: repeat(3, 26px) 1fr;
+    align-items: center;
+    padding: 3px 4px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* NOT's table has one input column fewer. */
+.codex-card[data-gate="not"] .codex-table-row {
+    grid-template-columns: repeat(2, 26px) 1fr;
+}
+
+.codex-table-head {
+    font-size: 7px;
+    color: rgba(255, 255, 255, 0.55);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    margin-bottom: 2px;
+}
+
+.codex-table-row.is-seen {
+    color: #ffffff;
+    background: var(--gate-soft);
+}
+
+.codex-table-row.is-seen .codex-out {
+    color: var(--gate);
+}
+
+.codex-count {
+    font-size: 7px;
+    text-align: right;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- the operation that unlocked it ---- */
+
+.codex-first {
+    display: inline-block;
+    padding: 8px 10px;
+    background: rgba(10, 10, 20, 0.7);
+}
+
+.codex-first-label,
+.codex-first-caption {
+    display: block;
+    font-size: 7px;
+    letter-spacing: 0.5px;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.codex-first-label {
+    margin-bottom: 6px;
+}
+
+.codex-first-caption {
+    margin-top: 6px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.codex-bits-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    padding: 1px 0;
+}
+
+.codex-bits-symbol {
+    min-width: 14px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--gate);
+}
+
+.codex-bit {
+    width: 10px;
+    text-align: center;
+    font-size: 10px;
+}
+
+.codex-bit[data-on="0"] {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.codex-bits-result .codex-bit[data-on="1"] {
+    color: var(--gate);
+}
+
+.codex-bits-rule {
+    height: 2px;
+    margin: 3px 0 3px 21px;
+    background: var(--gate);
+    opacity: 0.7;
+}
+
+/* ---- discoveries ---- */
+
+.codex-section-title {
+    margin: 22px 0 10px;
+    font-size: 10px;
+    font-weight: normal;
+    letter-spacing: 2px;
+    color: #ffff00;
+    text-shadow: 2px 2px 0 #999900;
+}
+
+.codex-discoveries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.codex-discovery {
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.3);
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 0, 0.35);
+}
+
+.codex-discovery.is-locked {
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+}
+
+.codex-discovery-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 6px;
+}
+
+.codex-discovery-mark {
+    font-size: 10px;
+    color: #39ff6e;
+}
+
+.codex-discovery.is-locked .codex-discovery-mark {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.codex-discovery-title {
+    font-size: 9px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #ffffff;
+}
+
+.codex-discovery.is-locked .codex-discovery-title {
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.codex-discovery-formula {
+    margin-left: auto;
+    font-size: 9px;
+    color: #ffff00;
+}
+
+.codex-discovery-text {
+    margin: 0;
+    font-size: 7px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.codex-discovery.is-locked .codex-discovery-text {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* ---- things that open the codex ---- */
+
+.codex-opener {
+    cursor: pointer;
+}
+
+.gate-tag.codex-opener:hover,
+.gate-tag.codex-opener:focus-visible {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- unlock toast ---- */
+
+.codex-toast {
+    --gate: #ffff00;
+    position: fixed;
+    left: 50%;
+    top: calc(env(safe-area-inset-top, 0px) + 14px);
+    transform: translateX(-50%);
+    z-index: 3300;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: rgba(10, 10, 20, 0.95);
+    box-shadow: 0 0 0 2px var(--gate), 0 4px 0 2px #0a0a14;
+    font-family: 'Press Start 2P', monospace;
+    pointer-events: none;
+    white-space: nowrap;
+    animation: codexToastIn 0.16s steps(4);
+}
+
+.codex-toast[data-gate="xor"] { --gate: #00ffff; }
+.codex-toast[data-gate="or"]  { --gate: #ffe03a; }
+.codex-toast[data-gate="and"] { --gate: #39ff6e; }
+.codex-toast[data-gate="not"] { --gate: #ffd700; }
+
+.codex-toast-kicker {
+    font-size: 7px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.codex-toast-title {
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--gate);
+}
+
+.codex-toast.is-leaving {
+    opacity: 0;
+    transition: opacity 0.24s steps(4);
+}
+
+@keyframes codexToastIn {
+    from { opacity: 0; transform: translate(-50%, -8px); }
+    to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .codex-toast { animation: none; }
+}
+
+body.performance-mode .codex-toast {
+    animation: none;
+}

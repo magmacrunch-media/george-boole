@@ -251,6 +251,19 @@
     transform: none;
 }
 
+/* "full rules" and "gate codex", side by side. */
+.lore-links {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+.lore-links .lore-rules-link {
+    display: inline-block;
+    margin: 0;
+}
+
 .lore-rules-link:hover,
 .lore-rules-link:focus-visible {
     color: #ffff00;

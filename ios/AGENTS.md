@@ -238,11 +238,17 @@ The build is real and the output runs. These are the open pieces:
   the game rather than for a platform, the site dispatches them into a document
   with no listeners, and `ios/shim/haptics.js` already consumes them.
 
-  `ios/shim/gamekit-achievements.js` is the rest of the JavaScript half: seven
-  overflow achievements, one per bit width, plus a Gauntlet clear. It needs one
-  method beyond the three `gamekit-scores.js` documents —
+  `ios/shim/gamekit-achievements.js` is the rest of the JavaScript half:
+  fifteen achievements. Seven overflows, one per bit width, and a Gauntlet
+  clear; and seven `learn.<id>` achievements, one per discovery in
+  `web/js/codex.js` (`self_inverse`, `nothing_in_common`, `all_lit`,
+  `opposites`, `wraparound`, `chain_reaction`, `full_set`), awarded on its
+  `boole:discovery` event so the codex and Game Center agree about what was
+  found. Those ids are permanent once created in App Store Connect, so the
+  codex's ids must not be renamed after that. It needs one method beyond the
+  three `gamekit-scores.js` documents —
   `reportAchievement({ achievementId, percent })`. What is left is that native
-  method and the eight achievements in App Store Connect.
+  method and the fifteen achievements in App Store Connect.
 
   Three decisions in it worth not re-litigating. They are keyed on bit *width*
   rather than mode, so the same achievement is reachable by picking that
@@ -255,9 +261,10 @@ The build is real and the output runs. These are the open pieces:
   as reported: the player earned it, and when the native half lands they should
   get it on their next overflow rather than having it written off in advance.
 
-  Seven at 100 plus 300 is 1000 exactly, which is App Store Connect's per-app
-  cap — so a ninth achievement means re-pointing all of them. Decide before
-  creating any; 80 and 240 would leave 200 spare.
+  Points: App Store Connect allows at most **100 per achievement** and 1000
+  per app. An earlier version of this bullet planned the Gauntlet clear at 300,
+  which the form refuses. The budget is overflows 7 × 50, Gauntlet clear 100,
+  discoveries 7 × 50 — 800, leaving 200 for later.
 
   **Do not replace this with a shim that patches the game from outside.** It
   does not work and it would be wrong twice over. `AdAudio`'s exports are

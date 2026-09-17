@@ -59,6 +59,8 @@ jobs:
         run: node web/tests/test-game-logic.js
       - name: game against a stub DOM
         run: node web/tests/test-game.js
+      - name: gate codex and discoveries
+        run: node web/tests/test-codex.js
 
   # What `make test` cannot reach: everything bound to GRRLIB and libogc. The
   # host suite links this game's own sources and skips the engine entirely — by

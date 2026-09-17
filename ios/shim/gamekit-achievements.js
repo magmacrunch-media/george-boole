@@ -27,12 +27,29 @@
  * "promoted to 8-bit" would be the easier thing wearing the name of the
  * harder one.
  *
+ * ## Discoveries
+ *
+ * web/js/codex.js announces boole:discovery when a player first does the thing
+ * that shows a gate's defining property -- XOR a number with itself, AND two
+ * numbers with nothing in common, and so on. Each is also an achievement here,
+ * `learn.<id>`, so the codex and Game Center agree about what was found. The
+ * ids are codex.js's DISCOVERIES ids and must not be renamed there once these
+ * exist in App Store Connect.
+ *
  * ## Points
  *
- * Seven at 100 and the clear at 300 is 1000 exactly, which is App Store
- * Connect's per-app cap. A ninth achievement therefore means re-pointing all
- * of them, so decide before creating any: 80 and 240 would leave 200 spare.
- * The ids are permanent once created and a deleted one cannot be reused.
+ * App Store Connect allows at most 100 points per achievement and 1000 across
+ * the app. An earlier version of this comment planned the Gauntlet clear at
+ * 300, which the form would never have accepted. Fifteen achievements now:
+ *
+ *   overflow.<n>bit  x7   50 each   350
+ *   gauntlet.clear   x1  100        100
+ *   learn.<id>       x7   50 each   350
+ *                                   ---
+ *                                   800, leaving 200 for later
+ *
+ * Nothing is created in App Store Connect yet, so this is free to change until
+ * it is. The ids are permanent once created and a deleted one cannot be reused.
  *
  * ## Reporting once
  *
@@ -115,9 +132,21 @@
     if (d.bits === 8 && d.difficulty === 'endless') award(GAUNTLET_CLEAR);
   });
 
+  // The codex's discoveries. Only ids codex.js defines are reported: an id
+  // Game Center has never heard of fails the report, and a typo'd achievement
+  // cannot be tidied up once created.
+  var LEARN = ['self_inverse', 'nothing_in_common', 'all_lit', 'opposites',
+    'wraparound', 'chain_reaction', 'full_set'];
+
+  document.addEventListener('boole:discovery', function (e) {
+    var id = e.detail && e.detail.id;
+    if (LEARN.indexOf(id) !== -1) award(PREFIX + 'learn.' + id);
+  });
+
   window.GameBoole = window.GameBoole || {};
   window.GameBoole.achievements = {
-    ids: [2, 3, 4, 5, 6, 7, 8].map(overflowId).concat([GAUNTLET_CLEAR]),
+    ids: [2, 3, 4, 5, 6, 7, 8].map(overflowId).concat([GAUNTLET_CLEAR])
+      .concat(LEARN.map(function (id) { return PREFIX + 'learn.' + id; })),
     get reported() {
       return reported.slice();
     },

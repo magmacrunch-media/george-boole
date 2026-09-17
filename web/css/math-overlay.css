@@ -27,12 +27,12 @@
     animation: pointRise 1s steps(10) forwards;
 }
 
-/* The same colours the gates use on the default board, so a label and the
-   tile that caused it read as one thing. */
-.point-label[data-gate="xor"] { color: #00d4aa; }
-.point-label[data-gate="or"]  { color: #ffdd44; }
-.point-label[data-gate="and"] { color: #7fa6ff; }
-.point-label[data-gate="not"] { color: #d6c2ff; }
+/* The rules strip and side panel colours (game.css .gate-tag), which the codex
+   uses too, so a gate is the same colour everywhere it is named. */
+.point-label[data-gate="xor"] { color: #00ffff; }
+.point-label[data-gate="or"]  { color: #ffe03a; }
+.point-label[data-gate="and"] { color: #39ff6e; }
+.point-label[data-gate="not"] { color: #ffd700; }
 .point-label[data-kind="same"] { color: #ffffff; }
 .point-label[data-kind="height"] { color: #7dff7d; }
 .point-label[data-kind="overflow"] { color: #ff6b6b; font-size: 12px; }
@@ -64,10 +64,10 @@
     --math-accent: #00ffff;
 }
 
-.math-card[data-gate="xor"] { --math-accent: #00d4aa; }
-.math-card[data-gate="or"]  { --math-accent: #ffdd44; }
-.math-card[data-gate="and"] { --math-accent: #7fa6ff; }
-.math-card[data-gate="not"] { --math-accent: #d6c2ff; }
+.math-card[data-gate="xor"] { --math-accent: #00ffff; }
+.math-card[data-gate="or"]  { --math-accent: #ffe03a; }
+.math-card[data-gate="and"] { --math-accent: #39ff6e; }
+.math-card[data-gate="not"] { --math-accent: #ffd700; }
 .math-card[data-overflow="true"] { --math-accent: #ff6b6b; }
 
 .math-card.is-leaving {

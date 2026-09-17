@@ -392,6 +392,7 @@ body {
 .instructions-modal,
 .credits-modal,
 .game-over,
+.codex-modal,
 .loading-screen {
     padding:
         var(--safe-top) var(--safe-right)

@@ -41,7 +41,7 @@
     <link rel="stylesheet" href="css/container.css?v=a30fdcef">
     <link rel="stylesheet" href="css/game.css?v=3eaa3eb3">
     <link rel="stylesheet" href="css/modal-title.css?v=71636a7e">
-    <link rel="stylesheet" href="css/modal-lore.css?v=bf9d2847">
+    <link rel="stylesheet" href="css/modal-lore.css?v=64b89acc">
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
@@ -49,7 +49,8 @@
     <link rel="stylesheet" href="css/responsive.css?v=e97b84e7">
     <link rel="stylesheet" href="css/gates.css?v=71f1f693">
     <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
-    <link rel="stylesheet" href="css/math-overlay.css?v=52ee7750">
+    <link rel="stylesheet" href="css/math-overlay.css?v=2b2e3275">
+    <link rel="stylesheet" href="css/codex.css?v=95488567">
 </head>
 <body>
     <a href="../puzzles/" class="mc-back">puzzles</a>
@@ -200,6 +201,9 @@
                     1 + 1 = 1 &nbsp;&middot;&nbsp; 7 + 7 = 7<br>
                     <span style="color: rgba(255,255,255,0.6);">(A &or; A = A)</span>
                 </div>
+
+                <!-- Opened by js/codex.js, as is each gate above. -->
+                <div class="full-rules-link" id="sidePanelCodex">gate codex &rarr;</div>
             </div>
         </div>
     </div>
@@ -287,7 +291,11 @@
                 </div>
             </div>
 
-            <button class="lore-rules-link" id="loreFullRules" type="button">full rules &rarr;</button>
+            <div class="lore-links">
+                <button class="lore-rules-link" id="loreFullRules" type="button">full rules &rarr;</button>
+                <!-- Opened by js/codex.js. -->
+                <button class="lore-rules-link" id="loreCodex" type="button">gate codex &rarr;</button>
+            </div>
 
             <div class="lore-quick-actions">
                 <button class="lore-action-btn" id="quickHighScores">
@@ -700,6 +708,7 @@
     <script src="js/scoring.js?v=36b0bed2"></script>
     <script src="js/game.js?v=c615ed3c"></script>
     <script src="js/math-overlay.js?v=2dd84444"></script>
+    <script src="js/codex.js?v=084a122a"></script>
     <script src="js/main.js?v=bb1535b5"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">

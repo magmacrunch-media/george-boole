@@ -21,10 +21,11 @@ says why one is skipped).
 
 **Presentation is not gameplay, and `web/` has some the others do not.** The
 point labels ("+6 XOR", "+45 OVERFLOW") and the "show the math" bit-column card
-(`web/js/math-overlay.js`) change nothing about what a move does: game.js logs
+(`web/js/math-overlay.js`), and the gate codex with its discoveries
+(`web/js/codex.js`), change nothing about what a move does: game.js logs
 each scoring event where its points are added (`_note`, into
 `lastOperations`) and announces the list as `boole:operations`, and the overlay
-only draws it. So the Wii and terminal versions lacking them is not a missing
+and the codex only read it. So the Wii and terminal versions lacking them is not a missing
 rule. The log does have to stay truthful, and `web/tests/test-game.js` checks
 it: every point is logged, the logged points sum to the score the move gained,
 positions map back through the board rotation in all four directions, operands
