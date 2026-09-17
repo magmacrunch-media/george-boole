@@ -422,14 +422,21 @@ The build is real and the output runs. These are the open pieces:
   advises against text on a launch screen; plenty of games ship a wordmark and
   pass review, so treat that as taste rather than a blocker.
 
-- **Two required App Store Connect URLs have nothing to point at.** Both the
-  Privacy Policy URL and the Support URL are mandatory for every submission,
-  and the magmacrunch.com checkout has **neither page** — no `privacy`, no
-  `support`, no `contact` anywhere in it. Nobody discovers this until the
-  Submit button is greyed out. The policy is short for an app that collects
-  nothing, and unusually easy to write honestly: `package.mjs`'s final sweep
-  fails the build on any asset fetched over `http(s)`, so "collects nothing,
-  contacts no server" is enforced rather than asserted.
+- **The two required App Store Connect URLs exist as of 2026-09-17**:
+  Privacy Policy `https://magmacrunch.com/privacy/` and Support
+  `https://magmacrunch.com/support/`, both in the website repo
+  (`privacy/index.html`, `support/index.html`). Both are scoped to this app,
+  not the website, which has chat and score servers the app does not.
+
+  The policy makes factual claims about the bundle, so **a change that
+  breaks one of them means updating the page before shipping**. They are: no
+  network connections of the app's own (true because `package.mjs` swaps
+  `ScoreClient().auto(...)` for an unconnected client and its sweep refuses
+  remote assets); the four kinds of thing kept in `localStorage` — bests,
+  codex progress, settings, and the reported-achievements set; and Game
+  Center as the only thing that leaves the device. A new storage key is
+  usually fine. Analytics, crash reporting, an ad, or reconnecting the score
+  client is not, and also changes the App Store privacy label.
 - **Two lines of visible copy still name 2048**, in `web/index.html`: the
   how-to-play ("Just as in *2048*…") and the credits. The credits line —
   "inspired by Gabriele Cirulli's *2048* (2014), reimagined with Boolean
