@@ -100,9 +100,12 @@
     
     .title-subtitle {
         font-size: 14px;
-        letter-spacing: 2px;
+        /* 1px, not 2: twenty characters at 14px + 2px is 320px, against about
+           322px of content box on a 402pt iPhone -- close enough that it
+           wrapped to "HAS ENTERED THE / CHAT". 300px fits on one line. */
+        letter-spacing: 1px;
     }
-    
+
     .start-button {
         font-size: 11px;
         padding: 15px 30px;

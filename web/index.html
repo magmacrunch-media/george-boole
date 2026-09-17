@@ -40,13 +40,13 @@
     <link rel="stylesheet" href="css/themes.css?v=97c2703d">
     <link rel="stylesheet" href="css/container.css?v=a30fdcef">
     <link rel="stylesheet" href="css/game.css?v=3eaa3eb3">
-    <link rel="stylesheet" href="css/modal-title.css?v=f13e3917">
+    <link rel="stylesheet" href="css/modal-title.css?v=24912896">
     <link rel="stylesheet" href="css/modal-lore.css?v=357c09c1">
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
     <link rel="stylesheet" href="css/modal-misc.css?v=e6e55e48">
-    <link rel="stylesheet" href="css/responsive.css?v=b2c8d689">
+    <link rel="stylesheet" href="css/responsive.css?v=ed9b7e2c">
     <link rel="stylesheet" href="css/gates.css?v=71f1f693">
     <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
 </head>
@@ -224,7 +224,11 @@
             </div>
             
             <button class="start-button" id="startButton">
-                <span class="start-text">press [space] or click to start</span>
+                <!-- Two wordings, picked by modal-title.css from the primary
+                     input device. A phone has no space bar and nobody clicks it,
+                     and in the App Store build this is the first sentence a
+                     reviewer reads. -->
+                <span class="start-text"><span class="start-text-pointer">press [space] or click to start</span><span class="start-text-touch">tap to start</span></span>
             </button>
             
             <!-- 

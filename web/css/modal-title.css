@@ -118,10 +118,14 @@
 .title-subtitle {
     font-size: 18px;
     color: #ff00ff;
-    text-shadow: 
+    text-shadow:
         3px 3px 0px #990099,
         0 0 15px rgba(255, 0, 255, 0.7);
     letter-spacing: 3px;
+    /* Press Start 2P's glyphs fill the whole em box, so at the inherited
+       line-height a wrapped second line sits on the first one's shadow. */
+    line-height: 1.5;
+    text-wrap: balance;
 }
 
 .start-button {
@@ -176,10 +180,31 @@
 }
 
 .start-text {
-    text-shadow: 
+    display: block;
+    text-shadow:
         2px 2px 0px #999900,
         0 0 10px rgba(255, 255, 0, 0.6);
     animation: textPulse 3s ease-in-out infinite;
+    line-height: 1.6;
+    text-wrap: balance;
+}
+
+/* Wording follows the primary input device rather than the screen width: a
+   narrow desktop window still has a space bar, and a large iPad does not.
+   `hover: none` plus `pointer: coarse` is a finger; an iPad with a trackpad
+   attached reports a fine pointer and correctly gets the keyboard wording. */
+.start-text-touch {
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .start-text-pointer {
+        display: none;
+    }
+
+    .start-text-touch {
+        display: inline;
+    }
 }
 
 @keyframes textPulse {
