@@ -1,0 +1,161 @@
+/* =============================================
+   SHOW THE MATH, AND WHERE EVERY POINT CAME FROM
+   Drawn by js/math-overlay.js. Everything here sits in a fixed layer above
+   the board that never takes a touch, so it can never get in the way of the
+   next swipe.
+   ============================================= */
+
+.math-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1500;
+    overflow: hidden;
+}
+
+/* ---- point labels ---- */
+
+.point-label {
+    position: fixed;
+    transform: translate(-50%, -50%);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    white-space: nowrap;
+    color: #ffffff;
+    text-shadow: 2px 2px 0 #0a0a14, -1px -1px 0 #0a0a14, 1px -1px 0 #0a0a14, -1px 1px 0 #0a0a14;
+    animation: pointRise 1s steps(10) forwards;
+}
+
+/* The same colours the gates use on the default board, so a label and the
+   tile that caused it read as one thing. */
+.point-label[data-gate="xor"] { color: #00d4aa; }
+.point-label[data-gate="or"]  { color: #ffdd44; }
+.point-label[data-gate="and"] { color: #7fa6ff; }
+.point-label[data-gate="not"] { color: #d6c2ff; }
+.point-label[data-kind="same"] { color: #ffffff; }
+.point-label[data-kind="height"] { color: #7dff7d; }
+.point-label[data-kind="overflow"] { color: #ff6b6b; font-size: 12px; }
+.point-label[data-cleared="true"] { color: rgba(255, 255, 255, 0.6); }
+
+/* steps() rather than a smooth ease: the rest of the game moves in pixel
+   steps, and a silky float would be the one thing on screen that did not. */
+@keyframes pointRise {
+    0%   { opacity: 0; transform: translate(-50%, -30%); }
+    10%  { opacity: 1; transform: translate(-50%, -60%); }
+    70%  { opacity: 1; transform: translate(-50%, -160%); }
+    100% { opacity: 0; transform: translate(-50%, -200%); }
+}
+
+/* ---- the math card ---- */
+
+.math-card {
+    position: fixed;
+    padding: 8px 10px 7px;
+    background: rgba(10, 10, 20, 0.94);
+    box-shadow:
+        inset 2px 2px 0 rgba(255, 255, 255, 0.12),
+        inset -2px -2px 0 rgba(0, 0, 0, 0.5),
+        0 0 0 2px var(--math-accent, #00ffff),
+        0 4px 0 2px #0a0a14;
+    font-family: 'Press Start 2P', monospace;
+    color: #ffffff;
+    animation: mathIn 0.12s steps(3);
+    --math-accent: #00ffff;
+}
+
+.math-card[data-gate="xor"] { --math-accent: #00d4aa; }
+.math-card[data-gate="or"]  { --math-accent: #ffdd44; }
+.math-card[data-gate="and"] { --math-accent: #7fa6ff; }
+.math-card[data-gate="not"] { --math-accent: #d6c2ff; }
+.math-card[data-overflow="true"] { --math-accent: #ff6b6b; }
+
+.math-card.is-leaving {
+    opacity: 0;
+    transition: opacity 0.2s steps(4);
+}
+
+.math-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 3px;
+    line-height: 1;
+    padding: 2px 0;
+}
+
+.math-symbol {
+    min-width: 14px;
+    margin-right: 4px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--math-accent);
+}
+
+.math-bit {
+    font-size: 11px;
+    width: 11px;
+    text-align: center;
+}
+
+.math-bit[data-on="0"] {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.math-row-result .math-bit {
+    animation: bitLight 0.12s steps(2) both;
+}
+
+.math-row-result .math-bit[data-on="1"] {
+    color: var(--math-accent);
+    text-shadow: 0 0 6px var(--math-accent);
+}
+
+.math-rule {
+    height: 2px;
+    margin: 3px 0 3px 21px;
+    background: var(--math-accent);
+    opacity: 0.7;
+}
+
+.math-caption {
+    margin-top: 6px;
+    font-size: 7px;
+    letter-spacing: 0.5px;
+    text-align: center;
+    white-space: nowrap;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+@keyframes mathIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes bitLight {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* 8-bit rows are eight glyphs wide; on a narrow phone keep the card from
+   crowding the board. */
+@media (max-width: 400px) {
+    .math-bit { font-size: 10px; width: 10px; }
+    .point-label { font-size: 9px; }
+}
+
+/* No floating or staggering for anyone who asked for less motion, or in
+   performance mode. The information stays; only the movement goes. */
+@media (prefers-reduced-motion: reduce) {
+    .point-label,
+    .math-card,
+    .math-row-result .math-bit {
+        animation: none;
+    }
+}
+
+body.performance-mode .point-label,
+body.performance-mode .math-card,
+body.performance-mode .math-row-result .math-bit {
+    animation: none;
+}

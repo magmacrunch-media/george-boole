@@ -73,6 +73,11 @@ class BooleBoard {
         this._dragging = false;
         this._settleTimer = 0;
 
+        // Everything that scored during the move in progress. See _note.
+        this._ops = [];
+        this._opAt = null;
+        this.lastOperations = [];
+
         this.init();
         this.setupEventListeners();
         
@@ -237,6 +242,48 @@ class BooleBoard {
                 detail
             ),
         }));
+    }
+
+    /**
+     * Record one thing that scored, at the moment its points are added.
+     *
+     * Presentation only: nothing reads this back into the rules. It exists so
+     * the player can be shown what each move actually did -- which gate fired
+     * on which bits, and where every point came from -- because the score on
+     * its own reads as arbitrary. See web/js/math-overlay.js.
+     *
+     * Kinds: 'gate' (a gate produced `result`, worth `points`), 'same' (two
+     * equal tiles consolidated), 'overflow' (NOT of the ceiling cleared a
+     * tile), 'height' (the bonus for a first-time value). Positions are in the
+     * rotated frame moveLeft() works in -- row `i`, landing index `j` -- and
+     * move() turns them back into board coordinates.
+     *
+     * Skipped under _silent for the same reason _emit is: checkGameOver() runs
+     * real moveLeft() calls on a copy, and those scored nothing anyone saw.
+     */
+    _note(op) {
+        if (this._silent) return;
+        const at = this._opAt || { i: 0, j: 0 };
+        this._ops.push(Object.assign({ i: at.i, j: at.j }, op));
+    }
+
+    /**
+     * Rotated-frame (i, j) back to the board's own row and column.
+     *
+     * move() turns the board rotateBoard(k) times so every direction can be
+     * resolved as a move to the left, then turns it back. rotateBoard maps
+     * (i, j) to (j, size-1-i), so undoing k turns is applying (4-k) % 4 more.
+     */
+    _toBoard(i, j, direction) {
+        const turns = { left: 0, right: 2, up: 1, down: 3 }[direction] || 0;
+        let row = i;
+        let col = j;
+        for (let t = 0; t < turns; t++) {
+            const nextRow = col;
+            col = this.size - 1 - row;
+            row = nextRow;
+        }
+        return { row, col };
     }
 
     // Helper to register timeouts that auto-cancel on destroy
@@ -504,6 +551,8 @@ class BooleBoard {
     move(direction) {
         const originalBoard = JSON.stringify(this.board);
         let mergeOccurred = false;
+        this._ops = [];
+        this._opAt = null;
         
         // Store merge state
         this.lastMoveHadMerge = false;
@@ -547,7 +596,31 @@ class BooleBoard {
             }
             this._emit('move', { direction, merged: mergeOccurred });
         }
-        
+
+        // What scored, in board coordinates, for anything that wants to show
+        // the player. Kept on the instance as well as announced so it can be
+        // read directly -- the tests do, having no DOM events.
+        //
+        // Operands are put in reading order too. moveLeft() meets them from
+        // the edge being moved toward, which for right and down is the far
+        // side of the screen: swiping right on "5 XOR 3" resolves 3 first.
+        // Every gate here is commutative, so the result is the same either
+        // way -- but anything showing the player the operation should show it
+        // the way it sits on the board.
+        const reversed = direction === 'right' || direction === 'down';
+        this.lastOperations = this._ops.map((op) => {
+            const { i, j, ...rest } = op;
+            if (reversed && rest.b !== undefined && rest.b !== null) {
+                [rest.a, rest.b] = [rest.b, rest.a];
+            }
+            return Object.assign(rest, this._toBoard(i, j, direction));
+        });
+        this._ops = [];
+        this._opAt = null;
+        if (boardChanged && this.lastOperations.length) {
+            this._emit('operations', { direction, operations: this.lastOperations });
+        }
+
         return boardChanged;
     }
     
@@ -591,6 +664,7 @@ class BooleBoard {
                     row[j] === -4 && 
                     !this.isGate(row[j + 1])) {
                     const num = row[j + 1];
+                    this._opAt = { i, j };
                     this._pendingEarnedUpgrade = false;
                     this._pendingPersonalBest = false;
                     const result = this.applyGate(-4, num, null);
@@ -620,6 +694,7 @@ class BooleBoard {
                     !this.isGate(row[j]) && 
                     row[j + 1] === -4) {
                     const num = row[j];
+                    this._opAt = { i, j };
                     this._pendingEarnedUpgrade = false;
                     this._pendingPersonalBest = false;
                     const result = this.applyGate(-4, num, null);
@@ -639,6 +714,7 @@ class BooleBoard {
                     const leftNum = row[j];
                     const gate = row[j + 1];
                     const rightNum = row[j + 2];
+                    this._opAt = { i, j };
                     this._pendingEarnedUpgrade = false;
                     this._pendingPersonalBest = false;
                     const result = this.applyGate(gate, leftNum, rightNum);
@@ -664,6 +740,8 @@ class BooleBoard {
                         
                         // Award points based on value consolidated
                         this.score += current;
+                        this._opAt = { i, j };
+                        this._note({ kind: 'same', a: current, b: current, result: current, points: current });
                         
                         // ENDLESS MODE: Track when max value is reached!
                         if (this.difficulty === 'endless' && current === this.maxValue && !this.hasReachedMaxInCurrentMode) {
@@ -698,6 +776,7 @@ class BooleBoard {
                         if (current > this.highestValueEver && current >= minBonusThreshold) {
                             const heightBonus = current * 2;
                             this.score += heightBonus;
+                            this._note({ kind: 'height', result: current, points: heightBonus });
                             this.highestValueEver = current;
                             // Mark this cell first, THEN clear other rows.
                             // Clearing first would stomp pbRow[j] on the current row
@@ -845,6 +924,7 @@ class BooleBoard {
                 if (result === 0) {
                     const overflowBonus = this.maxValue * 3;
                     this.score += overflowBonus;
+                    this._note({ kind: 'overflow', gate: 'NOT', a: value1, b: null, result: 0, points: overflowBonus });
                     this.showOverflowNotification(overflowBonus);
                     
                     // Check for Gauntlet upgrade (NOT maxValue counts as reaching max)
@@ -878,6 +958,7 @@ class BooleBoard {
             // OVERFLOW BONUS! Award max value × 3 as bonus points
             const overflowBonus = this.maxValue * 3;
             this.score += overflowBonus;
+            this._note({ kind: 'overflow', gate: this.getGateName(gate), a: value1, b: gate === -4 ? null : value2, result: 0, points: overflowBonus });
             
             // ENDLESS MODE: Count this as reaching max (overflow counts too!)
             if (this.difficulty === 'endless' && !this.hasReachedMaxInCurrentMode) {
@@ -912,6 +993,9 @@ class BooleBoard {
         } else {
             // Normal operation - award points based on result
             this.score += result;
+            // A zero result is still worth showing: it is the gate clearing
+            // both tiles, which is most of what AND and XOR are for.
+            this._note({ kind: 'gate', gate: this.getGateName(gate), a: value1, b: gate === -4 ? null : value2, result, points: result });
             
             // ENDLESS MODE: Track when max value is reached (not exceeded)!
             if (this.difficulty === 'endless' && result === this.maxValue && !this.hasReachedMaxInCurrentMode) {
@@ -951,6 +1035,7 @@ class BooleBoard {
             if (result > 0 && result > this.highestValueEver && result >= minBonusThreshold) {
                 const heightBonus = result * 2; // Double the value as bonus!
                 this.score += heightBonus;
+                this._note({ kind: 'height', result, points: heightBonus });
                 this.highestValueEver = result;
                 // Signal moveLeft to mark the result cell, THEN clear other rows.
                 // Setting the pending flag first ensures the current row's write-back

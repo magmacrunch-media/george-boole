@@ -379,6 +379,94 @@ try {
 console.log(`  ${passed} passed
 `);
 
+// ── Operation log (what "show the math" and the point labels read) ───────────
+//
+// Presentation only, but it has to be right: a wrong position puts the math
+// over the wrong tile, and a points total that disagrees with the score
+// teaches the opposite of what the labels are for.
+
+console.log('Operation log:');
+try {
+    const empty = () => [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+
+    // A gate: 5 XOR 3 = 6 at 4-bit, which also clears the height threshold.
+    let game = new BooleBoard('4', 'test');
+    game.board = empty();
+    game.board[0] = [5, -1, 3, 0];
+    game.score = 0;
+    game.move('left');
+    const gateOps = game.lastOperations;
+    assertEqual(gateOps[0], { kind: 'gate', gate: 'XOR', a: 5, b: 3, result: 6, points: 6, row: 0, col: 0 },
+        '5 XOR 3 is logged with operands, result, points and the tile it landed on');
+    assertEqual(gateOps[1], { kind: 'height', result: 6, points: 12, row: 0, col: 0 },
+        'the first-time height bonus is logged separately, on the same tile');
+    assertEqual(gateOps.reduce((s, op) => s + op.points, 0), game.score,
+        'the logged points add up to exactly the score the move gained');
+
+    // Same + same, and the rotation back to board coordinates in all four
+    // directions. Column 2 rather than 0, so a row/column mix-up cannot pass.
+    const landing = (direction, cells) => {
+        const g = new BooleBoard('2', 'test');
+        g.board = empty();
+        for (const [r, c, v] of cells) g.board[r][c] = v;
+        g.move(direction);
+        const op = g.lastOperations[0];
+        return op && [op.kind, op.row, op.col];
+    };
+    assertEqual(landing('left',  [[1, 1, 1], [1, 2, 1]]), ['same', 1, 0], 'left: lands in column 0 of its row');
+    assertEqual(landing('right', [[1, 1, 1], [1, 2, 1]]), ['same', 1, 3], 'right: lands in column 3 of its row');
+    assertEqual(landing('up',    [[1, 2, 1], [2, 2, 1]]), ['same', 0, 2], 'up: lands in row 0 of its column');
+    assertEqual(landing('down',  [[1, 2, 1], [2, 2, 1]]), ['same', 3, 2], 'down: lands in row 3 of its column');
+
+    // Operands in reading order. Swiping right, moveLeft() meets the 3 first.
+    game = new BooleBoard('4', 'test');
+    game.board = empty();
+    game.board[2] = [0, 5, -1, 3];
+    game.move('right');
+    const rightOp = game.lastOperations.find((op) => op.kind === 'gate');
+    assertEqual([rightOp.a, rightOp.b, rightOp.row, rightOp.col], [5, 3, 2, 3],
+        'swiping right on "5 XOR 3" logs 5 then 3, as the board reads, landing at the right edge');
+
+    // And down: the operand nearer the top is the first one read.
+    game = new BooleBoard('4', 'test');
+    game.board = empty();
+    game.board[0][1] = 5; game.board[1][1] = -2; game.board[2][1] = 3;
+    game.move('down');
+    const downOp = game.lastOperations.find((op) => op.kind === 'gate');
+    assertEqual([downOp.a, downOp.gate, downOp.b, downOp.row, downOp.col], [5, 'OR', 3, 3, 1],
+        'swiping down logs the upper operand first, landing on the bottom row');
+
+    // A gate that clears: 1 AND 2 = 0 is worth nothing and still logged.
+    game = new BooleBoard('2', 'test');
+    game.board = empty();
+    game.board[0] = [1, -3, 2, 0];
+    game.score = 0;
+    game.move('left');
+    assertEqual(game.lastOperations, [{ kind: 'gate', gate: 'AND', a: 1, b: 2, result: 0, points: 0, row: 0, col: 0 }],
+        'a gate that clears both tiles is logged at zero points');
+
+    // The overflow: NOT of the 2-bit ceiling.
+    game = new BooleBoard('2', 'test');
+    game.board = empty();
+    game.board[0] = [-4, 3, 0, 0];
+    game.score = 0;
+    game.move('left');
+    assertEqual(game.lastOperations, [{ kind: 'overflow', gate: 'NOT', a: 3, b: null, result: 0, points: 9, row: 0, col: 0 }],
+        'NOT of the ceiling is logged as an overflow worth 3 x max');
+
+    // The game-over probe runs real moveLeft() calls; none of it may be logged.
+    game = new BooleBoard('3', 'test');
+    game.board = [[1, 2, 1, 2], [2, 1, 2, 1], [1, 2, 1, 2], [2, 1, 2, 1]];
+    game.lastOperations = ['sentinel'];
+    game.checkGameOver();
+    assertEqual(game._ops, [], 'the game-over probe records nothing');
+    assertEqual(game.lastOperations, ['sentinel'], 'and leaves the last real move\'s log alone');
+} catch(e) {
+    console.error(`  FAIL: ${e.message}`);
+    failed++;
+}
+console.log(`  ${passed} passed\n`);
+
 // ── Summary ──────────────────────────────────────────────────────────────────
 
 console.log(`\n=== Results: ${passed} passed, ${failed} failed ===`);

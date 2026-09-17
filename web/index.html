@@ -49,6 +49,7 @@
     <link rel="stylesheet" href="css/responsive.css?v=e97b84e7">
     <link rel="stylesheet" href="css/gates.css?v=71f1f693">
     <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
+    <link rel="stylesheet" href="css/math-overlay.css?v=52ee7750">
 </head>
 <body>
     <a href="../puzzles/" class="mc-back">puzzles</a>
@@ -628,6 +629,13 @@
                             <span class="toggle-status">ON</span>
                         </button>
                     </div>
+                    <!-- Wired by js/math-overlay.js, which also remembers it. -->
+                    <div class="toggle-item">
+                        <span class="toggle-label">show the math</span>
+                        <button class="toggle-button active" id="mathToggle">
+                            <span class="toggle-status">ON</span>
+                        </button>
+                    </div>
                     <div class="toggle-item">
                         <span class="toggle-label">performance mode</span>
                         <button class="toggle-button" id="performanceToggle">
@@ -690,7 +698,8 @@
 <script src="../shared/adenosine-puzzle.js?v=52ca5e4d"></script>
     <script src="js/config.js?v=fdc4d4d3"></script>
     <script src="js/scoring.js?v=36b0bed2"></script>
-    <script src="js/game.js?v=725d5f32"></script>
+    <script src="js/game.js?v=c615ed3c"></script>
+    <script src="js/math-overlay.js?v=2dd84444"></script>
     <script src="js/main.js?v=bb1535b5"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
