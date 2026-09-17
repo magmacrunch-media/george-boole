@@ -1,14 +1,43 @@
 #!/usr/bin/env python3
-"""Generate a 32x32 pixel art portrait of George Boole with sunglasses.
+"""George Boole in pixel sunglasses: the app icon, and the portrait the web
+game uses on its loading and title screens.
+
+    python ios/tools/make-boole-pixel.py          # app icon only
+    python ios/tools/make-boole-pixel.py --web    # also the web portrait files
+
+Two sprites, deliberately. PORTRAIT is the title-screen figure, drawn to be
+seen at 96-128px on the game's own dark background. ICON is the same man
+redrawn for a home screen, where he is 60pt on a wallpaper nobody chose for
+him. The first icon was PORTRAIT scaled up, and at home-screen size it was a
+dark blob: dark hair and a near-black coat on dark navy, and sunglasses --
+the whole joke -- black on brown. What ICON changes, and why:
+
+  - a bright magenta ground (the splash tagline's colour), so the dark
+    figure reads as a silhouette on light and dark wallpaper alike;
+  - a one-cell outline around the figure, which is what keeps a pixel sprite
+    legible at any scale;
+  - cyan lenses with a white glint, so the sunglasses are the first thing
+    seen rather than the last, and a cyan bow tie that echoes them;
+  - head and shoulders only, filling the square, the coat running off the
+    bottom like a portrait crop, and the outline kept clear of iOS's
+    rounded corners.
+
+Judge a change at 60, 120 and 180px, not at 1024: `--sheet <png>` writes
+those sizes, masked, on a light and a dark wallpaper.
 
 Outputs:
   - ios/App/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
-  - ios/assets/apple-touch-icon.png (180x180)
-  - web/apple-touch-icon.png (180x180)
+  - ios/assets/apple-touch-icon.png (180x180, the icon; package.mjs puts it in
+    the bundle, where Safari's add-to-home-screen shows it)
+  - with --web: web/apple-touch-icon.png (180x180) and web/img/boole-pixel.png
+    (128x128), both from PORTRAIT. The site's icon is its own decision, so a
+    plain run leaves web/ alone.
 
-    python ios/tools/make-boole-pixel.py        # needs Pillow
+make-art.py draws the launch image. It used to draw the icon too, which is
+how two scripts came to write the same file.
 """
 
+import argparse
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFilter
@@ -118,6 +147,64 @@ PALETTE = {
     9: (255, 255, 255),  # eye highlight (unused but reserved)
 }
 
+# â”€â”€ 32x32 icon â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+# One character per cell. '.' is background.
+ICON = [
+    "................................",
+    "................................",
+    "................................",
+    "...........HHHHHHHHHH...........",
+    ".........HHHhhhhHHHHHH..........",
+    "........HHhhhhHHHHHHHHH.........",
+    "........HHHSSSSSSSSSSHHH........",
+    "........HHSSSSSSSSSSSSHH........",
+    "........HSSSSSSSSSSSSSSH........",
+    ".......KKKKKKKKKKKKKKKKKK.......",
+    ".......KWCCCCCKKKKWCCCCCK.......",
+    ".......KCCCCCCKSSKCCCCCCK.......",
+    ".......KccccccKSSKccccccK.......",
+    "........KKKKKKSssSKKKKKK........",
+    "........HSSSSSSssSSSSSSH........",
+    "........BSSBBBBBBBBBBSSB........",
+    "........BBBBBBSSSSBBBBBB........",
+    "........BBBBBBBBBBBBBBBB........",
+    "........BBBBBBBBBBBBBBBB........",
+    ".........BBBBBBBBBBBBBB.........",
+    "..........BBBBBBBBBBBB..........",
+    "........OOTTBBBBBBBBTTOO........",
+    ".....OOOOOTTTBBBBBBTTTOOOOO.....",
+    "..OOOOOOOOOTTTBBBBTTTOOOOOOOOO..",
+    "OOOOOOOOOOOTTTCKKCTTTOOOOOOOOOOO",
+    "OOOOOOOOOOOoTCCKKCCToOOOOOOOOOOO",
+    "OOOOOOOOOOOOoTTTTTToOOOOOOOOOOOO",
+    "OOOOOOOOOOOOOoTTTToOOOOOOOOOOOOO",
+    "OOOOOOOOOOOOOOoTToOOOOOOOOOOOOOO",
+    "OOOOOOOOOOOOOOOooOOOOOOOOOOOOOOO",
+    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+    "OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO",
+]
+
+ICON_PALETTE = {
+    "H": (52, 34, 26),     # hair
+    "h": (96, 64, 44),     # hair highlight
+    "S": (240, 198, 152),  # skin
+    "s": (206, 152, 110),  # skin shadow
+    "B": (60, 40, 30),     # beard
+    "K": (8, 8, 14),       # frames, bow tie knot
+    "C": (77, 227, 247),   # lens, bow tie -- the title's cyan
+    "c": (20, 150, 190),   # lower lens
+    "W": (255, 255, 255),  # glint
+    "O": (28, 30, 58),     # coat
+    "o": (58, 62, 104),    # lapel edge
+    "T": (238, 238, 246),  # shirt
+}
+ICON_OUTLINE = (14, 6, 26)
+
+# Radial ground: bright behind the head, deep purple at the edges.
+ICON_GLOW = (255, 96, 214)
+ICON_EDGE = (96, 24, 140)
+
 
 def draw_portrait(size=32):
     """Draw the 32x32 Boole portrait, centered with iOS mask clearance."""
@@ -181,31 +268,95 @@ def screen(base, layer):
     return out
 
 
-def build_icon(size=1024, small=32):
-    """Build the app icon from the 32x32 portrait."""
-    art = draw_portrait(small)
-    art = art.resize((size, size), Image.NEAREST)
+def draw_icon():
+    """ICON at 32x32, with a one-cell outline around the figure."""
+    n = len(ICON)
+    for i, row in enumerate(ICON):
+        if len(row) != n:
+            raise SystemExit(f"ICON row {i} is {len(row)} cells wide, not {n}")
 
-    # iOS corner mask: clip art to the rounded rectangle so corners are clean.
-    # The coat extends slightly into the mask area at the bottom, which is fine
-    # since it's dark on dark — but clip to prevent hard edges at the mask border.
+    def filled(x, y):
+        return 0 <= x < n and 0 <= y < n and ICON[y][x] != "."
+
+    art = Image.new("RGBA", (n, n), (0, 0, 0, 0))
+    for y, row in enumerate(ICON):
+        for x, ch in enumerate(row):
+            if ch != ".":
+                art.putpixel((x, y), ICON_PALETTE[ch] + (255,))
+            elif any(filled(x + dx, y + dy) for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                art.putpixel((x, y), ICON_OUTLINE + (255,))
+    return art
+
+
+def icon_ground(size):
+    """The radial magenta ground, with the scanlines the whole game wears."""
+    img = Image.new("RGB", (size, size))
+    px = img.load()
+    cx, cy, reach = size * 0.5, size * 0.38, size * 0.78
+    for y in range(size):
+        for x in range(size):
+            t = min(1.0, ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / reach)
+            px[x, y] = tuple(round(ICON_GLOW[i] + (ICON_EDGE[i] - ICON_GLOW[i]) * t) for i in range(3))
+    step = size // 64
+    lines = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    d = ImageDraw.Draw(lines)
+    for y in range(0, size, step * 2):
+        d.rectangle([0, y, size, y + step - 1], fill=(0, 0, 0, 22))
+    return Image.alpha_composite(img.convert("RGBA"), lines)
+
+
+def corner_mask(size):
+    """iOS's rounded square, near enough: radius about 22.4% of the side."""
     mask = Image.new("L", (size, size), 0)
     ImageDraw.Draw(mask).rounded_rectangle(
         [0, 0, size - 1, size - 1], radius=round(size * 0.2237), fill=255
     )
-    # Apply mask to alpha channel
-    masked_alpha = Image.composite(art.getchannel("A"), Image.new("L", (size, size), 0), mask)
-    art.putalpha(masked_alpha)
+    return mask
 
-    out = gradient(size)
-    out = screen(out, bloom(art, radius=size // 64, strength=0.85))
-    out = screen(out, bloom(art, radius=size // 200, strength=1.0))
+
+def build_icon(size=1024):
+    small = draw_icon()
+    art = small.resize((size, size), Image.NEAREST)
+
+    # iOS rounds the corners itself, and the asset catalog previews the full
+    # square, so a clipped figure looks fine right up until it is on a home
+    # screen. What matters is the outline: the coat may run off the edges like
+    # a portrait crop, where the rounding only trims solid colour, but a corner
+    # cutting through the outline bites a visible notch out of the silhouette.
+    outline = Image.new("L", small.size, 0)
+    for y in range(small.size[1]):
+        for x in range(small.size[0]):
+            if small.getpixel((x, y)) == ICON_OUTLINE + (255,):
+                outline.putpixel((x, y), 255)
+    bitten = Image.composite(
+        Image.new("L", (size, size), 0), outline.resize((size, size), Image.NEAREST), corner_mask(size)
+    ).getbbox()
+    if bitten:
+        raise SystemExit(f"icon outline is outside the iOS corner mask at {bitten}; pull it in.")
+
+    out = icon_ground(size)
     out.alpha_composite(art)
+    # App icons must be opaque; an alpha channel is rejected at upload.
     return out.convert("RGB")
 
 
+def build_sheet(icon):
+    """The icon at 180, 120 and 60, masked, on a light and a dark wallpaper."""
+    sheet = Image.new("RGB", (480, 460), (236, 232, 226))
+    ImageDraw.Draw(sheet).rectangle([0, 230, 480, 460], fill=(22, 24, 30))
+    for y0 in (25, 255):
+        x = 20
+        for s in (180, 120, 60):
+            sheet.paste(icon.resize((s, s), Image.LANCZOS), (x, y0), corner_mask(s))
+            x += s + 40
+    return sheet
+
+
+# â”€â”€ the web portrait â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+
 def build_touch_icon(size=180):
-    """Build the apple-touch-icon at180x180."""
+    """web/apple-touch-icon.png, from PORTRAIT."""
     art = draw_portrait(32)
     art = art.resize((size, size), Image.NEAREST)
 
@@ -215,46 +366,44 @@ def build_touch_icon(size=180):
     return out.convert("RGB")
 
 
-def build_web_icon(size=180):
-    """Build web/apple-touch-icon.png."""
-    return build_touch_icon(size)
-
-
 def main():
+    ap = argparse.ArgumentParser(description="Draw George Boole: the app icon, and optionally the web portrait.")
+    ap.add_argument("--web", action="store_true", help="also write the web portrait files")
+    ap.add_argument("--sheet", metavar="PNG", help="write a 60/120/180px preview sheet here")
+    args = ap.parse_args()
+
     icon_dir = ASSETS / "AppIcon.appiconset"
     if not icon_dir.is_dir():
         raise SystemExit(f"asset catalog not found: {icon_dir}")
 
-    # App icon (1024x1024)
     icon = build_icon()
     icon_path = icon_dir / "AppIcon-512@2x.png"
     icon.save(icon_path)
     print(f"icon     {icon_path.relative_to(REPO)}  {icon.size[0]}x{icon.size[1]}")
 
-    # ios/assets/apple-touch-icon.png (180x180)
     assets = IOS / "assets"
     assets.mkdir(exist_ok=True)
-    touch = build_touch_icon()
+    touch = icon.resize((180, 180), Image.LANCZOS)
     touch_path = assets / "apple-touch-icon.png"
     touch.save(touch_path)
     print(f"touch    {touch_path.relative_to(REPO)}  {touch.size[0]}x{touch.size[1]}")
 
-    # web/apple-touch-icon.png (180x180)
-    web_touch = build_web_icon()
-    web_path = WEB / "apple-touch-icon.png"
-    web_touch.save(web_path)
-    print(f"web      {web_path.relative_to(REPO)}  {web_touch.size[0]}x{web_touch.size[1]}")
+    if args.sheet:
+        build_sheet(icon).save(args.sheet)
+        print(f"sheet    {args.sheet}")
 
-    # Also save the raw 32x32 for use in the title screen
-    raw = draw_portrait(32)
-    raw_path = WEB / "img" / "boole-pixel.png"
-    raw_path.parent.mkdir(exist_ok=True)
-    # Scale up 4x for crisp display (128x128) with NEAREST
-    display = raw.resize((128, 128), Image.NEAREST)
-    display.save(raw_path)
-    print(f"portrait {raw_path.relative_to(REPO)}  {display.size[0]}x{display.size[1]}")
+    if args.web:
+        web_touch = build_touch_icon()
+        web_path = WEB / "apple-touch-icon.png"
+        web_touch.save(web_path)
+        print(f"web      {web_path.relative_to(REPO)}  {web_touch.size[0]}x{web_touch.size[1]}")
 
-    print("\ndone!")
+        # 32x32 scaled 4x with NEAREST, for the loading and title screens.
+        raw_path = WEB / "img" / "boole-pixel.png"
+        raw_path.parent.mkdir(exist_ok=True)
+        display = draw_portrait(32).resize((128, 128), Image.NEAREST)
+        display.save(raw_path)
+        print(f"portrait {raw_path.relative_to(REPO)}  {display.size[0]}x{display.size[1]}")
 
 
 if __name__ == "__main__":

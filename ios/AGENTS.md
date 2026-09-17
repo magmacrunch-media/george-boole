@@ -391,24 +391,31 @@ The build is real and the output runs. These are the open pieces:
   marked Shared and committed, `Package.resolved` (created under
   `project.xcworkspace/xcshareddata/swiftpm/` by the first resolve, untracked)
   committed, and anything that needs the paid developer account.
-- **The app icon needs redrawing — but not because it is a placeholder.** This
-  bullet claimed until 2026-09-14 that the icon and launch screen were
-  Capacitor's stock art. They have not been since `2ef2d8d`: both are generated
-  by `tools/make-art.py`, and regenerating means re-running that script.
+- **The app icon was redrawn on 2026-09-17, and one script owns it.**
+  `tools/make-boole-pixel.py` draws it; `tools/make-art.py` draws only the
+  launch image. Both used to write `AppIcon-512@2x.png` — `make-art.py` the
+  four gates on a 2×2 board, the pixel script (added 2026-09-13) the portrait —
+  so the icon on disk was whichever had run last, and `make-art.py`'s
+  docstring described a picture that was no longer there.
 
-  Two things are true instead. `make-art.py`'s `build_icon` docstring describes
-  the four gates on a 2×2 board and explains why the portrait was rejected —
-  but the file on disk *is* the portrait, so the art was replaced again
-  afterwards and the docstring no longer describes its own output. And the
-  portrait does not survive being small: at 1024 it is fine, at 180
-  (`ios/assets/apple-touch-icon.png`, roughly home-screen size) it is a dark
-  blob. Dark brown hair and a near-black coat on dark navy is almost no value
-  contrast, on a wallpaper that may itself be dark; the sunglasses — the whole
-  joke, and what the title screen's `glint` animation exists to show off — are
-  black on brown and invisible; the coat runs off the bottom edge in a value
-  close to the background, so iOS's superellipse mask will clip the shoulders
-  off a silhouette that already reads as cropped. Judge a redraw at 60, 120 and
-  180, not at 1024.
+  The first portrait icon was the title-screen sprite scaled up, and at
+  home-screen size it was a dark blob: dark hair and a near-black coat on dark
+  navy, and the sunglasses — the whole joke — black on brown. The icon is now
+  its own sprite (`ICON`, beside the title screen's `PORTRAIT`): a magenta
+  ground, a one-cell dark outline, cyan lenses with a white glint and a cyan
+  bow tie, and a head-and-shoulders crop with the coat running off the bottom.
+
+  Two things to keep. **Judge it at 60, 120 and 180px**, not 1024:
+  `--sheet <png>` writes those sizes, masked, on light and dark wallpaper.
+  And the script **refuses an outline that iOS's rounded corners would cut**.
+  Solid coat running into a corner is fine, since the rounding only trims
+  colour; the first redraw had narrower shoulders whose outline crossed the
+  bottom corners, which would have bitten a notch out of the silhouette on a
+  home screen while the asset catalog previewed the full square intact.
+
+  A plain run leaves `web/` alone. `--web` also rewrites the site's
+  `apple-touch-icon.png` and the title screen's `img/boole-pixel.png` from
+  `PORTRAIT`, which is a decision about the website rather than the app.
 
   **The launch image is good** and needs nothing: cyan wordmark, magenta
   subtitle, the same gradient and scanlines as the title screen. Apple's HIG
