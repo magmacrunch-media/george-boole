@@ -223,6 +223,14 @@ class BooleBoard {
      */
     _emit(name, detail) {
         if (this._silent) return;
+        // An announcement must never be able to break the move it announces.
+        // Every browser has both of these; web/tests/test-game.js runs the
+        // game against a stub document that has neither, and before this
+        // guard an overflow there threw out of moveLeft() -- taking the rest of
+        // that test block's scoring assertions down with it.
+        if (typeof document === 'undefined'
+            || typeof document.dispatchEvent !== 'function'
+            || typeof CustomEvent !== 'function') return;
         document.dispatchEvent(new CustomEvent('boole:' + name, {
             detail: Object.assign(
                 { difficulty: this.difficulty, bits: this.bitMode },

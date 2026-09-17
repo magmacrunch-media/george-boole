@@ -36,6 +36,30 @@ jobs:
         working-directory: wii
         run: make test
 
+  # The web version is the source of truth for rules and balance, and until
+  # 2026-09-17 its own two suites ran nowhere in this repo. They ran only in the
+  # website's `npm run check`, against the arcade/ copy, which exists only after
+  # a `make sync-george-boole` -- so a break here surfaced a week later, in
+  # another repo, at the moment somebody tried to deploy. That is exactly what
+  # happened: 9f5651d made _emit call document.dispatchEvent, test-game.js runs
+  # the game against a stub document without one, and an overflow threw out of
+  # moveLeft() and silently skipped twelve scoring assertions behind it.
+  #
+  # Both scripts are plain Node with a hand-rolled harness and exit non-zero on
+  # any failure, so there is nothing to install.
+  web-tests:
+    name: web tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+      - name: game logic
+        run: node web/tests/test-game-logic.js
+      - name: game against a stub DOM
+        run: node web/tests/test-game.js
+
   # What `make test` cannot reach: everything bound to GRRLIB and libogc. The
   # host suite links this game's own sources and skips the engine entirely — by
   # design, so it stays runnable without a cross-compiler — which leaves the
