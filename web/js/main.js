@@ -218,19 +218,45 @@ function createFloatingGates(container) {
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Initialize adenosine-audio
-        await AdAudio.init({
-            music: { url: audioSrc('audio/game-loop.ogg'), volume: 0.3, fadeIn: 2.0 },
-            sfx: {
-                spawn:    { url: audioSrc('audio/sfx/spawn.ogg'),     volume: 0.3, pool: 3 },
-                merge:    { url: audioSrc('audio/sfx/merge.ogg'),     volume: 0.3, pool: 3 },
-                victory:  { url: audioSrc('audio/sfx/victory.ogg'),   volume: 0.3, pool: 3 },
-                gameOver: { url: audioSrc('audio/sfx/gameover.ogg'),  volume: 0.3, pool: 3 },
-                move:     { url: audioSrc('audio/sfx/move.ogg'),      volume: 0.3, pool: 3 },
-                highScore:{ url: audioSrc('audio/sfx/highscore.ogg'), volume: 0.3, pool: 3 },
-            },
-        });
+        // Sound effects only. The music is deliberately not in this manifest:
+        // AdAudio.init() awaits every track it is given before it returns, and
+        // game-loop is 3:50 of audio that decodeAudioData turns into roughly
+        // 84MB of PCM. With it here the loading screen waited for that whole
+        // decode, and the sound effects did not even start loading until it
+        // was done -- on a desktop about 250ms of a 274ms launch, and several
+        // times that on a phone. Nothing on the title screen needs the music.
+        //
+        // Its own try, too: audio used to share the try below with everything
+        // that wires up the title screen, so one clip failing to decode threw
+        // past all of it and left the loading screen up for good. A game with
+        // no sound is still a game.
+        try {
+            await AdAudio.init({
+                sfx: {
+                    spawn:    { url: audioSrc('audio/sfx/spawn.ogg'),     volume: 0.3, pool: 3 },
+                    merge:    { url: audioSrc('audio/sfx/merge.ogg'),     volume: 0.3, pool: 3 },
+                    victory:  { url: audioSrc('audio/sfx/victory.ogg'),   volume: 0.3, pool: 3 },
+                    gameOver: { url: audioSrc('audio/sfx/gameover.ogg'),  volume: 0.3, pool: 3 },
+                    move:     { url: audioSrc('audio/sfx/move.ogg'),      volume: 0.3, pool: 3 },
+                    highScore:{ url: audioSrc('audio/sfx/highscore.ogg'), volume: 0.3, pool: 3 },
+                },
+            });
+        } catch (error) {
+            console.error('Sound effects failed to load:', error);
+        }
         AdAudio.handleVisibility({ pauseMusic: true });
+
+        // The music decodes in the background from here, while the title
+        // screen is already up. Started, not awaited; startGame() plays it once
+        // this settles, so tapping start before the decode finishes still gets
+        // music, just a moment later. Resolves false rather than rejecting, so
+        // a track that will not decode means silence and nothing else.
+        const musicReady = AdAudio.loadMusic(audioSrc('audio/game-loop.ogg'), { volume: 0.3 })
+            .then(() => true)
+            .catch((error) => {
+                console.error('Music failed to load:', error);
+                return false;
+            });
         
         // Start loading scores
         await loadScores();
@@ -270,8 +296,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             // render loop behind the board, which matters on a phone.
             rain.stop();
 
-            // Start music with fade-in
-            AdAudio.playMusic();
+            // Start music with fade-in, as soon as the background decode above
+            // has finished -- which it usually has by the time anyone taps.
+            musicReady.then((loaded) => {
+                if (loaded) AdAudio.playMusic(2.0);
+            });
         };
         
         // Function to advance from lore screen to difficulty selector

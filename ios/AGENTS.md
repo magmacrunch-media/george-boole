@@ -326,23 +326,64 @@ The build is real and the output runs. These are the open pieces:
   layers, which are meant to reach the corners, and `.game-notification` and
   `.initials-prompt` are centred on `top: 50%`.
 
-- **Launch is gated on decoding four minutes of audio.** `web/js/main.js`
-  awaits `AdAudio.init()` before hiding the loading screen, and `init()` awaits
-  the music load first and alone, ahead of the sfx `Promise.all`. `loadMusic`
-  runs the clip through `decodeAudioData` into a resident PCM buffer. Measured
-  in a browser against the bundle: `game-loop.mp3` is 2.72MB on disk, 230.5s,
-  and decodes to **84.4MB resident**. Nothing renders until that finishes and
-  the sfx do not start loading until it does.
+- **Launch no longer waits for the music, but the music still costs 84MB.**
+  `game-loop.mp3` is 2.72MB on disk, 230.5s, and `decodeAudioData` turns it
+  into **84.4MB of resident PCM**. `AdAudio.init()` awaits every track in its
+  manifest, and the music used to be in it, so the loading screen waited for
+  that whole decode and the sound effects did not start loading until it was
+  done.
 
-  The fix is small and lives in `engines/adenosine`: keep the `loadMusic`
-  promise without awaiting it in `init()`, and have `playMusic()` await it
-  instead — it already guards on `!musicBuffer`, and music is not wanted until
-  `startGame()`, at minimum one tap later.
-- **Nothing has been built or run.** `cap add ios` scaffolds the project fine
-  on Windows — that is all it did here — but compiling it, running a simulator
-  and archiving for submission need macOS and Xcode. Nothing in `App/` has been
-  opened by Xcode yet, so treat the project as generated-and-unverified rather
-  than known-good.
+  Fixed in `web/js/main.js`, not in the engine: `init()` now gets only the sound
+  effects, and `AdAudio.loadMusic()` — already exported on its own — runs in the
+  background with its promise kept; `startGame()` plays the music once it
+  settles. The engine needed no release for this, which an `init()` change
+  would have. Measured against the bundle in a desktop browser, median of five
+  cold loads: the title went from **274ms to 35ms**, now shown before the music
+  has finished downloading. A phone's decode is several times slower, so the
+  saving there is larger in absolute terms.
+
+  Audio loading also has its own `try` now. It used to share one with all of
+  the title-screen wiring, so a single clip failing to decode threw past it and
+  left the loading screen up permanently. Verified with a fetch stub: music
+  failing, or a sound effect failing, still reaches the title and the
+  how-to-play screen, with one console error each; tapping start before the
+  music has decoded starts it the moment the decode finishes.
+
+  What is not fixed is the 84MB. The track still decodes fully, only not in the
+  player's way. Streaming it through an `<audio>` element would avoid the
+  buffer, but that is the engine's decision to make, and it is why the loop is
+  a decoded buffer in the first place (see the root `AGENTS.md` on mp3 loop
+  seams).
+
+- **Built and run in the Simulator; not yet on a device, signed, or archived.**
+  First built 2026-09-16 on the MacBook Pro '26 (`jakes-macbook-pro--26`,
+  macOS 26.5.2, Xcode 26.6, iOS 26.5 Simulator runtime, iPhone 17 Pro). It
+  compiled at the first attempt with no source changes, and the Swift packages
+  resolve (`capacitor-swift-pm` 8.5.1 plus the local `CapacitorHaptics`). The
+  one warning is Xcode noting the app has no App Intents, which is harmless.
+
+  The Mac's checkout is flat, `~/Documents/magmacrunch/george-boole` beside
+  `~/Documents/magmacrunch/website`, which is `package.mjs`'s first candidate,
+  so it needs no `WEBSITE=`. Note `~/Documents/magmacrunch/games/george-boole`
+  on that Mac is an older loose copy and not a git repository. Build and run
+  without Xcode's window, and without signing, since the Simulator needs none:
+
+  ```
+  export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+  cd ios && npm run sync && cd App/App
+  xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+    -destination "platform=iOS Simulator,name=iPhone 17 Pro" \
+    -derivedDataPath ~/Library/Developer/gb-derived CODE_SIGNING_ALLOWED=NO build
+  xcrun simctl install booted ~/Library/Developer/gb-derived/Build/Products/Debug-iphonesimulator/App.app
+  xcrun simctl launch booted com.magmacrunch.georgeboole
+  ```
+
+  `DEVELOPER_DIR` because that Mac's `xcode-select` still points at the
+  Command Line Tools; `sudo xcode-select -s` fixes it for good and needs a
+  password. Still outstanding: a development team in the project, the scheme
+  marked Shared and committed, `Package.resolved` (created under
+  `project.xcworkspace/xcshareddata/swiftpm/` by the first resolve, untracked)
+  committed, and anything that needs the paid developer account.
 - **The app icon needs redrawing — but not because it is a placeholder.** This
   bullet claimed until 2026-09-14 that the icon and launch screen were
   Capacitor's stock art. They have not been since `2ef2d8d`: both are generated
