@@ -99,7 +99,7 @@ const FONTS = ['PressStart2P-Regular.woff2', 'PressStart2P-Regular.ttf'];
  * here rather than in `web/` for the same reason `css/ios.css` does: the
  * browser version should not carry code about a store it will never be in.
  */
-const SHIMS = ['gamekit-scores.js', 'gamekit-achievements.js', 'haptics.js'];
+const SHIMS = ['gamekit-scores.js', 'gamekit-achievements.js', 'haptics.js', 'personal-bests.js'];
 
 function die(msg, detail) {
   console.error(`\npackage.mjs: ${msg}`);
@@ -397,6 +397,69 @@ body {
         var(--safe-top) var(--safe-right)
         var(--safe-bottom) var(--safe-left);
     box-sizing: border-box;
+}
+
+/* "Your bests", which shim/personal-bests.js puts in place of the arcade
+   scoreboard. Same palette as that board's rows in modal-scoreboard.css: cyan
+   for the mode, violet for its name, white for the number. */
+.bests-list {
+    text-align: left;
+}
+
+.best-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 9px 6px;
+    border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+    font-family: 'Press Start 2P', monospace;
+}
+
+.best-row:last-child {
+    border-bottom: none;
+}
+
+.best-row.is-last-played {
+    background: rgba(0, 255, 255, 0.08);
+    box-shadow: inset 3px 0 0 #00ffff;
+}
+
+.best-mode {
+    color: #00ffff;
+    font-size: 10px;
+    min-width: 76px;
+    text-shadow: 1px 1px 0 #006666;
+}
+
+.best-name {
+    color: #b48cff;
+    font-size: 8px;
+    flex: 1;
+}
+
+.best-score {
+    color: #ffffff;
+    font-size: 10px;
+    text-align: right;
+    text-shadow: 1px 1px 0 #333333;
+}
+
+.bests-note {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 7px;
+    margin: 14px 0 0;
+    letter-spacing: 1px;
+}
+
+.game-over-best {
+    color: #b48cff;
+    font-size: 10px;
+    margin: 6px 0 14px;
+}
+
+.game-over-best.is-new {
+    color: #ffff00;
+    text-shadow: 2px 2px 0 #999900, 0 0 10px rgba(255, 255, 0, 0.6);
 }
 
 /* The board already sets these; everything else in the app wants them too, or

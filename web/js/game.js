@@ -1170,7 +1170,19 @@ class BooleBoard {
         if (!this.wasVictory) {
             AdAudio.playSfx('gameOver');
         }
-        
+
+        // Initials only mean something on a board other people can see. A
+        // build with no shared scoreboard -- one whose ScoreClient is never
+        // connected -- would list only its owner's own games under their own
+        // initials. Such a build declares it by setting GameBoole.scoreboard to
+        // 'personal' and keeps its own record from the boole:game-over event
+        // above. The website never sets it, so its arcade board is unchanged.
+        if (typeof window !== 'undefined' && window.GameBoole
+            && window.GameBoole.scoreboard === 'personal') {
+            this.showGameOver();
+            return;
+        }
+
         if (!Array.isArray(allScores)) {
             allScores = [];
         }

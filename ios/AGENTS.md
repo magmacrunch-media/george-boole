@@ -182,22 +182,52 @@ them. The package ships no `PrivacyInfo.xcprivacy`, which is correct:
 
 The build is real and the output runs. These are the open pieces:
 
+- **The app has no arcade scoreboard, on purpose.** On the website the
+  scoreboard is a cabinet — type initials, compete for the top ten — and it
+  works because `ScoreClient` is connected to a shared backend. The bundle
+  drops that connection, so the same board would only ever list one person's
+  games on one phone under initials they typed to compete with themselves.
+
+  `shim/personal-bests.js` replaces it. It sets `GameBoole.scoreboard` to
+  `'personal'`, which is the whole switch: `handleGameOver()` in
+  `web/js/game.js` checks it and goes straight to the game-over screen instead
+  of the initials prompt. The website never sets it, so its board is
+  unchanged. From `boole:game-over` the shim records each mode's best score,
+  best tile and games played in `localStorage['gb_bests']`, adds a "NEW BEST!" /
+  "your best: N" line to the game-over screen, and plays the high-score sound on
+  a new best. It rebuilds `#scoreboardModal`'s contents as a "your bests" card —
+  keeping the modal id and `#closeScoreboard`, so main.js's open and close
+  wiring applies unchanged — with a Game Center leaderboards button shown only
+  when signed in. main.js's `updateScoreboard()` and dropdown code both guard
+  against the elements the card removes; no patching needed.
+
+  A consequence worth knowing: the app never calls `scoreClient.save()` now,
+  so the unbounded `adenosine_scores__pending` queue this list used to warn
+  about cannot grow in the app.
+
 - **Game Center: the JavaScript half is done, the native half is not.**
-  `shim/gamekit-scores.js` patches `scoreClient.save` to also submit to a
-  leaderboard, maps all eight web difficulties to ids taken from
-  `tui/boole/modes.py` (whose docstring already promised those keys would stay
-  stable), and degrades to exactly today's behaviour when nothing answers.
+  `shim/gamekit-scores.js` submits to a leaderboard on `boole:game-over`, maps
+  all eight web difficulties to ids taken from `tui/boole/modes.py` (whose
+  docstring already promised those keys would stay stable), and does nothing
+  when no plugin answers.
+
+  **It submits every finished game, which it did not before.** It used to wrap
+  `scoreClient.save`, and that is called only from `submitInitials()` — only
+  when a score made the local top ten *and* the player typed initials. A
+  leaderboard fed that way would have missed nearly every game. Game Center
+  keeps each player's best per leaderboard itself, so submitting a lower score
+  is harmless; a zero is skipped. Verified with a stand-in plugin injected ahead
+  of the page: sign-in at launch, 120 then 30 both submitted to `hexad`, 0
+  skipped, and the card's button opening the last-played mode's leaderboard.
 
   What is missing is a Capacitor plugin registered as `GameCenter` providing
   `signIn()`, `submitScore({leaderboardId, score})` and
   `showLeaderboard({leaderboardId})` — Swift, so macOS. Then the eight
   leaderboards have to be created in App Store Connect under exactly those ids.
 
-  Two things the shim decides that are worth knowing. Reading stays local:
-  Game Center has no scores-query worth rendering into this game's own
-  scoreboard, and it has a full-screen UI instead, which is what
-  `showLeaderboard` is for. And the local write happens first and
-  unconditionally, so a declined sign-in never costs a player their score.
+  Reading stays local: Game Center has no scores-query worth rendering into
+  this game's own card, and it has a full-screen UI instead, which is what
+  `showLeaderboard` is for.
 
 - **Achievements are not wired**, but the seam they need exists. This bullet
   used to say hooking them meant touching `web/js/game.js` and was therefore a
@@ -252,10 +282,6 @@ The build is real and the output runs. These are the open pieces:
   left alone: the probe also fires the real notifications and sound effects, so
   a board that fills up can flash a phantom overflow popup. That is a visible
   change to the live website and belongs in its own commit.
-- **`adenosine_scores__pending` grows forever.** `ScoreClient.save()` queues
-  every unsynced score for a later flush that, unconnected, never comes.
-  Harmless but unbounded; whatever replaces the backend should drain or ignore
-  it.
 - **Touch-drag is wired here and waiting on an npm release.** The engine half
   already exists: adenosine's `createInput` gained opt-in `onDrag` /
   `onDragEnd` in `@magmacrunch/adenosine-puzzle` **0.4.0** (PR #18, merged

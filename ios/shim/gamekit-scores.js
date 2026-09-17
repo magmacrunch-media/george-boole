@@ -2,20 +2,28 @@
  * Game Center seam. Bundled by package.mjs into www/shim/, loaded after the
  * ScoreClient bootstrap and before the game's own scripts.
  *
- * The app has no leaderboard backend. score-server.js is dropped from the
- * bundle, so `scoreClient` is constructed unconnected and falls back to
- * localStorage, which works offline and is per-device. Game Center replaces
- * that -- but only the submitting half. Reading stays local, because Game
- * Center has no "give me the scores" call worth rendering into this game's own
- * scoreboard; it has a full-screen UI of its own, which is what showLeaderboard
- * is for.
+ * The app has no leaderboard backend of its own: score-server.js is dropped
+ * from the bundle, so there is no shared arcade board. personal-bests.js keeps
+ * each player's own record on the device, and Game Center is where scores are
+ * compared with anyone else's -- it has a full-screen UI of its own, which is
+ * what showLeaderboard is for.
+ *
+ * ## Every finished game is submitted
+ *
+ * This file used to wrap scoreClient.save. That call happens only from
+ * submitInitials(), which runs only when a score makes the local top ten AND
+ * the player types initials -- so a leaderboard fed that way would have missed
+ * nearly every game. It now submits on boole:game-over, which game.js
+ * announces for every game that ends, whatever the score. Game Center keeps
+ * each player's best per leaderboard itself, so submitting a lower score than
+ * one already recorded is harmless.
  *
  * ## What this file does NOT do
  *
  * It does not implement Game Center. It defines the interface the native side
- * has to provide and degrades to exactly the current behaviour when that side
- * is missing -- which is always, today, and always in a browser. Nothing here
- * changes what the game does until a plugin answers.
+ * has to provide and degrades to doing nothing when that side is missing --
+ * which is always in a browser, and in the app until GameCenterPlugin is
+ * registered (see ios/AGENTS.md on why that registration is explicit).
  *
  * ## The contract
  *
@@ -25,9 +33,9 @@
  *     submitScore({ leaderboardId, score })     -> void
  *     showLeaderboard({ leaderboardId })        -> void
  *
- * All three may reject; nothing here treats a rejection as fatal, because a
- * refused Game Center sign-in must not cost the player their score. That is
- * why the localStorage write happens first and unconditionally.
+ * All three may reject, and nothing here treats a rejection as fatal: a
+ * refused Game Center sign-in must not cost the player anything.
+ * personal-bests.js records the game from the same event regardless.
  *
  * ## Why the ids come from the terminal version
  *
@@ -84,31 +92,22 @@
       });
   }
 
-  // `scoreClient` is declared `const` in an inline <script>, so it is in the
-  // global lexical scope but NOT a property of window -- patching the object
-  // it points at is the only way to reach it from another file.
-  if (typeof scoreClient === 'undefined' || !scoreClient) return;
+  document.addEventListener('boole:game-over', function (e) {
+    var d = e.detail || {};
+    var id = LEADERBOARDS[String(d.difficulty)];
+    var score = Number(d.score) || 0;
+    // A zero is not a leaderboard entry anyone wants to see.
+    if (!available || !authenticated || !id || score <= 0) return;
 
-  var localSave = scoreClient.save.bind(scoreClient);
-
-  scoreClient.save = function (game, name, score, extra) {
-    // Local first, and awaited, so the player's own scoreboard is correct
-    // whatever Game Center does. This is also what returns the rank.
-    var result = localSave(game, name, score, extra);
-
-    var id = extra && LEADERBOARDS[extra.difficulty];
-    if (available && authenticated && id) {
-      Promise.resolve()
-        .then(function () {
-          return plugin().submitScore({ leaderboardId: id, score: score });
-        })
-        .catch(function () {
-          // A failed submission is not the player's problem. Game Center
-          // queues and retries submissions itself once signed in again.
-        });
-    }
-    return result;
-  };
+    Promise.resolve()
+      .then(function () {
+        return plugin().submitScore({ leaderboardId: id, score: score });
+      })
+      .catch(function () {
+        // A failed submission is not the player's problem. Game Center
+        // queues and retries submissions itself once signed in again.
+      });
+  });
 
   window.GameBoole = window.GameBoole || {};
   window.GameBoole.leaderboards = LEADERBOARDS;
