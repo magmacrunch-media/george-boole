@@ -36,17 +36,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../shared/arcade-base.css?v=de5e0d7b">
-    <link rel="stylesheet" href="css/base.css?v=ab57284b">
+    <link rel="stylesheet" href="css/base.css?v=48e2773f">
     <link rel="stylesheet" href="css/themes.css?v=97c2703d">
     <link rel="stylesheet" href="css/container.css?v=a30fdcef">
     <link rel="stylesheet" href="css/game.css?v=3eaa3eb3">
-    <link rel="stylesheet" href="css/modal-title.css?v=24912896">
-    <link rel="stylesheet" href="css/modal-lore.css?v=357c09c1">
+    <link rel="stylesheet" href="css/modal-title.css?v=71636a7e">
+    <link rel="stylesheet" href="css/modal-lore.css?v=bf9d2847">
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
-    <link rel="stylesheet" href="css/modal-misc.css?v=e6e55e48">
-    <link rel="stylesheet" href="css/responsive.css?v=ed9b7e2c">
+    <link rel="stylesheet" href="css/modal-misc.css?v=a6314c82">
+    <link rel="stylesheet" href="css/responsive.css?v=e97b84e7">
     <link rel="stylesheet" href="css/gates.css?v=71f1f693">
     <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
 </head>
@@ -224,11 +224,11 @@
             </div>
             
             <button class="start-button" id="startButton">
-                <!-- Two wordings, picked by modal-title.css from the primary
-                     input device. A phone has no space bar and nobody clicks it,
-                     and in the App Store build this is the first sentence a
-                     reviewer reads. -->
-                <span class="start-text"><span class="start-text-pointer">press [space] or click to start</span><span class="start-text-touch">tap to start</span></span>
+                <!-- Two wordings, picked by base.css from the primary input
+                     device. A phone has no space bar and nobody clicks it, and in
+                     the App Store build this is the first sentence a reviewer
+                     reads. -->
+                <span class="start-text"><span class="only-pointer">press space to start</span><span class="only-touch">tap to start</span></span>
             </button>
             
             <!-- 
@@ -243,38 +243,50 @@
     <!-- Lore / Rules Intro Screen -->
     <div class="lore-screen" id="loreScreen">
         <div class="lore-content">
-            <div class="lore-flavor">
-                <div class="lore-quote">"No general method for the solution of<br>questions in the theory of probabilities<br>can be established which does not<br>explicitly recognize [&hellip;] those universal<br>laws of thought which are the basis<br>of all reasoning."</div>
-                <div class="lore-attribution">— George Boole, <em>The Laws of Thought</em>, 1854</div>
+            <!-- The rules as the board draws them, not as sentences. Every
+                 tile below uses the exact markup render() gives a real tile --
+                 class, data-value, data-intensity, data-gate -- so it takes the
+                 real tile styles and cannot drift from what play looks like.
+                 Examples are 4-bit: max 15, overflow pays 3 x 15. The Boole
+                 quote that used to open this screen is still in the full rules,
+                 one tap away through the link below. -->
+            <h3 class="lore-title">how to play</h3>
+            <p class="lore-lead"><span class="only-pointer">arrow keys or swipe</span><span class="only-touch">swipe</span> to slide every tile</p>
+
+            <div class="lore-examples">
+                <div class="lore-example">
+                    <div class="lore-eq" aria-hidden="true">
+                        <div class="tile" data-value="1"><div class="tile-decimal">1</div><div class="tile-binary">0001</div></div>
+                        <div class="tile" data-value="1"><div class="tile-decimal">1</div><div class="tile-binary">0001</div></div>
+                        <span class="lore-arrow">&rarr;</span>
+                        <div class="tile" data-value="1"><div class="tile-decimal">1</div><div class="tile-binary">0001</div></div>
+                    </div>
+                    <p class="lore-caption">same + same = same</p>
+                </div>
+
+                <div class="lore-example">
+                    <div class="lore-eq" aria-hidden="true">
+                        <div class="tile" data-value="5" data-intensity="2"><div class="tile-decimal">5</div><div class="tile-binary">0101</div></div>
+                        <div class="tile gate-tile" data-value="gate" data-gate="xor">&#8853;</div>
+                        <div class="tile" data-value="3" data-intensity="2"><div class="tile-decimal">3</div><div class="tile-binary">0011</div></div>
+                        <span class="lore-arrow">&rarr;</span>
+                        <div class="tile" data-value="6" data-intensity="3"><div class="tile-decimal">6</div><div class="tile-binary">0110</div></div>
+                    </div>
+                    <p class="lore-caption">different numbers need a <em>gate</em></p>
+                </div>
+
+                <div class="lore-example">
+                    <div class="lore-eq" aria-hidden="true">
+                        <div class="tile gate-tile" data-value="gate" data-gate="not">&#172;</div>
+                        <div class="tile" data-value="15"><div class="tile-decimal">15</div><div class="tile-binary">1111</div></div>
+                        <span class="lore-arrow">&rarr;</span>
+                        <span class="lore-bonus">+45</span>
+                    </div>
+                    <p class="lore-caption">NOT the max: <em>overflow bonus</em></p>
+                </div>
             </div>
 
-            <div class="section-divider"></div>
-
-            <div class="lore-rules">
-                <div class="lore-rule">
-                    <span class="lore-rule-icon">&#8592;&#8593;&#8594;&#8595;</span>
-                    <span class="lore-rule-text">arrow keys or swipe to move tiles</span>
-                </div>
-                <div class="lore-rule">
-                    <span class="lore-rule-highlight">same + same = same</span>
-                    <span class="lore-rule-text">(idempotence &mdash; consolidates, not doubles)</span>
-                </div>
-                <div class="lore-rule">
-                    <span class="lore-rule-text">different numbers need a</span>
-                    <span class="lore-rule-highlight">gate</span>
-                    <span class="lore-rule-text">between them</span>
-                </div>
-                <div class="lore-rule">
-                    <span class="lore-rule-gates">&#8853; &#8744; &#8743; &#172;</span>
-                    <span class="lore-rule-text">sandwich binary gates, &#172;NOT slides into any tile</span>
-                </div>
-                <div class="lore-rule">
-                    <span class="lore-rule-text">&#172;NOT the max value &rarr; overflow bonus</span>
-                    <span class="lore-rule-highlight">3&times; max</span>
-                </div>
-            </div>
-
-            <div class="section-divider"></div>
+            <button class="lore-rules-link" id="loreFullRules" type="button">full rules &rarr;</button>
 
             <div class="lore-quick-actions">
                 <button class="lore-action-btn" id="quickHighScores">
@@ -405,6 +417,11 @@
 
     <div class="instructions-modal" id="instructionsModal">
         <div class="instructions-content" style="max-width: 650px; max-height: 85vh; overflow-y: auto; padding: 35px; padding-right: 20px;">
+            <!-- Pinned to the top of the scrolling panel. The only other way
+                 out is "close", after roughly 170 lines of rules. -->
+            <div class="instructions-topbar">
+                <button class="modal-back" id="instructionsBack" type="button">&larr; back</button>
+            </div>
             <h3 style="margin-bottom: 25px;">how to play</h3>
             
             <div class="info-box" style="background: rgba(138, 43, 226, 0.15); padding: 15px; margin-bottom: 20px; border-left: 4px solid #8a2be2;">
@@ -674,7 +691,7 @@
     <script src="js/config.js?v=fdc4d4d3"></script>
     <script src="js/scoring.js?v=36b0bed2"></script>
     <script src="js/game.js?v=725d5f32"></script>
-    <script src="js/main.js?v=35c2e341"></script>
+    <script src="js/main.js?v=459b3d6e"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
 <script src="../shared/adenosine-chat.js?v=4a6b886b"></script>

@@ -276,26 +276,6 @@
         padding: 25px 18px;
     }
 
-    .lore-quote {
-        font-size: 8px;
-    }
-
-    .lore-attribution {
-        font-size: 7px;
-    }
-
-    .lore-rule-text {
-        font-size: 8px;
-    }
-
-    .lore-rule-highlight {
-        font-size: 9px;
-    }
-
-    .lore-rule-gates {
-        font-size: 11px;
-    }
-
     .lore-continue-btn {
         font-size: 10px;
         padding: 14px 24px;
@@ -421,24 +401,23 @@
         padding: 20px 14px;
     }
 
-    .lore-quote {
+    .lore-eq .tile {
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+
+    .lore-eq .tile-decimal {
+        font-size: 12px;
+    }
+
+    .lore-eq .tile-binary {
         font-size: 7px;
     }
 
-    .lore-attribution {
-        font-size: 6px;
-    }
-
-    .lore-rule-text {
-        font-size: 7px;
-    }
-
-    .lore-rule-highlight {
-        font-size: 8px;
-    }
-
-    .lore-rule-gates {
-        font-size: 10px;
+    .lore-bonus {
+        height: 44px;
+        font-size: 12px;
     }
 
     .lore-continue-btn {

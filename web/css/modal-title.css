@@ -128,88 +128,76 @@
     text-wrap: balance;
 }
 
-.start-button {
-    background: linear-gradient(180deg, #8a2be2 0%, #4b0082 100%);
-    border: 4px solid #00ffff;
-    padding: 20px 40px;
-    font-size: 13px;
-    color: #ffff00;
-    cursor: pointer;
-    margin: 30px auto;
-    display: block;
-    box-shadow: 
-        0 6px 0 #0f0f1e,
-        0 0 20px rgba(0, 255, 255, 0.6);
-    transition: all 0.2s;
-    animation: startGlow 2s ease-in-out infinite;
-    font-family: 'Press Start 2P', cursive;
-    letter-spacing: 1px;
-    will-change: box-shadow;
-    position: relative;
-    text-transform: lowercase;
-}
+/* The start button is drawn like one of the game's own tiles rather than like
+   a web button: one flat colour, a pixel bevel (the same light-top-left,
+   dark-bottom-right inset .tile uses), a hard 1-bit outline and a solid drop
+   instead of a soft glow. The last version stacked a purple gradient, a cyan
+   border, yellow text and a pulsing blur, and three competing colours under a
+   glow read as a web page rather than a game -- which in the App Store build is
+   the first thing a reviewer sees.
 
-@keyframes startGlow {
-    0%, 100% { 
-        box-shadow: 
-            0 6px 0 #0f0f1e,
-            0 0 20px rgba(0, 255, 255, 0.6);
-    }
-    50% { 
-        box-shadow: 
-            0 6px 0 #0f0f1e,
-            0 0 35px rgba(0, 255, 255, 0.9),
-            0 0 50px rgba(138, 43, 226, 0.5);
-    }
+   The press is physical: the button drops by the height of its shadow, so it
+   visibly sits down into the screen. */
+.start-button {
+    display: block;
+    position: relative;
+    margin: 30px auto;
+    padding: 18px 30px 18px 26px;
+    background: #00ffff;
+    color: #0a0a14;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow:
+        inset 4px 4px 0 #b3ffff,
+        inset -4px -4px 0 #00a8bd,
+        0 0 0 4px #0a0a14,
+        0 8px 0 4px #0a0a14,
+        0 0 28px 6px rgba(0, 255, 255, 0.28);
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+    -webkit-tap-highlight-color: transparent;
 }
 
 .start-button:hover {
-    background: linear-gradient(180deg, #9d3bff 0%, #5b0099 100%);
-    box-shadow: 
-        0 6px 0 #0f0f1e,
-        0 0 30px rgba(0, 255, 255, 0.9);
-    transform: translateY(-3px);
-    animation: none;
+    background: #5cffff;
 }
 
 .start-button:active {
-    transform: translateY(4px);
-    box-shadow: 
-        0 2px 0 #0f0f1e,
-        0 0 20px rgba(0, 255, 255, 0.6);
+    transform: translateY(8px);
+    box-shadow:
+        inset 4px 4px 0 #00a8bd,
+        inset -4px -4px 0 #b3ffff,
+        0 0 0 4px #0a0a14,
+        0 0 0 4px #0a0a14,
+        0 0 28px 6px rgba(0, 255, 255, 0.28);
+}
+
+.start-button:focus-visible {
+    outline: 3px dashed #ff00ff;
+    outline-offset: 10px;
 }
 
 .start-text {
     display: block;
-    text-shadow:
-        2px 2px 0px #999900,
-        0 0 10px rgba(255, 255, 0, 0.6);
-    animation: textPulse 3s ease-in-out infinite;
     line-height: 1.6;
     text-wrap: balance;
 }
 
-/* Wording follows the primary input device rather than the screen width: a
-   narrow desktop window still has a space bar, and a large iPad does not.
-   `hover: none` plus `pointer: coarse` is a finger; an iPad with a trackpad
-   attached reports a fine pointer and correctly gets the keyboard wording. */
-.start-text-touch {
-    display: none;
+/* An arcade cabinet's blinking cursor. steps(1) rather than a fade: a CRT
+   either lights a pixel or it does not. */
+.start-text::before {
+    content: '\25B6\00A0';
+    display: inline-block;
+    animation: startCaret 1s steps(1) infinite;
 }
 
-@media (hover: none) and (pointer: coarse) {
-    .start-text-pointer {
-        display: none;
-    }
-
-    .start-text-touch {
-        display: inline;
-    }
-}
-
-@keyframes textPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.85; }
+@keyframes startCaret {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0; }
 }
 
 .boolean-quote {
@@ -344,6 +332,7 @@
     .title-large,
     .start-button,
     .start-text,
+    .start-text::before,
     .sunglasses-glint,
     .floating-gate {
         animation: none;

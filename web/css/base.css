@@ -142,3 +142,22 @@ body.performance-mode::after {
 @keyframes pixelspin {
     to { transform: rotate(360deg); }
 }
+/* Wording that depends on how the page is being driven. Follows the primary
+   input device rather than the screen width: a narrow desktop window still has
+   a space bar, and a large iPad does not. `hover: none` plus `pointer: coarse`
+   is a finger; an iPad with a trackpad attached reports a fine pointer and
+   correctly gets the keyboard wording. Used by the title screen's start button
+   and the how-to-play screen. */
+.only-touch {
+    display: none;
+}
+
+@media (hover: none) and (pointer: coarse) {
+    .only-pointer {
+        display: none;
+    }
+
+    .only-touch {
+        display: inline;
+    }
+}

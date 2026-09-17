@@ -342,6 +342,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
+        // "full rules" on the how-to-play screen. Same shape as the two quick
+        // actions above: the instructions modal stacks below the lore screen
+        // (z-index 2100 against 3000), so the lore screen has to step aside
+        // and be put back when the modal closes.
+        const loreFullRules = document.getElementById('loreFullRules');
+        if (loreFullRules) {
+            loreFullRules.addEventListener('click', () => {
+                loreScreen.classList.remove('active');
+                returnToLoreScreen = true;
+                const instructionsModal = document.getElementById('instructionsModal');
+                instructionsModal.classList.add('active');
+                const instructionsContent = instructionsModal.querySelector('.instructions-content');
+                if (instructionsContent) {
+                    instructionsContent.scrollTop = 0;
+                }
+            });
+        }
+
         // Setup difficulty selection
         const difficultyButtons = document.querySelectorAll('.difficulty-btn');
         
@@ -509,10 +527,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Instructions modal controls
-        document.getElementById('closeInstructions').addEventListener('click', () => {
+        // Opened from the how-to-play screen, closing goes back to it.
+        const returnFromInstructions = () => {
+            if (returnToLoreScreen) {
+                loreScreen.classList.add('active');
+                returnToLoreScreen = false;
+            }
+        };
+
+        const closeInstructionsModal = () => {
             document.getElementById('instructionsModal').classList.remove('active');
             returnToSettings = false;
-        });
+            returnFromInstructions();
+        };
+
+        document.getElementById('closeInstructions').addEventListener('click', closeInstructionsModal);
+
+        // The same action as "close", pinned to the top of the panel so leaving
+        // does not mean scrolling to the end of the rules first.
+        const instructionsBack = document.getElementById('instructionsBack');
+        if (instructionsBack) {
+            instructionsBack.addEventListener('click', closeInstructionsModal);
+        }
 
         document.getElementById('instructionsToSettings').addEventListener('click', () => {
             document.getElementById('instructionsModal').classList.remove('active');
@@ -524,6 +560,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (e.target.id === 'instructionsModal') {
                 document.getElementById('instructionsModal').classList.remove('active');
                 returnToSettings = false;
+                returnFromInstructions();
             }
         });
 

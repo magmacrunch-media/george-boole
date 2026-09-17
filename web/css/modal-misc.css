@@ -113,6 +113,69 @@
     padding: 8px 12px;
 }
 
+/* The back bar stays pinned while the rules scroll under it.
+
+   Sticky needs the panel's top padding gone: a sticky element pins inside the
+   padding box, so with 35px of padding the rules would scroll up through a
+   band above the bar and show there. The bar supplies that space itself. Both
+   selectors are one class heavier than responsive.css's
+   `.instructions-content { padding: 20px !important }`, which would otherwise
+   win on phones by coming later.
+
+   The bar's background only has to cover the content column: the side padding
+   holds no content, so nothing scrolls through it. */
+.instructions-modal .instructions-content {
+    padding-top: 0 !important;
+}
+
+.instructions-modal .instructions-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    padding: 16px 0 12px;
+    margin-bottom: 12px;
+    background: #1c1c31;
+    border-bottom: 2px solid rgba(138, 43, 226, 0.45);
+}
+
+/* A dark tile, like the how-to-play screen's secondary buttons. Every
+   declaration fights `.instructions-content button`, which sets its full-width
+   purple look with !important. */
+.instructions-content .modal-back {
+    width: auto !important;
+    margin: 0 !important;
+    padding: 9px 12px !important;
+    background: #2a2a4a !important;
+    border: 0 !important;
+    color: #00ffff !important;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow:
+        inset 3px 3px 0 #4a4a78,
+        inset -3px -3px 0 #16162a,
+        0 0 0 3px #0a0a14,
+        0 4px 0 3px #0a0a14 !important;
+    transform: none;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+
+.instructions-content .modal-back:hover {
+    background: #34345a !important;
+    transform: none;
+}
+
+.instructions-content .modal-back:active {
+    transform: translateY(4px);
+    box-shadow:
+        inset 3px 3px 0 #16162a,
+        inset -3px -3px 0 #4a4a78,
+        0 0 0 3px #0a0a14,
+        0 0 0 3px #0a0a14 !important;
+}
+
 /* =============================================
    CREDITS MODAL
    ============================================= */

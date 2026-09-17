@@ -53,176 +53,299 @@
         0 0 40px rgba(138, 43, 226, 0.7);
 }
 
-/* Flavor / quote section */
-.lore-flavor {
-    text-align: center;
-    margin-bottom: 10px;
-}
+/* =============================================
+   HOW TO PLAY: the rules drawn as tiles
+   ============================================= */
 
-.lore-quote {
-    font-size: 10px;
-    color: #00ff00;
-    line-height: 1.8;
-    text-shadow: 1px 1px 0px #006600;
-    letter-spacing: 0.5px;
-    font-family: 'Press Start 2P', cursive;
-}
-
-.lore-attribution {
-    font-size: 8px;
+.lore-title {
     color: #00ffff;
-    margin-top: 12px;
-    text-shadow: 1px 1px 0px #006699;
+    font-size: 16px;
+    font-weight: normal;
+    text-align: center;
+    letter-spacing: 2px;
+    margin: 0 0 10px;
+    text-shadow: 3px 3px 0 #0066cc, 0 0 15px rgba(0, 255, 255, 0.7);
+}
+
+.lore-lead {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 9px;
+    text-align: center;
     letter-spacing: 0.5px;
-    font-family: 'Press Start 2P', cursive;
+    line-height: 1.6;
+    margin: 0 0 22px;
 }
 
-/* Section divider */
-.lore-content .section-divider {
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #8a2be2, transparent);
-    margin: 25px 0;
-}
-
-/* Rules list */
-.lore-rules {
+.lore-examples {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 18px;
+    margin-bottom: 18px;
 }
 
-.lore-rule {
+.lore-example {
+    text-align: center;
+}
+
+.lore-eq {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
     justify-content: center;
+    gap: 6px;
 }
 
-.lore-rule-icon {
-    font-size: 11px;
-    color: #00ffff;
-    text-shadow: 0 0 6px rgba(0, 255, 255, 0.6);
+/* Real .tile markup, shown at a fixed size instead of a grid fraction. The
+   board gives tiles 1fr of a four-column grid; here there is no grid, so the
+   size is set and the type steps down to match. .gate-tile sets its symbol
+   size with !important, so the override has to as well. */
+.lore-eq .tile {
+    width: 50px;
+    height: 50px;
+    flex: 0 0 50px;
+    padding: 4px;
+    box-sizing: border-box;
+    transition: none;
 }
 
-.lore-rule-text {
-    font-size: 9px;
-    color: rgba(255, 255, 255, 0.9);
+.lore-eq .tile-decimal {
+    font-size: 14px;
+}
+
+.lore-eq .tile-binary {
+    font-size: 8px;
     letter-spacing: 0.5px;
-    font-family: 'Press Start 2P', cursive;
+}
+
+.lore-eq .gate-tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px !important;
+}
+
+/* The examples' colours, pinned to the 4-bit (SNES) palette.
+
+   Every tile colour in this game is scoped to a theme --
+   body[data-theme="snes"] .tile[data-value="5"] and so on -- and the body has
+   no theme until a mode is picked. So on this screen, which comes first, real
+   tile markup renders as transparent numbers and grey gates, and the pictures
+   teach nothing. After a game the body carries that mode's theme instead, so
+   the examples would change colour depending on what was last played.
+
+   Values read from the SNES theme with getComputedStyle on the real markup, not
+   retyped from themes.css. Every declaration here is !important, deliberately:
+   the themes set gate colours with !important and number-tile text through
+   more specific intensity rules, so anything weaker let the 8-bit theme repaint
+   half the examples after an 8-bit game. These illustrate 4-bit play; they are
+   not live tiles, so nothing is meant to restyle them. Text colour is set on
+   each value's own rule as well as the shared one: 3 is the 2-bit ceiling, and
+   the Game Boy theme restyles the max tile at higher specificity. */
+.lore-screen .lore-eq .tile {
+    border: 2px solid rgb(58, 58, 74) !important;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.2), inset -2px -2px 0 rgba(0, 0, 0, 0.5) !important;
+    color: #ffffff !important;
+    text-shadow: none !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="1"] {
+    color: #ffffff !important;
+    background: linear-gradient(135deg, rgb(90, 90, 106) 0%, rgb(74, 74, 90) 100%) !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="3"] {
+    color: #ffffff !important;
+    background: rgb(46, 24, 112) !important;
+    border-color: rgb(96, 96, 112) !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="5"] {
+    color: #ffffff !important;
+    background: rgb(46, 24, 112) !important;
+    border-color: rgb(160, 112, 48) !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="6"] {
+    color: #ffffff !important;
+    background: rgb(74, 30, 160) !important;
+    border-color: rgb(160, 112, 48) !important;
+}
+
+/* The max tile: the rainbow the board gives a tile at the ceiling. */
+.lore-screen .lore-eq .tile[data-value="15"] {
+    background: linear-gradient(135deg, rgb(255, 105, 180) 0%, rgb(201, 79, 216) 14%, rgb(138, 43, 226) 28%, rgb(91, 141, 238) 42%, rgb(0, 191, 255) 56%, rgb(0, 232, 192) 70%, rgb(127, 255, 80) 84%, rgb(255, 215, 0) 100%) !important;
+    border-color: rgba(255, 255, 255, 0.6) !important;
+    box-shadow: inset 2px 2px 0 rgba(255, 255, 255, 0.5), inset -2px -2px 0 rgba(0, 0, 0, 0.2) !important;
+    color: #000000 !important;
+    text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="1"] .tile-binary,
+.lore-screen .lore-eq .tile[data-value="3"] .tile-binary {
+    color: rgb(255, 221, 68) !important;
+}
+
+.lore-screen .lore-eq .tile[data-value="15"] .tile-binary {
+    color: #000000 !important;
+}
+
+.lore-screen .lore-eq .gate-tile[data-gate="xor"] {
+    background: rgb(0, 212, 170) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: rgb(0, 26, 20) !important;
+}
+
+.lore-screen .lore-eq .gate-tile[data-gate="not"] {
+    background: rgb(16, 8, 32) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: rgb(224, 208, 255) !important;
+}
+
+.lore-arrow {
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 12px;
+    margin: 0 2px;
+}
+
+/* The overflow payout, in the colours of the overflow banner game.js shows. */
+.lore-bonus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    padding: 0 10px;
+    background: rgba(255, 100, 100, 0.95);
+    color: #ffffff;
+    font-size: 14px;
+    box-shadow: inset 3px 3px 0 rgba(255, 255, 255, 0.35), inset -3px -3px 0 rgba(0, 0, 0, 0.3);
+    text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+.lore-caption {
+    margin: 8px 0 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 8px;
+    letter-spacing: 0.5px;
     line-height: 1.6;
 }
 
-.lore-rule-highlight {
-    font-size: 10px;
+.lore-caption em {
+    font-style: normal;
     color: #ffff00;
-    text-shadow: 1px 1px 0px #999900, 0 0 8px rgba(255, 255, 0, 0.5);
-    font-family: 'Press Start 2P', cursive;
+    text-shadow: 1px 1px 0 #999900;
 }
 
-.lore-rule-gates {
-    font-size: 13px;
-    color: #ff00ff;
-    text-shadow: 0 0 8px rgba(255, 0, 255, 0.6);
-    letter-spacing: 4px;
-}
-
-/* Continue button */
-.lore-continue-btn {
+.lore-rules-link {
     display: block;
-    margin: 0 auto;
-    background: linear-gradient(180deg, #8a2be2 0%, #4b0082 100%);
-    border: 4px solid #00ffff;
-    padding: 16px 32px;
-    font-size: 12px;
-    color: #ffff00;
-    cursor: pointer;
-    font-family: 'Press Start 2P', cursive;
+    margin: 0 auto 20px;
+    padding: 6px 8px;
+    background: none;
+    border: 0;
+    color: #00ffff;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
     letter-spacing: 1px;
-    box-shadow: 
-        0 4px 0 #0f0f1e,
-        0 0 15px rgba(0, 255, 255, 0.5);
-    transition: all 0.2s;
-    animation: loreBtnPulse 2.5s ease-in-out infinite;
+    cursor: pointer;
+    /* container.css styles every <button> with a drop shadow, a glow and a
+       hover lift; a text link wants none of them. */
+    box-shadow: none;
+    transform: none;
 }
 
-@keyframes loreBtnPulse {
-    0%, 100% { 
-        box-shadow: 
-            0 4px 0 #0f0f1e,
-            0 0 15px rgba(0, 255, 255, 0.5);
-    }
-    50% { 
-        box-shadow: 
-            0 4px 0 #0f0f1e,
-            0 0 25px rgba(0, 255, 255, 0.8),
-            0 0 40px rgba(138, 43, 226, 0.4);
-    }
-}
-
-.lore-continue-btn:hover {
-    background: linear-gradient(180deg, #9d3bff 0%, #5b0099 100%);
-    transform: translateY(-2px);
-    box-shadow: 
-        0 6px 0 #0f0f1e,
-        0 0 25px rgba(0, 255, 255, 0.8);
-    animation: none;
-}
-
-.lore-continue-btn:active {
-    transform: translateY(2px);
-    box-shadow: 
-        0 2px 0 #0f0f1e,
-        0 0 10px rgba(0, 255, 255, 0.5);
-}
-
-.lore-continue-btn span {
-    text-shadow: 
-        2px 2px 0px #999900,
-        0 0 10px rgba(255, 255, 0, 0.5);
+.lore-rules-link:hover,
+.lore-rules-link:focus-visible {
+    color: #ffff00;
+    background: none;
+    box-shadow: none;
+    transform: none;
 }
 
 /* =============================================
-   LORE QUICK ACTION BUTTONS
+   BUTTONS
+   Drawn like the title screen's start button, and like the tiles: a flat
+   colour, a pixel bevel, a hard outline and a solid drop the button sits down
+   into when pressed. SELECT MODE is the primary action and gets the start
+   button's cyan; the two quick actions are dark tiles, so there is one obvious
+   thing to press on the screen.
    ============================================= */
+
+.lore-continue-btn,
+.lore-action-btn {
+    font-family: 'Press Start 2P', monospace;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+    -webkit-tap-highlight-color: transparent;
+}
+
+.lore-continue-btn {
+    display: block;
+    margin: 0 auto;
+    padding: 16px 28px;
+    background: #00ffff;
+    color: #0a0a14;
+    font-size: 12px;
+    letter-spacing: 2px;
+    box-shadow:
+        inset 4px 4px 0 #b3ffff,
+        inset -4px -4px 0 #00a8bd,
+        0 0 0 4px #0a0a14,
+        0 8px 0 4px #0a0a14,
+        0 0 24px 4px rgba(0, 255, 255, 0.22);
+}
+
+.lore-continue-btn:hover {
+    background: #5cffff;
+}
+
+.lore-continue-btn:active {
+    transform: translateY(8px);
+    box-shadow:
+        inset 4px 4px 0 #00a8bd,
+        inset -4px -4px 0 #b3ffff,
+        0 0 0 4px #0a0a14,
+        0 0 0 4px #0a0a14,
+        0 0 24px 4px rgba(0, 255, 255, 0.22);
+}
 
 .lore-quick-actions {
     display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
+    gap: 14px;
+    margin-bottom: 26px;
     justify-content: center;
 }
 
 .lore-action-btn {
-    font-family: 'Press Start 2P', cursive;
-    font-size: 8px;
-    padding: 10px 14px;
-    background: linear-gradient(180deg, #d946ef 0%, #a21caf 100%);
-    border: 2px solid #00ffff;
-    color: #fff;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-radius: 0;
     flex: 1;
     min-width: 120px;
-    box-shadow: 
-        0 3px 0 rgba(0, 0, 0, 0.4),
-        0 0 12px rgba(217, 70, 239, 0.5);
+    padding: 11px 12px;
+    background: #2a2a4a;
+    color: #00ffff;
+    font-size: 8px;
+    letter-spacing: 1px;
+    box-shadow:
+        inset 3px 3px 0 #4a4a78,
+        inset -3px -3px 0 #16162a,
+        0 0 0 3px #0a0a14,
+        0 5px 0 3px #0a0a14;
 }
 
 .lore-action-btn:hover {
-    background: linear-gradient(180deg, #e879f9 0%, #c026d3 100%);
-    transform: translateY(-2px);
-    box-shadow: 
-        0 5px 0 rgba(0, 0, 0, 0.4),
-        0 0 18px rgba(217, 70, 239, 0.7);
+    background: #34345a;
 }
 
 .lore-action-btn:active {
-    transform: translateY(2px);
-    box-shadow: 
-        0 1px 0 rgba(0, 0, 0, 0.4),
-        0 0 8px rgba(217, 70, 239, 0.5);
+    transform: translateY(5px);
+    box-shadow:
+        inset 3px 3px 0 #16162a,
+        inset -3px -3px 0 #4a4a78,
+        0 0 0 3px #0a0a14,
+        0 0 0 3px #0a0a14;
+}
+
+.lore-continue-btn:focus-visible,
+.lore-action-btn:focus-visible {
+    outline: 3px dashed #ff00ff;
+    outline-offset: 8px;
 }
