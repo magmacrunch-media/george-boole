@@ -44,10 +44,20 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
     /// calls it again on every later change of state — signing out, returning
     /// from Settings, a second sign-in sheet. A JavaScript promise can only be
     /// settled once, so the calls waiting on the first outcome are held here
-    /// and released together, after which later invocations only update
-    /// `GKLocalPlayer.local.isAuthenticated`, which `signIn` reads directly.
+    /// and released together.
     private var waiting: [CAPPluginCall] = []
     private var handlerInstalled = false
+    /// Whether the handler has reported an outcome at least once. A `signIn`
+    /// arriving afterwards must be answered from the player's current state
+    /// rather than queued: the handler has already said its piece and may
+    /// never fire again, and a queued call would simply hang.
+    ///
+    /// That is not hypothetical. The shim calls `signIn` as the page loads,
+    /// GameKit answered 56ms later with "local player has not been
+    /// authenticated", and every later call — a sign-in button, a retry —
+    /// waited forever on a handler that had already finished. The app looked
+    /// fine, because the one call it makes at startup is the one that worked.
+    private var reported = false
 
     // MARK: - signIn
 
@@ -55,6 +65,11 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
         DispatchQueue.main.async {
             if GKLocalPlayer.local.isAuthenticated {
                 call.resolve(["authenticated": true])
+                return
+            }
+            if self.reported {
+                // Not signed in, and GameKit has already said so once.
+                call.resolve(["authenticated": false])
                 return
             }
 
@@ -77,6 +92,7 @@ public class GameCenterPlugin: CAPPlugin, CAPBridgedPlugin {
                 // or a player who declined. Both mean "not signed in", which
                 // the game already handles.
                 let authenticated = GKLocalPlayer.local.isAuthenticated
+                self.reported = true
                 if authenticated {
                     // The floating Game Center badge overlaps a board that
                     // already fills the screen.
