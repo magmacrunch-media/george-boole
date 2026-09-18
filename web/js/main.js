@@ -623,18 +623,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         // Settings links to other modals
-        document.getElementById('settingsHowToPlay').addEventListener('click', () => {
-            returnToSettings = true; // Remember we came from settings
-            document.getElementById('settingsModal').classList.remove('active');
-            const instructionsModal = document.getElementById('instructionsModal');
-            instructionsModal.classList.add('active');
-            
-            // Reset scroll position to top
-            const instructionsContent = instructionsModal.querySelector('.instructions-content');
-            if (instructionsContent) {
-                instructionsContent.scrollTop = 0;
-            }
-        });
+        // The codex, not the rules: "full rules" is already one tap away on
+        // the board behind this modal, and the codex was reachable only by
+        // tapping a gate symbol in the rules strip, which nothing announces.
+        const settingsCodex = document.getElementById('settingsCodex');
+        if (settingsCodex) {
+            settingsCodex.addEventListener('click', () => {
+                document.getElementById('settingsModal').classList.remove('active');
+                // js/codex.js owns the modal and loads before this file, but
+                // the game must not break if it ever does not.
+                if (window.BooleCodex) window.BooleCodex.open();
+            });
+        }
 
         document.getElementById('settingsCredits').addEventListener('click', () => {
             returnToSettings = true; // Remember we came from settings
