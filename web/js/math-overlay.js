@@ -8,7 +8,7 @@
 // single frame. This draws two things over the board after every move:
 //
 //  - a point label on each tile that scored: "+6 XOR", "+5 SAME",
-//    "+45 OVERFLOW", "+12 NEW HIGH", or "AND = 0" for a gate that cleared its
+//    "+45 OVERFLOW", "+12 HEIGHT", or "AND = 0" for a gate that cleared its
 //    tiles. Always on: it only explains the score.
 //  - "show the math": the bit columns of the move's most interesting gate,
 //    drawn above the tile it produced, result bits lighting left to right.
@@ -72,7 +72,7 @@
             case 'overflow':
                 return `+${op.points} OVERFLOW`;
             case 'height':
-                return `+${op.points} NEW HIGH`;
+                return `+${op.points} HEIGHT`;
             default:
                 return `+${op.points}`;
         }

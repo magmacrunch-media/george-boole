@@ -888,7 +888,7 @@ class BooleBoard {
         const notification = document.getElementById('overflowNotification');
         if (!notification) return;
         
-        notification.textContent = `>>> NEW HIGH ${value} (+${bonus})`;
+        notification.textContent = `>>> HEIGHT BONUS ${value} (+${bonus})`;
         notification.style.display = 'block';
         notification.style.opacity = '1';
         notification.style.transform = 'translate(-50%, -50%) scale(1)';
