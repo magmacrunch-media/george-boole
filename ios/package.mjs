@@ -295,6 +295,53 @@ edit(state, 'let the viewport reach the notch', (html) =>
   )
 );
 
+// The credits, in the app only. The site's line is "last updated: <date>",
+// which answers nothing useful about an installed app; store/metadata.md
+// points support at magmacrunch.com/support/, and the first thing anybody is
+// asked for there is the version they are running. The two URLs are the ones
+// on file with App Store Connect, so a reviewer looking for the privacy
+// policy inside the app finds it rather than taking our word for it.
+//
+// This step runs BEFORE the outbound-links one below, so these two links get
+// target="_blank" from that rule rather than carrying their own copy of it.
+//
+// The version is read from project.pbxproj rather than retyped: a version in
+// two places is a version that disagrees with itself the first time somebody
+// bumps one. Both build configurations must agree, or the number shown would
+// depend on which one was built.
+function appVersion() {
+  const pbx = join(IOS, 'App', 'App', 'App.xcodeproj', 'project.pbxproj');
+  if (!existsSync(pbx)) die(`the Xcode project is missing: ${pbx}`);
+  const text = readFileSync(pbx, 'utf8');
+  const read = (key) => {
+    const found = [...text.matchAll(new RegExp(`${key} = ([^;]+);`, 'g'))].map((m) => m[1].trim());
+    if (found.length === 0) die(`${key} is not set in project.pbxproj`);
+    if (new Set(found).size > 1) {
+      die(
+        `${key} differs between build configurations: ${[...new Set(found)].join(', ')}`,
+        'The credits would then show whichever configuration happened to be built.'
+      );
+    }
+    return found[0];
+  };
+  return { marketing: read('MARKETING_VERSION'), build: read('CURRENT_PROJECT_VERSION') };
+}
+
+const version = appVersion();
+
+edit(state, 'credits: the app version and the store URLs', (html) =>
+  html.replace(
+    /<p><strong>last updated:<\/strong><br>[^<]*<\/p>/,
+    [
+      `<p><strong>version:</strong><br>${version.marketing} (build ${version.build})</p>`,
+      '',
+      '            <p><strong>privacy &amp; support:</strong><br>',
+      '            • <a href="https://magmacrunch.com/privacy/">magmacrunch.com/privacy</a><br>',
+      '            • <a href="https://magmacrunch.com/support/">magmacrunch.com/support</a></p>',
+    ].join('\n')
+  )
+);
+
 edit(state, 'open outbound links in the system browser', (html) =>
   html.replace(/<a href="(https?:\/\/[^"]+)"/g, '<a href="$1" target="_blank" rel="noopener"')
 );

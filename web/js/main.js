@@ -7,9 +7,11 @@ function getScoreboardDefault() {
     return localStorage.getItem('lastPlayedDifficulty') || 'overall';
 }
 
-// Track if we opened instructions/credits from settings
+// Set when settings opened whatever is on top of it, and read by that
+// thing's every exit. It used to be set and cleared and never read, so
+// closing credits from settings closed both -- and since opening settings
+// from the rules screen hides that screen, what was left was an empty board.
 let returnToSettings = false;
-let returnToSettingsFromCodex = false;
 
 // Track if we opened instructions from difficulty modal
 let returnToLoreScreen = false;
@@ -634,7 +636,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // the game must not break if it ever does not.
                 if (!window.BooleCodex) return;
                 document.getElementById('settingsModal').classList.remove('active');
-                returnToSettingsFromCodex = true;
+                returnToSettings = true;
                 window.BooleCodex.open();
             });
         }
@@ -643,8 +645,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         // rules do. It has to: opening settings from the rules screen hides
         // that screen, so simply closing the codex left an empty board.
         document.addEventListener('boole:codex-closed', () => {
-            if (!returnToSettingsFromCodex) return;
-            returnToSettingsFromCodex = false;
+            if (!returnToSettings) return;
+            returnToSettings = false;
             document.getElementById('settingsModal').classList.add('active');
         });
 
@@ -718,10 +720,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Credits modal controls
-        document.getElementById('closeCredits').addEventListener('click', () => {
+        // Both ways out of credits go back where they came from. The
+        // "settings" button below is the explicit version of the same thing,
+        // kept because it says so on the button.
+        const closeCreditsModal = () => {
             document.getElementById('creditsModal').classList.remove('active');
+            if (!returnToSettings) return;
             returnToSettings = false;
-        });
+            document.getElementById('settingsModal').classList.add('active');
+        };
+
+        document.getElementById('closeCredits').addEventListener('click', closeCreditsModal);
 
         document.getElementById('creditsToSettings').addEventListener('click', () => {
             document.getElementById('creditsModal').classList.remove('active');
@@ -730,10 +739,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         document.getElementById('creditsModal').addEventListener('click', (e) => {
-            if (e.target.id === 'creditsModal') {
-                document.getElementById('creditsModal').classList.remove('active');
-                returnToSettings = false;
-            }
+            if (e.target.id === 'creditsModal') closeCreditsModal();
         });
     } catch (error) {
         console.error('Error initializing game:', error);

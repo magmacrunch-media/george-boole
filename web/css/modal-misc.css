@@ -201,13 +201,19 @@
     background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
     padding: 30px;
     border-radius: 0;
-    box-shadow: 
+    box-shadow:
         0 0 0 4px #8a2be2,
         0 0 0 8px #00ffff,
         0 0 40px rgba(138, 43, 226, 0.9);
     border: 4px solid #0f0f1e;
     max-width: 500px;
     width: 90%;
+    /* The list is taller than a phone: 896px at 375x812, against a viewport
+       of 812. Nothing scrolled, so the close and settings buttons sat below
+       the bottom edge and the only way out was the backdrop. The instructions
+       modal has carried the same pair of rules inline since it was written. */
+    max-height: 85vh;
+    overflow-y: auto;
 }
 
 .credits-content h3 {
