@@ -7,11 +7,6 @@ function getScoreboardDefault() {
     return localStorage.getItem('lastPlayedDifficulty') || 'overall';
 }
 
-// Set when settings opened whatever is on top of it, and read by that
-// thing's every exit. It used to be set and cleared and never read, so
-// closing credits from settings closed both -- and since opening settings
-// from the rules screen hides that screen, what was left was an empty board.
-let returnToSettings = false;
 
 // Track if we opened instructions from difficulty modal
 let returnToLoreScreen = false;
@@ -591,7 +586,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const closeInstructionsModal = () => {
             document.getElementById('instructionsModal').classList.remove('active');
-            returnToSettings = false;
             returnFromInstructions();
         };
 
@@ -607,13 +601,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('instructionsToSettings').addEventListener('click', () => {
             document.getElementById('instructionsModal').classList.remove('active');
             document.getElementById('settingsModal').classList.add('active');
-            returnToSettings = false;
         });
 
         document.getElementById('instructionsModal').addEventListener('click', (e) => {
             if (e.target.id === 'instructionsModal') {
                 document.getElementById('instructionsModal').classList.remove('active');
-                returnToSettings = false;
                 returnFromInstructions();
             }
         });
@@ -673,32 +665,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // The codex, not the rules: "full rules" is already one tap away on
         // the board behind this modal, and the codex was reachable only by
         // tapping a gate symbol in the rules strip, which nothing announces.
-        const settingsCodex = document.getElementById('settingsCodex');
-        if (settingsCodex) {
-            settingsCodex.addEventListener('click', () => {
-                // js/codex.js owns the modal and loads before this file, but
-                // the game must not break if it ever does not.
-                if (!window.BooleCodex) return;
-                document.getElementById('settingsModal').classList.remove('active');
-                returnToSettings = true;
-                window.BooleCodex.open();
+        const loreCredits = document.getElementById('loreCredits');
+        if (loreCredits) {
+            loreCredits.addEventListener('click', () => {
+                loreScreen.classList.remove('active');
+                returnToLoreScreen = true;
+                document.getElementById('creditsModal').classList.add('active');
             });
         }
-
-        // Closing the codex goes back to settings, as credits and the full
-        // rules do. It has to: opening settings from the rules screen hides
-        // that screen, so simply closing the codex left an empty board.
-        document.addEventListener('boole:codex-closed', () => {
-            if (!returnToSettings) return;
-            returnToSettings = false;
-            document.getElementById('settingsModal').classList.add('active');
-        });
-
-        document.getElementById('settingsCredits').addEventListener('click', () => {
-            returnToSettings = true; // Remember we came from settings
-            document.getElementById('settingsModal').classList.remove('active');
-            document.getElementById('creditsModal').classList.add('active');
-        });
 
         // Side panel "full rules" link opens instructions modal
         const sidePanelHowToPlay = document.getElementById('sidePanelHowToPlay');
@@ -778,15 +752,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
 
-        // Credits modal controls
-        // Both ways out of credits go back where they came from. The
-        // "settings" button below is the explicit version of the same thing,
-        // kept because it says so on the button.
+        // Credits modal controls. Opened from the rules screen, which sits
+        // above this modal in the stack and so is hidden while it is up;
+        // every way out puts it back.
         const closeCreditsModal = () => {
             document.getElementById('creditsModal').classList.remove('active');
-            if (!returnToSettings) return;
-            returnToSettings = false;
-            document.getElementById('settingsModal').classList.add('active');
+            returnFromInstructions();
         };
 
         document.getElementById('closeCredits').addEventListener('click', closeCreditsModal);
@@ -794,7 +765,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         document.getElementById('creditsToSettings').addEventListener('click', () => {
             document.getElementById('creditsModal').classList.remove('active');
             document.getElementById('settingsModal').classList.add('active');
-            returnToSettings = false;
         });
 
         document.getElementById('creditsModal').addEventListener('click', (e) => {

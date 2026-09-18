@@ -41,7 +41,7 @@
     <link rel="stylesheet" href="css/container.css?v=a30fdcef">
     <link rel="stylesheet" href="css/game.css?v=3eaa3eb3">
     <link rel="stylesheet" href="css/modal-title.css?v=71636a7e">
-    <link rel="stylesheet" href="css/modal-lore.css?v=64b89acc">
+    <link rel="stylesheet" href="css/modal-lore.css?v=11d41076">
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
@@ -299,6 +299,7 @@
                 <button class="lore-rules-link" id="loreFullRules" type="button">full rules &rarr;</button>
                 <!-- Opened by js/codex.js. -->
                 <button class="lore-rules-link" id="loreCodex" type="button">gate codex &rarr;</button>
+                <button class="lore-rules-link" id="loreCredits" type="button">credits &rarr;</button>
             </div>
 
             <div class="lore-quick-actions">
@@ -659,17 +660,10 @@
                 <p style="font-size: 8px; color: rgba(255, 255, 255, 0.6); margin-top: 10px; line-height: 1.4;">Turns off visual effects to save power.</p>
             </div>
             
-            <div class="settings-section">
-                <h4>information</h4>
-                <div class="settings-links">
-                    <!-- Not "how to play": that opened the full rules, which
-                         the rules strip already links to by that name from the
-                         same screen. The codex is the one thing here with no
-                         obvious way in during a game. -->
-                    <button class="settings-link" id="settingsCodex">gate codex</button>
-                    <button class="settings-link" id="settingsCredits">credits</button>
-                </div>
-            </div>
+            <!-- No "information" section here. It held a gate codex link and a
+                 credits link, and both are on the rules screen now, beside
+                 "full rules"; the codex is also on the strip under the board
+                 and on every gate symbol. Settings is for settings. -->
             
             <button id="closeSettings">close</button>
         </div>
@@ -714,7 +708,7 @@
     <script src="js/game.js?v=8311982c"></script>
     <script src="js/math-overlay.js?v=44ff0d30"></script>
     <script src="js/codex.js?v=e5f34bee"></script>
-    <script src="js/main.js?v=8a86c776"></script>
+    <script src="js/main.js?v=573b74a3"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
 <script src="../shared/adenosine-chat.js?v=4a6b886b"></script>
