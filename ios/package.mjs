@@ -246,7 +246,7 @@ edit(state, 'drop chat and score-server tags', (html) =>
 edit(state, 'unconnect ScoreClient', (html) =>
   html.replace(
     /new AdScore\.ScoreClient\(\)\.auto\(MC_SCORE_OPTS\)/,
-    'new AdScore.ScoreClient() /* offline: localStorage only until GameKit lands */'
+    'new AdScore.ScoreClient() /* never connected: bests are local, the rest is Game Center */'
   )
 );
 

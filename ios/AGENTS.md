@@ -7,8 +7,11 @@ node ios/package.mjs
 ```
 
 That reads `../web/`, applies the transforms below, and writes `ios/www/` —
-Capacitor's `webDir`, generated and gitignored. There is no source in this
-folder except the script, this file, and the Xcode project once it exists.
+Capacitor's `webDir`, generated and gitignored. No copy of the *game* lives
+here: what this folder holds beside the script and the Xcode project is
+`shim/` (the four files bundled into `www/shim/`), `tools/` (the icon, launch
+image, screenshot and metadata scripts), `store/metadata.md`, and
+`assets/apple-touch-icon.png`, which the build refuses to run without.
 
 ## Why a derivation and not a fourth version
 
@@ -56,7 +59,7 @@ Same shape as the Wii Makefile's `MAGNOLIA=` and the website's `GAME_SRC=`.
 | `viewport-fit=cover` + `css/ios.css` | Safe-area insets, no rubber-banding, no tap highlight, no long-press callout. The site has no reason to carry any of it. |
 | drop every `.ogg`, and pin `AUDIO_EXT` to `.mp3` | Every clip ships twice and iOS has no Vorbis decoder, so 2.7MB of the bundle could never be decoded — `www/` went from 6.2MB to 3.5MB. **Both halves are required.** Dropping the files alone leaves `main.js` still asking for them, from a `canPlayType()` probe that is false on WebKit and true nearly everywhere else: the bundle then works on a phone and 404s in Chrome, where the failed decode takes `AdAudio.init` down and the loading screen never lifts — breaking the one way this bundle can be tested without a Mac, in the direction that looks like the audio work being wrong. Safe only here, and only because the runtime is WebKit by definition; `web/` keeps both, since it is served to Firefox too. |
 | outbound `<a href="http…">` gets `target="_blank" rel="noopener"` | So the credits link opens in the system browser instead of navigating the app away from itself. |
-| drop `tests/`, `performance-test.html`, the guides, `title-card.html` | Dead weight, and `performance-test.html` is a second entry point a reviewer could reach. |
+| drop `tests/`, `performance-test.html`, the guides, `title-card.html`, `README.md`, `audio/README.txt` | Dead weight, and `performance-test.html` is a second entry point a reviewer could reach. |
 
 ## The two guards
 
@@ -168,7 +171,7 @@ wrapper. What moves that is native integration, not polish.
 | Haptics | `ios/shim/haptics.js`, via `@capacitor/haptics`. Listens to the `boole:*` events; the site gains no Capacitor dependency because the shim never reaches it. A slide is `LIGHT` and a merge `MEDIUM` — a move fires on most swipes, and anything heavier stops being information within a minute. Overflow is a `SUCCESS` *notification* rather than an impact: it is the biggest single payout in the game and the one moment that should not feel like a merge. A Gauntlet promotion lands ~800ms after the overflow that earned it, so it is three heavy taps rather than a second `SUCCESS` nobody could tell from the first. |
 | Genuinely offline | Not a claim, a build failure: the final sweep rejects any asset fetched over `http(s)`, and there is no `NSAppTransportSecurity` block because there is nothing to except. |
 | Portrait lock and safe-area layout | `Info.plist` plus the generated `css/ios.css`. |
-| Game Center | The strongest item. Native since 2026-09-17: `App/GameCenterPlugin.swift`, registered by `GameViewController`. What is left is not code — the leaderboards and achievements in App Store Connect, and the capability, which needs the paid account. |
+| Game Center | The strongest item. Native since 2026-09-17: `App/App/App/GameCenterPlugin.swift`, registered by `App/App/App/GameViewController.swift`. What is left is not code — the leaderboards and achievements in App Store Connect, and the capability, which needs the paid account. |
 
 Note `'HEAVY'` and `'SUCCESS'` in the haptics shim are not matched by name:
 `@capacitor/haptics` only string-compares `MEDIUM`/`LIGHT` and `WARNING`/
@@ -176,7 +179,9 @@ Note `'HEAVY'` and `'SUCCESS'` in the haptics shim are not matched by name:
 `.heavy` and `.success`. They are the documented API and they do the right
 thing, by default rather than by comparison — spelled out so nobody "fixes"
 them. The package ships no `PrivacyInfo.xcprivacy`, which is correct:
-`UIFeedbackGenerator` is not a required-reason API.
+`UIFeedbackGenerator` is not a required-reason API. The app has its own, at
+`App/App/App/PrivacyInfo.xcprivacy`, and what Apple checks is the aggregate of
+the two -- Product > Archive > Generate Privacy Report is how to see it.
 
 ## Not done yet
 
@@ -220,7 +225,7 @@ The build is real and the output runs. These are the open pieces:
   of the page: sign-in at launch, 120 then 30 both submitted to `hexad`, 0
   skipped, and the card's button opening the last-played mode's leaderboard.
 
-  `App/GameCenterPlugin.swift` is the native side: `signIn`, `submitScore`,
+  `App/App/App/GameCenterPlugin.swift` is the native side: `signIn`, `submitScore`,
   `showLeaderboard` and `reportAchievement`, registered by
   `GameViewController.capacitorDidLoad()` for the reason given further up.
   Verified in the simulator: the plugin registers, the shim sees it, and
@@ -239,7 +244,7 @@ The build is real and the output runs. These are the open pieces:
   `GKGameCenterViewController` with no delegate does not dismiss itself: the
   Done button does nothing and the player is stuck on Apple's screen.
 
-  `App/App.entitlements` carries `com.apple.developer.game-center` and is
+  `App/App/App/App.entitlements` carries `com.apple.developer.game-center` and is
   wired through `CODE_SIGN_ENTITLEMENTS`. A simulator build signs ad hoc and
   ignores it; a device build or archive fails on it, naming that entitlement,
   until Game Center is enabled for the bundle id on the account. That failure
@@ -447,8 +452,17 @@ The build is real and the output runs. These are the open pieces:
   ground, a one-cell dark outline, cyan lenses with a white glint and a cyan
   bow tie, and a head-and-shoulders crop with the coat running off the bottom.
 
-  Two things to keep. **Judge it at 60, 120 and 180px**, not 1024:
-  `--sheet <png>` writes those sizes, masked, on light and dark wallpaper.
+  There are two icons. `AppIcon-512@2x.png` is the one above;
+  `AppIcon-512@2x-dark.png` is a deeper version of the same sprite, paired
+  with it by an `appearances` entry in the appiconset's `Contents.json`,
+  because from iOS 18 the system dims a light icon on a dark home screen and
+  took the magenta nearly to black. The tinted variant is derived by the
+  system, so there is no third file.
+
+  Two things to keep. **Judge them at 60, 120 and 180px**, not 1024:
+  `--sheet <png>` writes both at those sizes, masked -- the light icon on a
+  light wallpaper and the dark one on a dark wallpaper, which is where each is
+  actually shown.
   And the script **refuses an outline that iOS's rounded corners would cut**.
   Solid coat running into a corner is fine, since the rounding only trims
   colour; the first redraw had narrower shoulders whose outline crossed the

@@ -1,6 +1,16 @@
 # 🔊 Sound Effects System Guide
 ## George Boole has entered the chat
 
+> **How this is wired today.** The guide below is the brief the six effects
+> were written to, and it still describes what each one is for. Two things
+> have changed since: playback goes through the adenosine bundle, so the calls
+> below now read `AdAudio.playSfx('merge')` where they used to say
+> `SoundEffects.play('merge')`, a helper this game no longer has; and
+> every clip ships as **both `.ogg` and `.mp3`** — iOS has no Vorbis decoder,
+> so an ogg-only clip is silent on every iPhone. The "code location" line
+> numbers are from 2026 and are not maintained; `grep playSfx web/js/` finds
+> the call sites.
+
 ## File Structure
 
 Create this folder structure in your project:
@@ -33,7 +43,7 @@ audio/
 **Code location**: `game.js` line 146
 ```javascript
 if (mergeOccurred) {
-    SoundEffects.play('merge');
+    AdAudio.playSfx('merge');
 }
 ```
 
@@ -50,7 +60,7 @@ if (mergeOccurred) {
 
 **Code location**: `game.js` line 111
 ```javascript
-SoundEffects.play('spawn');
+AdAudio.playSfx('spawn');
 ```
 
 ---
@@ -66,7 +76,7 @@ SoundEffects.play('spawn');
 
 **Code location**: `game.js` line 188
 ```javascript
-SoundEffects.play('victory');
+AdAudio.playSfx('victory');
 ```
 
 ---
@@ -82,7 +92,7 @@ SoundEffects.play('victory');
 
 **Code location**: `game.js` line 194
 ```javascript
-SoundEffects.play('gameOver');
+AdAudio.playSfx('gameOver');
 ```
 
 ---
@@ -98,7 +108,7 @@ SoundEffects.play('gameOver');
 
 **Code location**: `game.js` (in handleGameOver when rank detected)
 ```javascript
-SoundEffects.play('highScore');
+AdAudio.playSfx('highScore');
 ```
 
 ---
@@ -115,7 +125,7 @@ SoundEffects.play('highScore');
 **Code location**: `game.js` line 148
 ```javascript
 else {
-    SoundEffects.play('move');
+    AdAudio.playSfx('move');
 }
 ```
 
@@ -232,10 +242,10 @@ Since you're making these with your modular:
 ### Console Test:
 Open browser console and type:
 ```javascript
-SoundEffects.play('merge');    // Test merge sound
-SoundEffects.play('spawn');    // Test spawn sound
-SoundEffects.play('victory');  // Test victory sound
-SoundEffects.play('gameOver'); // Test game over sound
+AdAudio.playSfx('merge');    // Test merge sound
+AdAudio.playSfx('spawn');    // Test spawn sound
+AdAudio.playSfx('victory');  // Test victory sound
+AdAudio.playSfx('gameOver'); // Test game over sound
 ```
 
 ---

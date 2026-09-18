@@ -45,8 +45,9 @@ to watch: they name files that do not exist in this repo at all. They resolve
 only once `web/` has been copied into the website's `arcade/`, and they go
 stale when *that* repo updates the shared bundles — which nothing here can
 notice. This page's own stamps drift too, and they drift in **both**
-directions. All six local stamps were stale on 2026-09-14 and are now
-recomputed, but three of them — `css/game.css`, `css/modal-difficulty.css`,
+directions. Six local stamps were stale on 2026-09-14 and were
+recomputed -- six of the page's stamps, not all of them; there are 21 today.
+Three of the six — `css/game.css`, `css/modal-difficulty.css`,
 `css/modal-settings.css` — were wrong the *other* way round: `6b5b329` bumped
 their stamps while reverting nothing in the files, so the page advertised a
 version of each file that had never existed. That direction is harmless, since
@@ -92,7 +93,8 @@ ffmpeg -i web/audio/sfx/new.ogg -c:a libmp3lame -q:a 2 web/audio/sfx/new.mp3
 Check the result against the source size rather than reaching for `-q:a 0`.
 `game-loop.ogg` is 3:50 of roughly 93kbps Vorbis: V0 inflated it from 2.7MB to
 4MB, which is the wrong trade for background music over mobile data, and V2
-brought it back to 2.86MB.
+brought it back to 2.86MB. Note `ios/AGENTS.md` calls that same mp3 2.72MB:
+both are right, decimal MB here and MiB there, and they are not two files.
 
 iOS has no Ogg Vorbis decoder, and every browser on iOS is WebKit, so Chrome
 and Firefox there fail exactly as Safari does. Ogg-only audio is not quieter on
@@ -158,10 +160,14 @@ This section used to say the Wii did not have the tile at all and that the TUI
 had inherited the gap. That was wrong about the Wii — `render.c` has drawn it
 since the repo was restructured — and is now wrong about the TUI too.
 
-The **rainbow tile** (the tile that earned a Gauntlet promotion) is in all
-three, and wins over the gold in all three when one tile is both. Note it only
-appears when a *merge* lands on the ceiling — NOT-of-ceiling also promotes, but
-clears the tile, so there is nothing left to mark.
+The **rainbow tile** is in all three, and wins over the gold in all three
+when one tile is both. What earns it differs by mode, which is easy to misread
+as a bug: in the seven fixed modes it is the value, so *every* tile at that
+mode's ceiling is rainbow, spawned ones included (`css/game.css`). In Gauntlet
+it is a class on the one tile that earned the promotion (`earnedBoard` in
+`js/game.js`), and there it only appears when a *merge* lands on the ceiling —
+NOT-of-ceiling also promotes, but clears the tile, so there is nothing left to
+mark.
 
 ## `tui/LICENSE` and `tui/NOTICE` are copies
 

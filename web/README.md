@@ -140,7 +140,10 @@ Gauntlet mode is the **ultimate survival challenge** with escalating difficulty:
 
 ## 🚀 Quick Start
 
-1. Open `index.html` in browser
+1. Open `index.html` — but **not from this repo**: the page loads eight
+   `../shared/*` files that exist only once `web/` has been copied into the
+   website's `arcade/`. Run `make sync-george-boole` there and open the copy,
+   or `node ios/package.mjs` and serve `ios/www/`, which is self-contained.
 2. Press [SPACE] or click to start
 3. Select a bit mode (try 3-BIT first!)
 4. Use arrow keys or swipe to move tiles
@@ -253,13 +256,18 @@ This would also be a natural point to introduce a **hex display toggle** in Sett
 - Gold tile only awarded for values above each mode's spawnable range
 
 ### 🎵 Audio System:
-Ready for custom sound effects! Replace placeholder files in `audio/sfx/`:
-- `merge.ogg` - When tiles combine
-- `spawn.ogg` - New tile appears
-- `victory.ogg` - High score milestones
-- `gameover.ogg` - Game ends
-- `move.ogg` - Valid tile movements
-- `highscore.ogg` - New personal best
+Six effects in `audio/sfx/`, **each as both `.ogg` and `.mp3`**:
+- `merge` - When tiles combine
+- `spawn` - New tile appears
+- `victory` - High score milestones
+- `gameover` - Game ends
+- `move` - Valid tile movements
+- `highscore` - New personal best
+
+Replacing one means replacing both. iOS has no Ogg Vorbis decoder and every
+browser on iOS is WebKit, so an ogg-only clip is not quieter on an iPhone, it
+is silent — and silent without an error. Transcode with
+`ffmpeg -i in.ogg -c:a libmp3lame -q:a 2 out.mp3`.
 
 System features audio pooling (3 instances per sound) for smooth overlapping playback.
 
@@ -277,7 +285,9 @@ All core systems working and balanced! Fully optimized for performance.
 │   ├── game.js        # Core game logic (Boolean ops, overflow, scoring)
 │   ├── scoring.js     # Leaderboard system
 │   ├── main.js        # UI management, sound, settings
-│   └── config.js      # API keys, configuration
+│   ├── math-overlay.js # Point labels and the "show the math" card
+│   ├── codex.js       # The gate codex and its discoveries
+│   └── config.js      # Nothing: the score backend moved to ScoreClient
 ├── css/
 │   ├── base.css            # Base styles & CRT effects (optimized!)
 │   ├── themes.css          # Retro themes (one per mode)
@@ -289,10 +299,15 @@ All core systems working and balanced! Fully optimized for performance.
 │   ├── modal-difficulty.css # Difficulty selector & per-theme button styles
 │   ├── modal-scoreboard.css # Dropdown, scoreboard, initials prompt
 │   ├── modal-settings.css  # Settings (toggle buttons hardened against theme bleed)
-│   └── modal-misc.css      # Instructions, credits, game over
+│   ├── modal-lore.css      # The rules screen, with the rules drawn as tiles
+│   ├── modal-misc.css      # Instructions, credits, game over
+│   ├── side-panels.css     # Quick rules and gate reference, on wide screens
+│   ├── math-overlay.css    # Point labels and the math card
+│   └── codex.css           # The gate codex
 └── audio/
     ├── game-loop.ogg  # Background music
-    └── sfx/           # Sound effects (ready for custom recordings)
+    ├── game-loop.mp3  # The same clip; iOS has no Vorbis decoder
+    └── sfx/           # Sound effects, each as both .ogg and .mp3
 ```
 
 ---
