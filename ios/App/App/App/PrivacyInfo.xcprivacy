@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Privacy manifest. Every app uploaded to App Store Connect needs one, and the
+  aggregate of this file and every bundled framework's own is what Apple
+  checks. Confirm the aggregate with Product > Archive > Generate Privacy
+  Report before an upload rather than trusting this file alone.
+
+  All four answers are the empty one, and each is a claim about the binary:
+
+  - NSPrivacyTracking false, NSPrivacyTrackingDomains empty: the app contacts
+    nothing. package.mjs fails the build on any asset fetched over http(s),
+    and the iOS build replaces ScoreClient().auto(...) with an unconnected
+    client, so there is no network code left to track anybody with.
+  - NSPrivacyCollectedDataTypes empty: nothing is collected. Scores, codex
+    progress and settings stay in localStorage on the device; Game Center
+    scores go to Apple under the player's own account, which is Apple's
+    collection and not ours to declare.
+  - NSPrivacyAccessedAPITypes empty. The one most guides get wrong here is
+    NSPrivacyAccessedAPICategoryUserDefaults, which is required when *your*
+    binary or a bundled SDK calls NSUserDefaults. localStorage in a WKWebView
+    is WebKit's own store and WebKit is a system framework; @capacitor/ios
+    contains no UserDefaults call and ships its own manifest declaring none.
+    Adding @capacitor/preferences, or anything that writes UserDefaults from
+    Swift, changes that -- and so does adding file timestamp, disk space or
+    system boot time APIs.
+
+  magmacrunch.com/privacy/ is the human-readable version, and the two must
+  stay in step.
+-->
+<plist version="1.0">
+<dict>
+	<key>NSPrivacyTracking</key>
+	<false/>
+	<key>NSPrivacyTrackingDomains</key>
+	<array/>
+	<key>NSPrivacyCollectedDataTypes</key>
+	<array/>
+	<key>NSPrivacyAccessedAPITypes</key>
+	<array/>
+</dict>
+</plist>

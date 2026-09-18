@@ -13,7 +13,9 @@ dark blob: dark hair and a near-black coat on dark navy, and sunglasses --
 the whole joke -- black on brown. What ICON changes, and why:
 
   - a bright magenta ground (the splash tagline's colour), so the dark
-    figure reads as a silhouette on light and dark wallpaper alike;
+    figure reads as a silhouette on light and dark wallpaper alike, plus a
+    deeper version of it as the dark-appearance icon, since iOS otherwise
+    dims the bright one until the magenta is nearly black;
   - a one-cell outline around the figure, which is what keeps a pixel sprite
     legible at any scale;
   - cyan lenses with a white glint, so the sunglasses are the first thing
@@ -27,6 +29,7 @@ those sizes, masked, on a light and a dark wallpaper.
 
 Outputs:
   - ios/App/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png
+    and AppIcon-512@2x-dark.png
   - ios/assets/apple-touch-icon.png (180x180, the icon; package.mjs puts it in
     the bundle, where Safari's add-to-home-screen shows it)
   - with --web: web/apple-touch-icon.png (180x180) and web/img/boole-pixel.png
@@ -205,6 +208,12 @@ ICON_OUTLINE = (14, 6, 26)
 ICON_GLOW = (255, 96, 214)
 ICON_EDGE = (96, 24, 140)
 
+# The dark-appearance icon, which iOS 18 and later show on a dark home screen.
+# Without one the system dims the light icon itself, and its magenta goes
+# nearly black; this keeps the hue and lets the cyan carry the contrast.
+ICON_GLOW_DARK = (122, 28, 104)
+ICON_EDGE_DARK = (26, 8, 38)
+
 
 def draw_portrait(size=32):
     """Draw the 32x32 Boole portrait, centered with iOS mask clearance."""
@@ -288,15 +297,16 @@ def draw_icon():
     return art
 
 
-def icon_ground(size):
+def icon_ground(size, dark=False):
     """The radial magenta ground, with the scanlines the whole game wears."""
+    glow, edge = (ICON_GLOW_DARK, ICON_EDGE_DARK) if dark else (ICON_GLOW, ICON_EDGE)
     img = Image.new("RGB", (size, size))
     px = img.load()
     cx, cy, reach = size * 0.5, size * 0.38, size * 0.78
     for y in range(size):
         for x in range(size):
             t = min(1.0, ((x - cx) ** 2 + (y - cy) ** 2) ** 0.5 / reach)
-            px[x, y] = tuple(round(ICON_GLOW[i] + (ICON_EDGE[i] - ICON_GLOW[i]) * t) for i in range(3))
+            px[x, y] = tuple(round(glow[i] + (edge[i] - glow[i]) * t) for i in range(3))
     step = size // 64
     lines = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(lines)
@@ -314,7 +324,7 @@ def corner_mask(size):
     return mask
 
 
-def build_icon(size=1024):
+def build_icon(size=1024, dark=False):
     small = draw_icon()
     art = small.resize((size, size), Image.NEAREST)
 
@@ -334,20 +344,22 @@ def build_icon(size=1024):
     if bitten:
         raise SystemExit(f"icon outline is outside the iOS corner mask at {bitten}; pull it in.")
 
-    out = icon_ground(size)
+    out = icon_ground(size, dark)
     out.alpha_composite(art)
     # App icons must be opaque; an alpha channel is rejected at upload.
     return out.convert("RGB")
 
 
-def build_sheet(icon):
-    """The icon at 180, 120 and 60, masked, on a light and a dark wallpaper."""
+def build_sheet(icon, dark_icon):
+    """Both icons at 180, 120 and 60, masked: the light one on a light
+    wallpaper, the dark one on a dark wallpaper, which is where each is
+    actually shown."""
     sheet = Image.new("RGB", (480, 460), (236, 232, 226))
     ImageDraw.Draw(sheet).rectangle([0, 230, 480, 460], fill=(22, 24, 30))
-    for y0 in (25, 255):
+    for y0, art in ((25, icon), (255, dark_icon)):
         x = 20
         for s in (180, 120, 60):
-            sheet.paste(icon.resize((s, s), Image.LANCZOS), (x, y0), corner_mask(s))
+            sheet.paste(art.resize((s, s), Image.LANCZOS), (x, y0), corner_mask(s))
             x += s + 40
     return sheet
 
@@ -381,6 +393,14 @@ def main():
     icon.save(icon_path)
     print(f"icon     {icon_path.relative_to(REPO)}  {icon.size[0]}x{icon.size[1]}")
 
+    # The dark-appearance variant. Contents.json carries the appearances entry
+    # that pairs it with the one above; the system derives the tinted icon
+    # itself, so there is no third file.
+    dark_icon = build_icon(dark=True)
+    dark_path = icon_dir / "AppIcon-512@2x-dark.png"
+    dark_icon.save(dark_path)
+    print(f"dark     {dark_path.relative_to(REPO)}  {dark_icon.size[0]}x{dark_icon.size[1]}")
+
     assets = IOS / "assets"
     assets.mkdir(exist_ok=True)
     touch = icon.resize((180, 180), Image.LANCZOS)
@@ -389,7 +409,7 @@ def main():
     print(f"touch    {touch_path.relative_to(REPO)}  {touch.size[0]}x{touch.size[1]}")
 
     if args.sheet:
-        build_sheet(icon).save(args.sheet)
+        build_sheet(icon, dark_icon).save(args.sheet)
         print(f"sheet    {args.sheet}")
 
     if args.web:
