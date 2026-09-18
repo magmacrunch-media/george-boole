@@ -1,5 +1,36 @@
 // game.js - BOOLEAN LOGIC VERSION - Pure bitwise operations
 
+/**
+ * Is anything covering the board?
+ *
+ * Arrow keys are bound to the document, so without this they kept playing a
+ * board nobody could see: read the full rules with the arrow keys and you
+ * were moving tiles, not scrolling the panel, and the game could reach game
+ * over behind the panel you were reading -- where it drew underneath it,
+ * since `.game-over` sits below every modal in the stack.
+ *
+ * Matched by class rather than by id so a screen that builds itself at
+ * runtime is covered too: `.codex-modal` is created by js/codex.js the first
+ * time the codex is opened, so there is no element to look up until then.
+ */
+const OVERLAY_SELECTOR = [
+    '.title-screen.active',
+    '.loading-screen:not(.hidden)',
+    '.lore-screen.active',
+    '.difficulty-modal.active',
+    '.instructions-modal.active',
+    '.settings-modal.active',
+    '.credits-modal.active',
+    '.scoreboard-modal.active',
+    '.codex-modal.active',
+    '.initials-prompt.active',
+    '.game-over.active',
+].join(', ');
+
+function overlayOpen() {
+    return !!document.querySelector(OVERLAY_SELECTOR);
+}
+
 class BooleBoard {
     constructor(difficulty = '11', target = 2048) {
         this.size = 4;
@@ -84,7 +115,7 @@ class BooleBoard {
         // Initialize puzzle input (keyboard + touch)
         this.input = AdPuzzle.createInput({
             onMove: (dir) => {
-                if (this.gameOver || this.waitingForInitials) return;
+                if (this.gameOver || this.waitingForInitials || overlayOpen()) return;
                 const moved = this.move(dir);
                 if (moved) {
                     this.moves++;
@@ -95,7 +126,7 @@ class BooleBoard {
                     }
                 }
             },
-            isActive: () => !this.gameOver && !this.waitingForInitials,
+            isActive: () => !this.gameOver && !this.waitingForInitials && !overlayOpen(),
             // adenosine-puzzle 0.4.0 and later. An older bundle reads only
             // onMove and isActive, so these are ignored there and the board
             // behaves exactly as it did.
@@ -346,16 +377,22 @@ class BooleBoard {
     }
     
     setupEventListeners() {
-        // New game button
+        // New game button. `from` tells the mode picker's back button where
+        // this came from: leaving it has to put the player back where they
+        // were, and from here that is a game still in progress.
         const newGameHandler = () => {
-            document.getElementById('difficultyModal').classList.add('active');
+            const modal = document.getElementById('difficultyModal');
+            modal.dataset.from = 'game';
+            modal.classList.add('active');
         };
         this.addListener(document.getElementById('newGame'), 'click', newGameHandler);
         
         // Restart button
         const restartHandler = () => {
             document.getElementById('gameOver').classList.remove('active');
-            document.getElementById('difficultyModal').classList.add('active');
+            const modal = document.getElementById('difficultyModal');
+            modal.dataset.from = 'gameover';
+            modal.classList.add('active');
         };
         this.addListener(document.getElementById('restartGame'), 'click', restartHandler);
         
@@ -1277,7 +1314,10 @@ class BooleBoard {
             .sort((a, b) => b.score - a.score);
         const lowestTopScore = difficultyScores.length >= 10 ? difficultyScores[9].score : -1;
         
-        if (difficultyScores.length < 10 || this.score > lowestTopScore) {
+        // A zero is not a high score, whatever the board has room for. The
+        // prompt used to fire on any game while a mode had fewer than ten
+        // scores, so a 0-point game was announced as "NEW HIGH SCORE!".
+        if (this.score > 0 && (difficultyScores.length < 10 || this.score > lowestTopScore)) {
             let rank = 1;
             for (let i = 0; i < difficultyScores.length; i++) {
                 if (this.score > difficultyScores[i].score) {
@@ -1375,8 +1415,11 @@ class BooleBoard {
         document.getElementById('initialsInput').value = '';
         this.waitingForInitials = false;
         
-        // Don't show game over screen after high score - just return to difficulty selector
-        document.getElementById('difficultyModal').classList.add('active');
+        // The game-over screen, same as any other game. This used to jump
+        // straight to the mode picker, so the players who most deserved to see
+        // their final score -- the ones who had just made the board -- were the
+        // only ones who never did.
+        this.showGameOver();
     }
     
     showGameOver() {

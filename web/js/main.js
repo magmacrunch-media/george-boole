@@ -309,6 +309,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Function to advance from lore screen to difficulty selector
         const showDifficulty = () => {
             loreScreen.classList.remove('active');
+            difficultyModal.dataset.from = 'lore';
             difficultyModal.classList.add('active');
         };
         
@@ -413,11 +414,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
 
-        // Back button: difficulty modal -> lore screen
+        // Back button: wherever the mode picker was opened from.
+        //
+        // It always went to the rules screen, which is right when that is
+        // where you came from and quietly destructive when it is not: "new
+        // game" during a game opens this picker, and backing out of it left
+        // the rules screen with a live board behind it and no way to reach
+        // that board again. The only way on was to start a different game, so
+        // second thoughts cost you the one you were playing.
         const difficultyBack = document.getElementById('difficultyBack');
         if (difficultyBack) {
             difficultyBack.addEventListener('click', () => {
+                const from = difficultyModal.dataset.from || 'lore';
                 difficultyModal.classList.remove('active');
+                delete difficultyModal.dataset.from;
+
+                if (from === 'game') return;                 // back to the board
+                if (from === 'gameover') {
+                    document.getElementById('gameOver').classList.add('active');
+                    return;
+                }
                 loreScreen.classList.add('active');
             });
         }
