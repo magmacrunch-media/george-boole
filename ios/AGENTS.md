@@ -387,10 +387,30 @@ The build is real and the output runs. These are the open pieces:
 
   `DEVELOPER_DIR` because that Mac's `xcode-select` still points at the
   Command Line Tools; `sudo xcode-select -s` fixes it for good and needs a
-  password. Still outstanding: a development team in the project, the scheme
-  marked Shared and committed, `Package.resolved` (created under
+  password. The shared scheme landed on 2026-09-17, so `-scheme App` now
+  resolves from a fresh clone. Still outstanding: a development team in the
+  project, `Package.resolved` (created under
   `project.xcworkspace/xcshareddata/swiftpm/` by the first resolve, untracked)
   committed, and anything that needs the paid developer account.
+- **Screenshots are captured by a script, not by hand.**
+  `tools/screenshots/capture.sh <udid> <name>` boots a simulator, injects
+  `tools/screenshots/shots.js` into a *copy* of the built app, freezes the
+  status bar at 9:41 and takes five: title, the rules as tiles, a board with
+  the point labels and the math card, the gate codex, and your bests. The
+  staging script taps the real buttons and plays real moves, so what is
+  captured is the app.
+
+  Two things it has to work around, both of which produced a bad take first.
+  `main.js` declares `let currentGame` at the top level of a classic script,
+  which is a global lexical binding and **not** a property of `window` --
+  `window.currentGame` is undefined, and reaching for it staged nothing while
+  appearing to work. And every codex unlock shows a toast for 2.4 seconds, so
+  the gates are unlocked in one early burst and the shots that follow wait the
+  whole queue out; a toast across the top of a frame means the timeline and
+  the offsets in `capture.sh` have drifted apart.
+
+  The images themselves are **not** committed -- 24MB of PNG that this script
+  reproduces. They land in `~/gb-shots/<name>/` on the Mac.
 - **The app icon was redrawn on 2026-09-17, and one script owns it.**
   `tools/make-boole-pixel.py` draws it; `tools/make-art.py` draws only the
   launch image. Both used to write `AppIcon-512@2x.png` — `make-art.py` the
