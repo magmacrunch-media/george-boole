@@ -297,10 +297,11 @@ edit(state, 'let the viewport reach the notch', (html) =>
 
 // The credits, in the app only. The site's line is "last updated: <date>",
 // which answers nothing useful about an installed app; store/metadata.md
-// points support at magmacrunch.com/support/, and the first thing anybody is
-// asked for there is the version they are running. The two URLs are the ones
-// on file with App Store Connect, so a reviewer looking for the privacy
-// policy inside the app finds it rather than taking our word for it.
+// points support at magmacrunch.com/support/george-boole/, and the first thing
+// anybody is asked for there is the version they are running. The two URLs are
+// the ones on file with App Store Connect -- one page per app, since a second
+// app's policy is its own -- so a reviewer looking for the privacy policy
+// inside the app finds it rather than taking our word for it.
 //
 // This step runs BEFORE the outbound-links one below, so these two links get
 // target="_blank" from that rule rather than carrying their own copy of it.
@@ -336,8 +337,8 @@ edit(state, 'credits: the app version and the store URLs', (html) =>
       `<p><strong>version:</strong><br>${version.marketing} (build ${version.build})</p>`,
       '',
       '            <p><strong>privacy &amp; support:</strong><br>',
-      '            • <a href="https://magmacrunch.com/privacy/">magmacrunch.com/privacy</a><br>',
-      '            • <a href="https://magmacrunch.com/support/">magmacrunch.com/support</a></p>',
+      '            • <a href="https://magmacrunch.com/privacy/george-boole/">privacy policy</a><br>',
+      '            • <a href="https://magmacrunch.com/support/george-boole/">support</a></p>',
     ].join('\n')
   )
 );

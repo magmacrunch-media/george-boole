@@ -25,8 +25,8 @@
     Swift, changes that -- and so does adding file timestamp, disk space or
     system boot time APIs.
 
-  magmacrunch.com/privacy/ is the human-readable version, and the two must
-  stay in step.
+  magmacrunch.com/privacy/george-boole/ is the human-readable version, and the
+  two must stay in step.
 -->
 <plist version="1.0">
 <dict>

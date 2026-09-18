@@ -105,7 +105,7 @@ For 1.0 this field is not shown, so it only matters from the first update. The
 
 ## Support URL
 
-    https://magmacrunch.com/support/
+    https://magmacrunch.com/support/george-boole/
 
 ## Marketing URL
 
@@ -136,7 +136,10 @@ Do **not** opt into the Kids Category: Game Center is not permitted there.
 
 **Do you collect data? No.** One question, one answer. Game Center data goes
 to Apple under the player's own account, not to us, and `localStorage` never
-leaves the device. Privacy Policy URL is `https://magmacrunch.com/privacy/`.
+leaves the device. Privacy Policy URL is
+`https://magmacrunch.com/privacy/george-boole/`. Both are per-app: `/privacy/`
+and `/support/` are indexes, so a second app gets its own pages rather than
+editing these.
 
 ## Export compliance
 

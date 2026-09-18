@@ -465,9 +465,11 @@ The build is real and the output runs. These are the open pieces:
   pass review, so treat that as taste rather than a blocker.
 
 - **The two required App Store Connect URLs exist as of 2026-09-17**:
-  Privacy Policy `https://magmacrunch.com/privacy/` and Support
-  `https://magmacrunch.com/support/`, both in the website repo
-  (`privacy/index.html`, `support/index.html`). Both are scoped to this app,
+  Privacy Policy `https://magmacrunch.com/privacy/george-boole/` and Support
+  `https://magmacrunch.com/support/george-boole/`, both in the website repo
+  (`privacy/george-boole/`, `support/george-boole/`, with `/privacy/` and
+  `/support/` as indexes -- one page per app, since App Store Connect takes
+  one of each per app and a second app's answers are its own). Both are scoped to this app,
   not the website, which has chat and score servers the app does not.
 
   The policy makes factual claims about the bundle, so **a change that
