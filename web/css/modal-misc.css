@@ -241,6 +241,23 @@
     text-shadow: 1px 1px 0px #006699;
 }
 
+/* Links had no rule here, so they took the browser default: #0000EE on a
+   #1a1a2e panel, which is unreadable. The links in the app's credits are the
+   privacy policy and the support page, the two a reviewer goes looking for.
+   Cyan is what the rest of this panel uses for anything that is not body
+   text, and the underline is what says it can be tapped. */
+.credits-content a {
+    color: #00ffff;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+}
+
+.credits-content a:hover,
+.credits-content a:focus-visible {
+    color: #ffff00;
+}
+
 .credits-content .credits-subtitle {
     color: #00ff00;
     text-align: center;
