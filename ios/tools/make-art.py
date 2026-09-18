@@ -40,6 +40,9 @@ MID = (22, 33, 62)
 BOT = (26, 26, 46)
 CYAN = (77, 227, 247)
 MAGENTA = (232, 56, 200)
+# Quiet beside the two accents, the way the title screen's line is quiet
+# beside the start button.
+PUBLISHER = (150, 142, 176)
 
 
 def gradient(size):
@@ -117,9 +120,21 @@ def build_splash(size=2732):
     title = load_font(round(size * SAFE_WIDTH / unit))
     tag = load_font(round(size * SAFE_WIDTH / unit * 0.30))
 
-    lines = [("GEORGE", title, CYAN), ("BOOLE", title, CYAN), ("HAS ENTERED THE CHAT", tag, MAGENTA)]
-    heights = [title.size, title.size, tag.size]
-    gaps = [round(title.size * 0.35), round(title.size * 0.85)]
+    # The publisher, as on the title screen. Part of the centred block rather
+    # than pinned near the square's bottom edge, because which edges survive
+    # depends on the device: scaleAspectFill crops the sides on a portrait
+    # phone and the top and bottom on a landscape iPad, so the only region
+    # certain to be on screen is the middle of both axes.
+    pub = load_font(round(size * SAFE_WIDTH / unit * 0.22))
+
+    lines = [
+        ("GEORGE", title, CYAN),
+        ("BOOLE", title, CYAN),
+        ("HAS ENTERED THE CHAT", tag, MAGENTA),
+        ("MAGMACRUNCH MEDIA", pub, PUBLISHER),
+    ]
+    heights = [title.size, title.size, tag.size, pub.size]
+    gaps = [round(title.size * 0.35), round(title.size * 0.85), round(title.size * 1.05)]
     total = sum(heights) + sum(gaps)
 
     y = (size - total) // 2
@@ -139,6 +154,16 @@ def build_splash(size=2732):
             f"{0.44:.0%} safe width. scaleAspectFill would crop it on a phone."
         )
     print(f"  wordmark {widest / size:.0%} of the square (safe band is 46%)")
+
+    # The same check on the other axis, which only started to matter with a
+    # fourth line. A landscape iPad fills the width and crops the top and
+    # bottom, showing about the middle 75% of the square's height.
+    if total > size * 0.70:
+        raise SystemExit(
+            f"splash block is {total / size:.0%} of the square's height, past "
+            f"{0.70:.0%}. A landscape iPad shows about the middle 75%."
+        )
+    print(f"  block    {total / size:.0%} of the height (safe band is 75%)")
 
     out = screen(out, bloom(art, radius=size // 90, strength=0.8))
     out = screen(out, bloom(art, radius=size // 300, strength=1.0))
