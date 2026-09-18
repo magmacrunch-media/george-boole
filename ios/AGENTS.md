@@ -410,10 +410,10 @@ The build is real and the output runs. These are the open pieces:
   `DEVELOPER_DIR` because that Mac's `xcode-select` still points at the
   Command Line Tools; `sudo xcode-select -s` fixes it for good and needs a
   password. The shared scheme landed on 2026-09-17, so `-scheme App` now
-  resolves from a fresh clone. Still outstanding: a development team in the
-  project, `Package.resolved` (created under
-  `project.xcworkspace/xcshareddata/swiftpm/` by the first resolve, untracked)
-  committed, and anything that needs the paid developer account.
+  resolves from a fresh clone. `Package.resolved` is committed as of
+  2026-09-17, pinning capacitor-swift-pm, so a fresh clone resolves to the
+  same version this was built against. Still outstanding: a development team
+  in the project, and anything that needs the paid developer account.
 - **Screenshots are captured by a script, not by hand.**
   `tools/screenshots/capture.sh <udid> <name>` boots a simulator, injects
   `tools/screenshots/shots.js` into a *copy* of the built app, freezes the
