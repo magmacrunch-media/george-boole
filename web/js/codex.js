@@ -407,8 +407,15 @@
         }
     }
 
+    // Every way out goes through here -- the back button, the backdrop and
+    // Escape -- so whoever opened the codex is told once, however it closed.
+    // main.js uses it to put the settings modal back, since opening settings
+    // from the rules screen hides that screen: without this, closing the codex
+    // left an empty board behind it.
     function close() {
-        if (modal) modal.classList.remove('active');
+        if (!modal || !modal.classList.contains('active')) return;
+        modal.classList.remove('active');
+        document.dispatchEvent(new CustomEvent('boole:codex-closed'));
     }
 
     function isOpen() {

@@ -9,6 +9,7 @@ function getScoreboardDefault() {
 
 // Track if we opened instructions/credits from settings
 let returnToSettings = false;
+let returnToSettingsFromCodex = false;
 
 // Track if we opened instructions from difficulty modal
 let returnToLoreScreen = false;
@@ -629,12 +630,23 @@ document.addEventListener('DOMContentLoaded', async () => {
         const settingsCodex = document.getElementById('settingsCodex');
         if (settingsCodex) {
             settingsCodex.addEventListener('click', () => {
-                document.getElementById('settingsModal').classList.remove('active');
                 // js/codex.js owns the modal and loads before this file, but
                 // the game must not break if it ever does not.
-                if (window.BooleCodex) window.BooleCodex.open();
+                if (!window.BooleCodex) return;
+                document.getElementById('settingsModal').classList.remove('active');
+                returnToSettingsFromCodex = true;
+                window.BooleCodex.open();
             });
         }
+
+        // Closing the codex goes back to settings, as credits and the full
+        // rules do. It has to: opening settings from the rules screen hides
+        // that screen, so simply closing the codex left an empty board.
+        document.addEventListener('boole:codex-closed', () => {
+            if (!returnToSettingsFromCodex) return;
+            returnToSettingsFromCodex = false;
+            document.getElementById('settingsModal').classList.add('active');
+        });
 
         document.getElementById('settingsCredits').addEventListener('click', () => {
             returnToSettings = true; // Remember we came from settings
