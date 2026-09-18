@@ -310,22 +310,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         const showDifficulty = () => {
             loreScreen.classList.remove('active');
             difficultyModal.classList.add('active');
-            
-            // Sync quick toggle states with current settings
-            const quickMusicToggle = document.getElementById('quickMusicToggle');
-            const quickSfxToggle = document.getElementById('quickSfxToggle');
-            
-            if (quickMusicToggle) {
-                const musicMuted = AdAudio.isMusicMuted();
-                quickMusicToggle.classList.toggle('active', !musicMuted);
-                quickMusicToggle.querySelector('.toggle-state').textContent = musicMuted ? 'OFF' : 'ON';
-            }
-            
-            if (quickSfxToggle) {
-                const sfxMuted = AdAudio.isSfxMuted();
-                quickSfxToggle.classList.toggle('active', !sfxMuted);
-                quickSfxToggle.querySelector('.toggle-state').textContent = sfxMuted ? 'OFF' : 'ON';
-            }
         };
         
         // Click handler for start button (title → lore)

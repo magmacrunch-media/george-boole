@@ -576,4 +576,8 @@ console.log(`  fonts              ${FONTS.join(', ')}`);
 console.log(`  shims              ${SHIMS.join(', ')}`);
 console.log(`  ogg left out       ${oggDropped} file(s) -- iOS decodes the mp3`);
 console.log(`  self-contained     yes (no ../ paths, no network assets)`);
-console.log(`\nLeaderboard is localStorage-only. GameKit is not wired yet -- see ios/AGENTS.md.`);
+console.log(
+  `\nScores: personal bests on the device, and Game Center for the rest.`
+    + `\nGameCenterPlugin.swift is in the app target; what is left is the App`
+    + `\nStore Connect entries and the capability. See ios/AGENTS.md.`
+);

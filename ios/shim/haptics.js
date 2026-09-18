@@ -34,9 +34,9 @@
  * ## The plugin may not be there
  *
  * Capacitor injects window.Capacitor.Plugins.* from the native side at
- * document start. In a browser -- including `node ios/serve.js` on the dev
- * box -- there is no injection, plugin() is null, and every call here is a
- * no-op. That is the same degrade-quietly contract gamekit-scores.js uses.
+ * document start. In a browser -- including any static server pointed at
+ * ios/www -- there is no injection, plugin() is null, and every call here is
+ * a no-op. That is the same degrade-quietly contract gamekit-scores.js uses.
  */
 (function () {
   'use strict';
