@@ -71,6 +71,27 @@
     50% { opacity: 0.8; }
 }
 
+/* Pinned to the bottom of the screen, not to the content block.
+   `bottom` carries the safe-area inset itself: an absolutely positioned
+   child is laid out against its container's padding box, so the padding
+   ios.css adds for the home indicator does not move it, and without this it
+   would sit under the indicator on a notched phone. --safe-bottom is
+   undefined on the website, where the fallback is what applies. */
+.title-publisher {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--safe-bottom, 0px) + 16px);
+    z-index: 1;
+    text-align: center;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.42);
+    text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
+    pointer-events: none;
+}
+
 .title-screen-content {
     position: relative;
     z-index: 1;
