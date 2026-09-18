@@ -95,6 +95,7 @@
                         <span class="scoring-label">height bonus</span>
                         <span class="scoring-value">2&times; value</span>
                     </div>
+                    <div class="rule-item" style="margin-top: 2px;">no height bonus in 2-bit: every value spawns</div>
                     <div class="scoring-row">
                         <span class="scoring-label">overflow</span>
                         <span class="scoring-value">3&times; max</span>
@@ -136,7 +137,7 @@
             </div>
             
             <div class="controls">
-                <button id="toggleScoreboard">scores</button>
+                <button id="toggleScoreboard">high scores</button>
                 <button id="newGame">new game</button>
                 <button id="toggleSettings">settings</button>
             </div>
@@ -155,7 +156,10 @@
                     <span class="gate-tag" data-gate="and"><b>&and;</b> AND</span>
                     <span class="gate-tag" data-gate="not"><b>&not;</b> NOT</span>
                 </div>
-                <div class="rules-row"><span class="rule-link" id="howToPlayLink">full rules &rarr;</span></div>
+                <div class="rules-row">
+                    <span class="rule-link" id="howToPlayLink">full rules &rarr;</span>
+                    <span class="rule-link" id="stripCodexLink">gate codex &rarr;</span>
+                </div>
             </div>
         </div>
 
@@ -398,9 +402,9 @@
     
     <div class="scoreboard-modal" id="scoreboardModal">
         <div class="scoreboard-content">
-            <h3>all-time high scores</h3>
+            <h3>high scores</h3>
             <div class="mode-selector-container">
-                <label class="mode-label">SELECT MODE:</label>
+                <label class="mode-label">MODE:</label>
                 <div class="custom-dropdown" id="customDropdown">
                     <div class="dropdown-selected" id="dropdownSelected">
                         <span class="selected-text">OVERALL (all modes)</span>
@@ -431,7 +435,7 @@
             <div class="instructions-topbar">
                 <button class="modal-back" id="instructionsBack" type="button">&larr; back</button>
             </div>
-            <h3 style="margin-bottom: 25px;">how to play</h3>
+            <h3 style="margin-bottom: 25px;">full rules</h3>
             
             <div class="info-box" style="background: rgba(138, 43, 226, 0.15); padding: 15px; margin-bottom: 20px; border-left: 4px solid #8a2be2;">
                 <p style="font-size: 11px; line-height: 1.8; margin: 0;">Just as in <em>2048</em>, <strong style="color: #00ffff;">use arrow keys or swipe</strong> to move tiles on a 4 by 4 grid in any direction.</p>
@@ -504,6 +508,7 @@
                 <p style="margin: 0 0 6px 0; font-size: 10px; line-height: 1.7; color: rgba(255, 255, 255, 0.95);"><strong style="color: #00ffff;">gate usage:</strong></p>
                 <ul style="font-size: 10px; line-height: 1.7; margin: 0; margin-left: 15px; padding: 0; list-style: none; color: rgba(255, 255, 255, 0.95);">
                     <li style="margin-bottom: 4px;"><strong style="color: #ffd700;">¬ NOT:</strong> slide into any number! <span style="color: #00ff00;">[¬][num]</span> or <span style="color: #00ff00;">[num][¬]</span></li>
+                    <li style="margin-bottom: 4px;"><strong style="color: #ffd700;">¬ meets ¬:</strong> two NOTs cancel: both tiles clear, for no points</li>
                     <li style="margin-bottom: 4px;"><strong style="color: #00ffff;">⊕ ∨ ∧:</strong> sandwich between two numbers! <span style="color: #00ff00;">[num][gate][num]</span></li>
                     <li style="margin-bottom: 4px;"><strong style="color: #ff4444;">result 0:</strong> a gate that comes out to 0 clears its tiles for no points: <span style="color: #00ff00;">3⊕3 = 0, 1∧2 = 0</span></li>
                 </ul>
@@ -674,9 +679,9 @@
         <div class="credits-content">
             <h3>credits</h3>
             
-            <p><strong>by:</strong><br>Jake A. McCoy for magmacrunch media</p>
+            <p><strong>game by:</strong><br>Jake A. McCoy for magmacrunch media</p>
             
-            <p><strong>music:</strong><br>"George Boole" by Juanito Thompson</p>
+            <p><strong>music:</strong><br>"George Boole Has Entered the Chat" by Juanito Thompson</p>
             
             <!-- The lineage line stays, in these words. Guideline 4.3 is about
                  undisclosed clones, so saying it is the protection; it is the
@@ -708,8 +713,8 @@
     <script src="js/scoring.js?v=36b0bed2"></script>
     <script src="js/game.js?v=624727bb"></script>
     <script src="js/math-overlay.js?v=2dd84444"></script>
-    <script src="js/codex.js?v=28fc9e1e"></script>
-    <script src="js/main.js?v=dca7691f"></script>
+    <script src="js/codex.js?v=e5f34bee"></script>
+    <script src="js/main.js?v=8a86c776"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
 <script src="../shared/adenosine-chat.js?v=4a6b886b"></script>

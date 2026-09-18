@@ -16,6 +16,28 @@ let returnToSettings = false;
 // Track if we opened instructions from difficulty modal
 let returnToLoreScreen = false;
 
+/**
+ * Settings that survive a reload. Wrapped because localStorage throws in
+ * private mode rather than returning null, and a display toggle is not worth
+ * taking the page down for.
+ */
+function readSetting(key, fallback) {
+    try {
+        const raw = localStorage.getItem(key);
+        return raw === null ? fallback : raw === 'on';
+    } catch (e) {
+        return fallback;
+    }
+}
+
+function writeSetting(key, on) {
+    try {
+        localStorage.setItem(key, on ? 'on' : 'off');
+    } catch (e) {
+        // Storage full or disabled. The setting still applies to this session.
+    }
+}
+
 // Binary display mode - enabled by default
 let binaryDisplayMode = true;
 
@@ -596,6 +618,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        // Escape closes whatever is on top. The codex handles its own (it
+        // also swallows the arrow keys while it is open), so it is absent
+        // here; the initials prompt and the game-over screen are deliberately
+        // absent too, since neither is something to dismiss.
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const close = (id, fn) => {
+                const el = document.getElementById(id);
+                if (!el || !el.classList.contains('active')) return false;
+                fn();
+                return true;
+            };
+            close('creditsModal', closeCreditsModal)
+                || close('instructionsModal', closeInstructionsModal)
+                || close('settingsModal', () => document.getElementById('closeSettings').click())
+                || close('scoreboardModal', () => document.getElementById('closeScoreboard').click())
+                || close('difficultyModal', () => {
+                    const back = document.getElementById('difficultyBack');
+                    if (back) back.click();
+                });
+        });
+
         // Settings modal controls
         document.getElementById('toggleSettings').addEventListener('click', () => {
             document.getElementById('settingsModal').classList.add('active');
@@ -694,13 +738,24 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
 
+        // Both of these are remembered, as "show the math" already was. Three
+        // switches in one group, two of which forgot on reload, is the kind of
+        // thing a player reads as the setting not working.
+        const setToggle = (button, on) => {
+            button.classList.toggle('active', on);
+            button.querySelector('.toggle-status').textContent = on ? 'ON' : 'OFF';
+        };
+
         // Binary display toggle
         const binaryToggle = document.getElementById('binaryToggle');
         if (binaryToggle) {
+            binaryDisplayMode = readSetting('gb_binary', true);
+            setToggle(binaryToggle, binaryDisplayMode);
+
             binaryToggle.addEventListener('click', function() {
                 binaryDisplayMode = !binaryDisplayMode;
-                this.classList.toggle('active');
-                this.querySelector('.toggle-status').textContent = binaryDisplayMode ? 'ON' : 'OFF';
+                setToggle(this, binaryDisplayMode);
+                writeSetting('gb_binary', binaryDisplayMode);
                 
                 // Re-render the game board if game is active
                 if (currentGame) {
@@ -712,10 +767,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Performance mode toggle
         const performanceToggle = document.getElementById('performanceToggle');
         if (performanceToggle) {
+            const performanceOn = readSetting('gb_performance', false);
+            document.body.classList.toggle('performance-mode', performanceOn);
+            setToggle(performanceToggle, performanceOn);
+
             performanceToggle.addEventListener('click', function() {
-                const performanceModeEnabled = document.body.classList.toggle('performance-mode');
-                this.classList.toggle('active');
-                this.querySelector('.toggle-status').textContent = performanceModeEnabled ? 'ON' : 'OFF';
+                const on = document.body.classList.toggle('performance-mode');
+                setToggle(this, on);
+                writeSetting('gb_performance', on);
             });
         }
 

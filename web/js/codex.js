@@ -470,6 +470,10 @@
 
         openFrom(document.getElementById('loreCodex'));
         openFrom(document.getElementById('sidePanelCodex'));
+        // The strip under the board, which is the only one of these a phone
+        // shows: the gate symbols there open the codex too, but a tap target
+        // whose only affordance is a hover tint announces nothing on touch.
+        openFrom(document.getElementById('stripCodexLink'));
         document.querySelectorAll('.gate-tag[data-gate], .gate-ref[data-gate]').forEach((node) => {
             openFrom(node, node.dataset.gate.toUpperCase());
         });
