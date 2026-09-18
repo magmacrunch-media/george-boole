@@ -176,6 +176,79 @@
         0 0 0 3px #0a0a14 !important;
 }
 
+/* The rules, one section per page. js/rules-pages.js groups the panel's own
+   <h4> sections; the panel keeps its max-height and overflow for the rare
+   page still taller than a small screen. */
+.instructions-content .rules-page {
+    display: none;
+}
+
+.instructions-content .rules-page.is-current {
+    display: block;
+}
+
+/* Pinned to the bottom of the panel, the way the back bar is pinned to the
+   top. Four of the seven pages are longer than the window on a phone, and a
+   "next" the player has to scroll to find is the complaint this replaced. */
+.instructions-content .rules-nav {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 20px 0 0;
+    padding: 12px 0;
+    background: #1c1c31;
+    border-top: 2px solid rgba(138, 43, 226, 0.45);
+}
+
+.instructions-content .rules-nav-count {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 1px;
+}
+
+/* The dark tile the back button uses, so the three controls in this panel
+   read as one set. `.instructions-content button` sets a full-width purple
+   look with !important, which is what every declaration here is answering. */
+.instructions-content .rules-nav-btn {
+    width: auto !important;
+    margin: 0 !important;
+    padding: 9px 12px !important;
+    background: #2a2a4a !important;
+    border: 0 !important;
+    color: #00ffff !important;
+    font-family: 'Press Start 2P', monospace;
+    font-size: 9px !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow:
+        inset 3px 3px 0 #4a4a78,
+        inset -3px -3px 0 #16162a,
+        0 0 0 3px #0a0a14,
+        0 4px 0 3px #0a0a14 !important;
+    transition: transform 0.08s steps(2), box-shadow 0.08s steps(2);
+}
+
+.instructions-content .rules-nav-btn:active {
+    transform: translateY(4px);
+    box-shadow:
+        inset 3px 3px 0 #16162a,
+        inset -3px -3px 0 #4a4a78,
+        0 0 0 3px #0a0a14,
+        0 0 0 3px #0a0a14 !important;
+}
+
+.instructions-content .rules-nav-btn:disabled {
+    opacity: 0.35;
+    color: rgba(255, 255, 255, 0.5) !important;
+    cursor: default;
+    transform: none;
+}
+
 /* =============================================
    CREDITS MODAL
    ============================================= */
