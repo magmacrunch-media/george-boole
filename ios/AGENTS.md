@@ -168,7 +168,7 @@ wrapper. What moves that is native integration, not polish.
 | Haptics | `ios/shim/haptics.js`, via `@capacitor/haptics`. Listens to the `boole:*` events; the site gains no Capacitor dependency because the shim never reaches it. A slide is `LIGHT` and a merge `MEDIUM` — a move fires on most swipes, and anything heavier stops being information within a minute. Overflow is a `SUCCESS` *notification* rather than an impact: it is the biggest single payout in the game and the one moment that should not feel like a merge. A Gauntlet promotion lands ~800ms after the overflow that earned it, so it is three heavy taps rather than a second `SUCCESS` nobody could tell from the first. |
 | Genuinely offline | Not a claim, a build failure: the final sweep rejects any asset fetched over `http(s)`, and there is no `NSAppTransportSecurity` block because there is nothing to except. |
 | Portrait lock and safe-area layout | `Info.plist` plus the generated `css/ios.css`. |
-| Game Center | The strongest item, and the one still missing its native half. |
+| Game Center | The strongest item. Native since 2026-09-17: `App/GameCenterPlugin.swift`, registered by `GameViewController`. What is left is not code — the leaderboards and achievements in App Store Connect, and the capability, which needs the paid account. |
 
 Note `'HEAVY'` and `'SUCCESS'` in the haptics shim are not matched by name:
 `@capacitor/haptics` only string-compares `MEDIUM`/`LIGHT` and `WARNING`/
@@ -205,7 +205,7 @@ The build is real and the output runs. These are the open pieces:
   so the unbounded `adenosine_scores__pending` queue this list used to warn
   about cannot grow in the app.
 
-- **Game Center: the JavaScript half is done, the native half is not.**
+- **Game Center: both halves are written; what is left needs an Apple account.**
   `shim/gamekit-scores.js` submits to a leaderboard on `boole:game-over`, maps
   all eight web difficulties to ids taken from `tui/boole/modes.py` (whose
   docstring already promised those keys would stay stable), and does nothing
@@ -220,16 +220,37 @@ The build is real and the output runs. These are the open pieces:
   of the page: sign-in at launch, 120 then 30 both submitted to `hexad`, 0
   skipped, and the card's button opening the last-played mode's leaderboard.
 
-  What is missing is a Capacitor plugin registered as `GameCenter` providing
-  `signIn()`, `submitScore({leaderboardId, score})` and
-  `showLeaderboard({leaderboardId})` — Swift, so macOS. Then the eight
-  leaderboards have to be created in App Store Connect under exactly those ids.
+  `App/GameCenterPlugin.swift` is the native side: `signIn`, `submitScore`,
+  `showLeaderboard` and `reportAchievement`, registered by
+  `GameViewController.capacitorDidLoad()` for the reason given further up.
+  Verified in the simulator: the plugin registers, the shim sees it, and
+  `signIn` answers. What is left is the capability and the App Store Connect
+  entries — eight leaderboards and fifteen achievements under exactly the ids
+  the shims name — both of which need the paid account.
+
+  **Two GameKit traps are handled, and both look like nothing is wrong.**
+  `authenticateHandler` is not a completion handler: GameKit keeps it, calls
+  it again on every later state change, and reports an outcome once. A
+  `signIn` arriving *after* that outcome must be answered from
+  `GKLocalPlayer.local.isAuthenticated` rather than queued on the handler —
+  queued, it hangs forever, and the app still looks healthy because the shim's
+  one call at page load is the one that worked. That was a real bug, found by
+  probing the running app rather than by reading it. And a
+  `GKGameCenterViewController` with no delegate does not dismiss itself: the
+  Done button does nothing and the player is stuck on Apple's screen.
+
+  `App/App.entitlements` carries `com.apple.developer.game-center` and is
+  wired through `CODE_SIGN_ENTITLEMENTS`. A simulator build signs ad hoc and
+  ignores it; a device build or archive fails on it, naming that entitlement,
+  until Game Center is enabled for the bundle id on the account. That failure
+  is expected until then, not a mistake in the project.
 
   Reading stays local: Game Center has no scores-query worth rendering into
   this game's own card, and it has a full-screen UI instead, which is what
   `showLeaderboard` is for.
 
-- **Achievements are not wired**, but the seam they need exists. This bullet
+- **Achievements: the same state as the leaderboards above** — both halves
+  written, nothing created in App Store Connect. This bullet
   used to say hooking them meant touching `web/js/game.js` and was therefore a
   decision rather than a detail. It was, and it was taken: `game.js` now
   announces five moments as plain `CustomEvent`s on the document —
@@ -247,8 +268,9 @@ The build is real and the output runs. These are the open pieces:
   found. Those ids are permanent once created in App Store Connect, so the
   codex's ids must not be renamed after that. It needs one method beyond the
   three `gamekit-scores.js` documents —
-  `reportAchievement({ achievementId, percent })`. What is left is that native
-  method and the fifteen achievements in App Store Connect.
+  `reportAchievement({ achievementId, percent })` — and
+  `GameCenterPlugin.swift` provides it. What is left is the fifteen
+  achievements in App Store Connect.
 
   Three decisions in it worth not re-litigating. They are keyed on bit *width*
   rather than mode, so the same achievement is reachable by picking that
