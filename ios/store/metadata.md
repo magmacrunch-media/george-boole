@@ -2,7 +2,7 @@
 
 Every field App Store Connect asks for, written out, so the submission is a
 copy-and-paste rather than a writing session at the moment you least want one.
-Limits are Apple's and are counted, not estimated — `tools/check-metadata.mjs`
+Limits are Apple's and are counted, not estimated: `tools/check-metadata.mjs`
 fails if any field here is over. Each field is the indented block under its
 heading and is pasted exactly as it stands, line breaks included, so the
 single-line fields are single lines here however long that makes them.
@@ -49,8 +49,8 @@ update or a mention.
     every computer is built from. Push two numbers together across an XOR tile
     and they combine bit by bit. Push them through OR, AND or NOT and you get
     something else. Points come from what the gates compute, so the way to
-    score is to understand what they do — and you learn that by playing, not
-    by reading a manual.
+    score is to understand what they do, and you learn that by playing rather
+    than by reading a manual.
 
     THE GATES
     XOR keeps the bits that differ. OR keeps every bit that is set. AND keeps
@@ -89,7 +89,7 @@ update or a mention.
 
 ## Keywords (100)
 
-Comma-separated, no spaces — a space costs a character and buys nothing.
+Comma-separated, no spaces: a space costs a character and buys nothing.
 "2048" is deliberately absent: the credits state the lineage, which is the
 opposite of a clone, but bidding on another app's name in the keyword field is
 read differently, and Apple applies that distinction.
@@ -148,8 +148,8 @@ Store Connect stops asking on every upload.
 
 ## Review notes
 
-The reviewer's likely objection is guideline 4.2 — a web game in a wrapper —
-so this answers it before it is raised, in the reviewer's own terms.
+The reviewer's likely objection is guideline 4.2, a web game in a wrapper, so
+this answers it before it is raised, in the reviewer's own terms.
 
     George Boole is fully playable offline and needs no account, no sign-in
     and no network connection. The app makes no network requests of any kind:
@@ -162,7 +162,7 @@ so this answers it before it is raised, in the reviewer's own terms.
     portrait on iPhone, rotating on iPad.
 
     Game Center is optional. The game is identical if you decline the sign-in
-    prompt — scores are then kept on the device only — so there is no need to
+    prompt; scores are then kept on the device only, so there is no need to
     sign in to review the app.
 
     To see the whole game quickly: tap TAP TO START, then SELECT MODE, then
