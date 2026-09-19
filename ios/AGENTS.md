@@ -10,8 +10,37 @@ That reads `../web/`, applies the transforms below, and writes `ios/www/` —
 Capacitor's `webDir`, generated and gitignored. No copy of the *game* lives
 here: what this folder holds beside the script and the Xcode project is
 `shim/` (the four files bundled into `www/shim/`), `tools/` (the icon, launch
-image, screenshot and metadata scripts), `store/metadata.md`, and
+image and screenshot scripts), `store/metadata.md`, and
 `assets/apple-touch-icon.png`, which the build refuses to run without.
+
+## Part of this folder now has an upstream
+
+Since 2026-09-18 the shared half of an iOS build lives in
+`engines/hypnopompia`, the iOS shell, and this game is its first consumer.
+Read its AGENTS.md before changing any of the following.
+
+| Here | Upstream |
+|---|---|
+| `App/App/App/GameCenterPlugin.swift` | **vendored** from `hypnopompia/native/`. Do not edit it here. |
+| `App/App/App/GameViewController.swift` | the same |
+| the metadata checker | **moved.** Run `node ../../../engines/hypnopompia/tools/check-metadata.mjs .` from this folder, or give it this folder's path from there. `tools/check-metadata.mjs` is gone. |
+
+**Editing a vendored Swift file here is the drift this arrangement is designed
+to catch, and it is caught from the other end.** `node tools/sync.mjs --check`
+in hypnopompia hash-compares both files against every consumer in its
+`consumers.json`, which lists this repo. A change belongs upstream, followed by
+`node tools/sync.mjs ../../games/george-boole` to bring it back down. Nothing in
+this repo notices on its own yet; wiring that check into this game's CI is
+listed as outstanding in hypnopompia's AGENTS.md.
+
+`store/metadata.md` gained a `<!-- forbid-keywords: 2048 -->` line, which is how
+the moved checker learns a fact it used to hardcode. The prose above it explains
+why "2048" must not be a keyword; that line is what enforces it.
+
+Everything else here is still this game's own, and the pipeline, the four shims
+and the safe-area CSS deliberately have **not** moved. They wait for a second
+iOS game, because with one example there is no way to tell which of
+`package.mjs`'s fourteen transforms are arcade-wide and which are george-boole's.
 
 ## Why a derivation and not a fourth version
 

@@ -2,8 +2,8 @@
 
 Every field App Store Connect asks for, written out, so the submission is a
 copy-and-paste rather than a writing session at the moment you least want one.
-Limits are Apple's and are counted, not estimated: `tools/check-metadata.mjs`
-fails if any field here is over. Each field is the indented block under its
+Limits are Apple's and are counted, not estimated:
+`engines/hypnopompia/tools/check-metadata.mjs` fails if any field here is over. Each field is the indented block under its
 heading and is pasted exactly as it stands, line breaks included, so the
 single-line fields are single lines here however long that makes them.
 
@@ -93,6 +93,13 @@ Comma-separated, no spaces: a space costs a character and buys nothing.
 "2048" is deliberately absent: the credits state the lineage, which is the
 opposite of a clone, but bidding on another app's name in the keyword field is
 read differently, and Apple applies that distinction.
+
+The line below is what enforces that. `check-metadata.mjs` moved to the
+hypnopompia repo, which cannot know one game's facts, so the forbidden word is
+declared here instead of hardcoded there.
+
+<!-- forbid-keywords: 2048 -->
+
 
     logic,gate,binary,boolean,xor,bitwise,puzzle,brain,number,merge,tile,retro,pixel,offline,stem
 
