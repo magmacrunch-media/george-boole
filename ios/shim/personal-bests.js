@@ -84,6 +84,36 @@
     return line;
   }
 
+  /**
+   * Is there anything behind the button yet?
+   *
+   * On the website this button opens the arcade's board, which always has
+   * somebody's scores in it. In the app it opens YOUR bests, and on a first
+   * run that is eight rows of dashes offered to a player who has not played.
+   * So it is hidden until it leads somewhere, which is the app's own answer to
+   * an app-only relabelling and belongs here rather than in web/.
+   *
+   * A game is recorded even when it scores nothing, so `games > 0` would show
+   * the button after a game with nothing in it. `best` or `bestTile` is the
+   * stricter test: something happened worth reading.
+   */
+  function hasBests() {
+    return Object.keys(bests).some(function (k) {
+      var e = bests[k] || {};
+      return (e.best || 0) > 0 || (e.bestTile || 0) > 0;
+    });
+  }
+
+  /**
+   * style.display rather than the `hidden` attribute: .lore-action-btn sets a
+   * display, and a class beats `[hidden]`'s user-agent rule, so the attribute
+   * would set hidden and change nothing.
+   */
+  function showQuickButton() {
+    var btn = document.getElementById('quickHighScores');
+    if (btn) btn.style.display = hasBests() ? '' : 'none';
+  }
+
   document.addEventListener('boole:game-over', function (e) {
     var d = e.detail || {};
     var key = String(d.difficulty);
@@ -100,6 +130,9 @@
     if ((Number(d.highest) || 0) > (entry.bestTile || 0)) entry.bestTile = Number(d.highest);
     bests[key] = entry;
     save(bests);
+    // The first score makes the button worth showing, and the player is one
+    // tap from the screen it lives on.
+    showQuickButton();
 
     var line = gameOverLine();
     if (line) {
@@ -214,6 +247,7 @@
 
     var quick = document.querySelector('#quickHighScores span');
     if (quick) quick.textContent = 'YOUR BESTS';
+    showQuickButton();
   }
 
   if (document.readyState === 'loading') {
