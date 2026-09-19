@@ -46,24 +46,38 @@ Checked against Apple's own pages on 2026-09-19:
    @  MX  20  mx2.improvmx.com.
    ```
 
-   **Where to add them is the part that wasted an evening.** The domain is
-   registered with Squarespace Domains II LLC, having come from Google Domains,
-   and its nameservers are `ns-cloud-a1..a4.googledomains.com`. Those look like
-   Squarespace's own and are not: the zone is served by **Google Cloud DNS**, in
-   a Google Cloud project, and is edited at `console.cloud.google.com` under
-   Network services. Registrar and DNS host are simply two different companies
-   here, which is why the two clues disagree.
+   Added 2026-09-19 and live the same minute, confirmed by query against both
+   8.8.8.8 and 1.1.1.1. The second record's preference reads 28 rather than 20,
+   a typo that changes nothing: preference only orders which server is tried
+   first. What remains is a delivery test, since records resolving and mail
+   arriving are different claims.
 
-   The SOA contact is the field that settles it, because both products answer
-   from nameservers named `googledomains.com`:
+   **Where to add them cost an evening, and the answer is boring: Squarespace,
+   under Domains, magmacrunch.com, DNS, DNS Settings, Custom records.** Two
+   things sent this the wrong way, and both look like evidence:
 
    ```
-   responsible mail addr = cloud-dns-hostmaster.google.com   -> Google Cloud DNS
-                           dns-admin.google.com              -> Squarespace
+   nameservers           = ns-cloud-a1..a4.googledomains.com
+   responsible mail addr = cloud-dns-hostmaster.google.com
    ```
+
+   Neither means Google Cloud. Squarespace bought Google Domains and kept
+   running on the infrastructure it acquired, so a zone managed entirely from
+   the Squarespace panel still answers with Google's nameserver names and
+   Google's SOA contact. **There is no Google Cloud project, and
+   `console.cloud.google.com` is a dead end**: it offers to enable the Cloud DNS
+   API, which reads like a permissions problem and is really the console saying
+   there is nothing here.
+
+   The test that would have settled it in one step is the records themselves.
+   Squarespace's DNS Settings page listed nine records, and all nine, including
+   eight obscure board-game subdomains pointing at a machine that is not the
+   website, resolved live to exactly those values. An editor showing what DNS actually answers is the live
+   editor. Compare the panel against `nslookup` before theorising about who
+   serves the zone.
 
    Note the knock-on: `magmacrunchmedia@gmail.com` is the address on the support
-   page and in `store/metadata.md`. Once forwarding works those become
+   page and in `store/metadata.md`. Once a test message arrives those become
    `info@magmacrunch.com`, and `jake@` is what Apple's enrollment form wants.
 
 3. **Then enroll**, as an organization, with the number and the work address.
