@@ -83,13 +83,28 @@
     right: 0;
     bottom: calc(var(--safe-bottom, 0px) + 16px);
     z-index: 1;
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
     letter-spacing: 2px;
     color: rgba(255, 255, 255, 0.42);
     text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.6);
     pointer-events: none;
+}
+
+/* ios/tools/make-logo.py draws this from the website's MClogoNoText.png,
+   which is black on transparency and would be invisible here. It is white at
+   three times the size it is drawn, so the curves stay smooth on a phone --
+   this one mark is not pixel art, and scaling it like the tiles would make it
+   mush rather than make it match. */
+.title-publisher-mark {
+    display: block;
+    width: 26px;
+    height: 32px;
+    opacity: 0.55;
 }
 
 .title-screen-content {
