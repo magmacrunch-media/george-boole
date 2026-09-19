@@ -159,6 +159,24 @@
     will-change: text-shadow;
 }
 
+/* The title screen keeps its own colours whatever mode was last played.
+ *
+ * `.title-large` is an <h1>, and every theme in themes.css styles the element:
+ * `body[data-theme="ps1"] h1` is specificity 0-1-2, which outranks the 0-1-0 of
+ * `.title-large` above. So picking 8-BIT set data-theme="ps1", and the title
+ * screen came back gold instead of cyan. Nobody changed a colour; the mode did.
+ *
+ * It only became visible when the game gained a way back to the title (6ed17b8),
+ * which is why it looks new. Scoped to .title-screen so the themes keep every
+ * other h1 they are meant to have, at 0-2-1 so they cannot win this one. */
+body .title-screen .title-large {
+    color: #00ffff;
+}
+
+body .title-screen .title-subtitle {
+    color: #ff00ff;
+}
+
 @keyframes titlePulse {
     0%, 100% { text-shadow: 
         4px 4px 0px #0066cc,
