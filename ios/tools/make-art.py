@@ -105,6 +105,22 @@ def load_font(px):
 SAFE_WIDTH = 0.38
 
 
+def load_mark():
+    """The magmacrunch media mark, white on transparency.
+
+    make-logo.py derives it from the website's black-on-transparent original
+    and writes it into web/, which is where the title screen reads it from.
+    Using that file rather than the original keeps one definition of what the
+    mark looks like; if it is missing, this returns None and the splash is
+    drawn without it rather than failing over a decoration.
+    """
+    mark = REPO / "web" / "img" / "mc-logo.png"
+    if not mark.exists():
+        print(f"  no mark at {mark.relative_to(REPO)} -- run tools/make-logo.py")
+        return None
+    return Image.open(mark).convert("RGBA")
+
+
 def build_splash(size=2732):
     """The wordmark, as on the album art. Full screen, so text is fine here."""
     out = gradient(size)
@@ -137,9 +153,25 @@ def build_splash(size=2732):
     gaps = [round(title.size * 0.35), round(title.size * 0.85), round(title.size * 1.05)]
     total = sum(heights) + sum(gaps)
 
+    # The mark sits above the publisher's name, the same pairing the title
+    # screen uses, and joins the block's height so the checks below cover it.
+    mark = load_mark()
+    mark_height = round(pub.size * 2.2) if mark else 0
+    mark_gap = round(pub.size * 0.8) if mark else 0
+    total += mark_height + mark_gap
+
     y = (size - total) // 2
     widest = 0
     for i, (text, font, colour) in enumerate(lines):
+        if mark is not None and text == "MAGMACRUNCH MEDIA":
+            scaled = mark.resize(
+                (max(1, round(mark.width * mark_height / mark.height)), mark_height),
+                Image.LANCZOS,
+            )
+            art.alpha_composite(scaled, ((size - scaled.width) // 2, y))
+            widest = max(widest, scaled.width)
+            y += mark_height + mark_gap
+
         w = d.textlength(text, font=font)
         widest = max(widest, w)
         d.text(((size - w) / 2, y), text, font=font, fill=colour)

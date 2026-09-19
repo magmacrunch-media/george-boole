@@ -336,10 +336,24 @@ edit(state, 'credits: the app version and the store URLs', (html) =>
     [
       `<p><strong>version:</strong><br>${version.marketing} (build ${version.build})</p>`,
       '',
+      // One line rather than two bullets: this panel fits a phone screen
+      // exactly, and it is the last thing on it.
       '            <p><strong>privacy &amp; support:</strong><br>',
-      '            • <a href="https://magmacrunch.com/privacy/george-boole/">privacy policy</a><br>',
-      '            • <a href="https://magmacrunch.com/support/george-boole/">support</a></p>',
+      '            <a href="https://magmacrunch.com/privacy/george-boole/">privacy policy</a>'
+        + ' · <a href="https://magmacrunch.com/support/george-boole/">support</a></p>',
     ].join('\n')
+  )
+);
+
+// The title screen's mark links to magmacrunch.com on the website, and must
+// not in the app. An outbound link on the first screen is a front door
+// pointing somewhere else, which is the reading of guideline 4.2 this bundle
+// spends the rest of its transforms arguing against; the credits carry the
+// links, where somebody has gone looking for them.
+edit(state, 'unlink the title screen publisher mark', (html) =>
+  html.replace(
+    /<a class="title-publisher-link"[^>]*>([\s\S]*?)<\/a>/,
+    (_, inner) => inner.trim()
   )
 );
 

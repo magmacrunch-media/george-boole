@@ -300,9 +300,22 @@
     overflow-y: auto;
 }
 
+.credits-content .credits-mark {
+    width: 22px;
+    height: 27px;
+    opacity: 0.75;
+}
+
+/* 12px would be the obvious spacing here, and leaves the panel 6px over a
+   phone screen. The panel is the length of its contents, so the last few
+   pixels are as load-bearing as the first. */
 .credits-content h3 {
     color: #ff00ff;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     text-align: center;
     font-size: 16px;
     font-weight: normal;
@@ -316,7 +329,7 @@
     color: #ffffff;
     font-size: 10px;
     line-height: 1.7;
-    margin-bottom: 11px;
+    margin-bottom: 8px;
     letter-spacing: 0.5px;
 }
 

@@ -107,6 +107,25 @@
     opacity: 0.55;
 }
 
+/* On the website this is a link home. package.mjs unwraps it for the app,
+   where the credits carry the links instead. */
+.title-publisher-link {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    color: inherit;
+    text-decoration: none;
+    pointer-events: auto;
+}
+
+.title-publisher-link:hover {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.title-publisher-link:hover .title-publisher-mark {
+    opacity: 0.8;
+}
+
 .title-screen-content {
     position: relative;
     z-index: 1;
