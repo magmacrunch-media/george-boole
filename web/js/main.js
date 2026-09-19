@@ -632,6 +632,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
         });
 
+        // The menu, from a finished game. The rules screen is this game's
+        // menu -- your bests, settings, the full rules, the codex and the
+        // credits all hang off it -- so one button reaches all of them.
+        const gameOverMenu = document.getElementById('gameOverMenu');
+        if (gameOverMenu) {
+            gameOverMenu.addEventListener('click', () => {
+                document.getElementById('gameOver').classList.remove('active');
+                document.getElementById('difficultyModal').classList.remove('active');
+                loreScreen.classList.add('active');
+            });
+        }
+
         // Settings modal controls
         document.getElementById('toggleSettings').addEventListener('click', () => {
             document.getElementById('settingsModal').classList.add('active');

@@ -45,7 +45,7 @@
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
-    <link rel="stylesheet" href="css/modal-misc.css?v=ba1058b4">
+    <link rel="stylesheet" href="css/modal-misc.css?v=23391c5f">
     <link rel="stylesheet" href="css/responsive.css?v=e97b84e7">
     <link rel="stylesheet" href="css/gates.css?v=71f1f693">
     <link rel="stylesheet" href="css/side-panels.css?v=471c4a2c">
@@ -407,7 +407,14 @@
         <div class="game-over-content">
             <h2>GAME OVER!</h2>
             <p>Final Score: <span id="finalScore">0</span></p>
-            <button id="restartGame">play again</button>
+            <!-- "play again" goes to the mode picker, which is one way out of
+                 a finished game and was the only one: from here there was no
+                 route to the scores, the rules or the settings, all of which
+                 live on the menu behind it. -->
+            <div class="modal-btn-row" style="display: flex; gap: 10px;">
+                <button id="restartGame">play again</button>
+                <button id="gameOverMenu">menu</button>
+            </div>
         </div>
     </div>
     
@@ -455,9 +462,6 @@
             <div class="section-divider" style="height: 3px; background: linear-gradient(90deg, transparent, #8a2be2, transparent); margin: 25px 0;"></div>
             
             <h4 style="font-size: 13px; margin: 15px 0 10px 0; color: #ffff00; text-shadow: 2px 2px 0 #999900;">GOAL: SURVIVE & SCORE!</h4>
-            <p style="font-size: 11px; line-height: 1.9; margin-bottom: 8px;">
-                This is a <strong style="color: #ffff00;">survival game</strong> with no win state!
-            </p>
             <ul style="font-size: 11px; line-height: 1.9; margin: 8px 0 8px 20px; padding: 0; list-style: none;">
                 <li style="margin-bottom: 6px; color: rgba(255, 255, 255, 0.95);">• collect points through operations</li>
                 <li style="margin-bottom: 6px; color: rgba(255, 255, 255, 0.95);">• survive as long as possible, reach a high score</li>
@@ -718,8 +722,8 @@
     <script src="js/game.js?v=8311982c"></script>
     <script src="js/math-overlay.js?v=44ff0d30"></script>
     <script src="js/codex.js?v=e5f34bee"></script>
-    <script src="js/rules-pages.js?v=efb95380"></script>
-    <script src="js/main.js?v=573b74a3"></script>
+    <script src="js/rules-pages.js?v=460908e3"></script>
+    <script src="js/main.js?v=d68dad9a"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
 <script src="../shared/adenosine-chat.js?v=4a6b886b"></script>

@@ -176,9 +176,8 @@
         0 0 0 3px #0a0a14 !important;
 }
 
-/* The rules, one section per page. js/rules-pages.js groups the panel's own
-   <h4> sections; the panel keeps its max-height and overflow for the rare
-   page still taller than a small screen. */
+/* The rules, a screenful at a time. js/rules-pages.js measures the panel and
+   fills pages to fit it, so no page is longer than the space it has. */
 .instructions-content .rules-page {
     display: none;
 }
@@ -187,9 +186,21 @@
     display: block;
 }
 
+/* While rules-pages.js measures. A hidden page has no height, so every page
+   is shown for the length of one layout pass. */
+.instructions-content .rules-pages.is-measuring .rules-page {
+    display: block;
+}
+
+/* The repeated heading on a section that runs on to another page: the same
+   section, so quieter than the heading that opened it. */
+.instructions-content .rules-page-continued {
+    opacity: 0.55;
+    font-size: 11px;
+}
+
 /* Pinned to the bottom of the panel, the way the back bar is pinned to the
-   top. Four of the seven pages are longer than the window on a phone, and a
-   "next" the player has to scroll to find is the complaint this replaced. */
+   top: whatever a page holds, the way forward is on screen. */
 .instructions-content .rules-nav {
     position: sticky;
     bottom: 0;
