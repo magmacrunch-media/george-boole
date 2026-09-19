@@ -175,6 +175,13 @@ so there is no `Podfile` and nothing to `pod install`. `cap sync` rewrites
 the file says "DO NOT MODIFY" and means it. Add plugins with `npm install`,
 never by hand.
 
+Because it is both tracked and rewritten, `cap sync` leaves `git status` showing
+` M CapApp-SPM/Package.swift` even when the plugin list has not changed. That is
+a stale stat cache, not drift: the bytes match the index exactly, `git diff` is
+empty, and a commit of it would be a no-op. Confirmed 2026-09-18 by comparing the
+file against `git show :<path>`, which is the check to run rather than assuming
+either way.
+
 **A plugin written into the App target is not auto-discovered, and the failure
 is silent.** Capacitor 8 builds its plugin list from `packageClassList` in the
 generated `App/App/App/capacitor.config.json`, which `cap sync` regenerates

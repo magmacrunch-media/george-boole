@@ -198,3 +198,78 @@ jobs:
       # -- and the forbid-keywords note in metadata.md -- on every push.
       - name: Store metadata fits App Store Connect's limits
         run: node engines/hypnopompia/tools/check-metadata.mjs games/george-boole/ios
+
+  # The App Store build, and the first thing that runs package.mjs automatically.
+  #
+  # That is the real point of this job, more than the compile. package.mjs is 583
+  # lines of guards whose purpose is to stop the bundle gaining something it must
+  # not ship -- an unlisted ../shared/ script, a transform that silently stopped
+  # matching, an asset fetched over the network -- and until now every one of them
+  # fired only when somebody happened to run it on the dev box. The failure it was
+  # written against is the website gaining a widget that reaches the App Store on
+  # the next sync, and the website is a repo this one does not watch. Now it does:
+  # the bundle is built here, from the website's main, on every push.
+  #
+  # macOS runner minutes are free on public repos, which is what makes this
+  # affordable to run unconditionally rather than behind a path filter.
+  ios-build:
+    name: ios build
+    runs-on: macos-latest
+    steps:
+      # The flat layout, which is findWebsite()'s SECOND candidate (../website
+      # from the game root) and what a pair of plain clones produces. Same
+      # reasoning as wii-build: CI exercises the arrangement the script already
+      # documents, so there is no WEBSITE= override here to keep correct.
+      - name: Check out the game
+        uses: actions/checkout@v7
+        with:
+          path: george-boole
+
+      # web/index.html names ../shared/* and pulls its font from the website, so
+      # the bundle cannot be built from this repo alone. main rather than a pinned
+      # ref, deliberately, and for the sharper of the two reasons: a script added
+      # to the arcade's shared folder is exactly what package.mjs's allowlist
+      # exists to refuse, and this is where that refusal now happens.
+      - name: Check out the website beside it
+        uses: actions/checkout@v7
+        with:
+          repository: magmacrunch-media/magmacrunch.com
+          path: website
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Install the Capacitor CLI
+        working-directory: george-boole/ios
+        run: npm ci
+
+      # Split from cap sync so a failure is attributable. This step is the 14
+      # transforms, the SHARED allowlist, the no-op-is-fatal rule, and the final
+      # sweep for ../ paths and network assets.
+      - name: Build the bundle from web/
+        working-directory: george-boole/ios
+        run: node package.mjs
+
+      - name: Sync it into the Xcode project
+        working-directory: george-boole/ios
+        run: npx cap sync ios
+
+      # A generic destination rather than the named simulator the local recipe
+      # uses: "iPhone 17 Pro" exists on the dev Mac and need not exist on the
+      # runner image, and nothing here needs a device to boot. Signing is off
+      # because the simulator needs none. A device build or an archive would fail
+      # on App.entitlements' Game Center capability until that is enabled for the
+      # bundle id on the paid account, which is expected and is not this job's
+      # business. Package.resolved is committed, so SPM resolves what the
+      # 2026-09-17 build was verified against.
+      - name: xcodebuild
+        working-directory: george-boole/ios/App/App
+        run: |
+          xcodebuild -project App.xcodeproj -scheme App -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath "$RUNNER_TEMP/derived" \
+            CODE_SIGNING_ALLOWED=NO build
+
+      - name: The app was produced
+        run: test -d "$RUNNER_TEMP/derived/Build/Products/Debug-iphonesimulator/App.app"
