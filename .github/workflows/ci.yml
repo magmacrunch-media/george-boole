@@ -153,3 +153,48 @@ jobs:
       - name: Full suite
         working-directory: tui
         run: python -m pytest -q
+
+  # The other end of hypnopompia's drift check, and the end that catches the
+  # likelier mistake. Since 2026-09-18 the Game Center plugin's two Swift files
+  # are vendored from engines/hypnopompia, and editing them here is invisible
+  # from both sides on its own: from this repo, because a copy always verifies
+  # clean against itself, and from the shell, until somebody there happens to
+  # run the check. This job notices at the moment the edit lands.
+  #
+  # Same layout as wii-build above: the shell is checked out beside this game so
+  # its consumers.json resolves through the grouped path it already names,
+  # rather than through a path this workflow would have to keep correct.
+  ios-shared:
+    name: ios shared half
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the game where consumers.json expects it
+        uses: actions/checkout@v7
+        with:
+          path: games/george-boole
+
+      # main rather than a pinned ref, for the same reason the engine checkout
+      # above tracks main: a change in the shell that breaks this game should
+      # redden this repo on the day it lands.
+      - name: Check out the iOS shell beside it
+        uses: actions/checkout@v7
+        with:
+          repository: magmacrunch-media/hypnopompia
+          path: engines/hypnopompia
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      # The strict form, which exits 2 rather than 0 when it compared nothing,
+      # so a checkout step that silently failed cannot read as a pass here.
+      - name: The vendored plugin matches the shell
+        working-directory: engines/hypnopompia
+        run: npm run check
+
+      # New coverage rather than a move: the metadata checker lived in this repo
+      # and ran only when somebody remembered to run it before a submission.
+      # Now that it takes a path, CI can hold the App Store Connect field limits
+      # -- and the forbid-keywords note in metadata.md -- on every push.
+      - name: Store metadata fits App Store Connect's limits
+        run: node engines/hypnopompia/tools/check-metadata.mjs games/george-boole/ios
