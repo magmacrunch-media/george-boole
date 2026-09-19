@@ -9,6 +9,32 @@ Checked against Apple's own pages on 2026-09-19:
 `developer.apple.com/support/D-U-N-S/` and
 `developer.apple.com/help/account/membership/program-enrollment`.
 
+## Paused on purpose, 2026-09-19
+
+The D-U-N-S Number arrived and enrollment was **not** started. That is a
+decision, not a loose end: the $99 runs for a year from the day it is paid, one
+membership covers every app the company ships, and there is one finished app
+here and nothing else ready. Enrolling now would spend most of a membership year
+on a build sitting in a folder.
+
+Nothing in this file decays while it waits. The D-U-N-S Number does not expire,
+the company details do not change, `jake@magmacrunch.com` keeps receiving, and
+the art and store text in this folder are finished.
+
+One thing does decay, and it is the reason not to leave this indefinitely: Apple
+requires uploads to be built against a reasonably current SDK, so after roughly
+six months expect George Boole to need a rebuild under a newer Xcode before it
+can be submitted. That is a rebuild, not rework. Screenshot dimensions drift on
+the same sort of schedule, which the metadata file already warns about.
+
+**Start enrolling about a month before you actually want to ship**, not the week
+of. Review runs from days to a couple of weeks, and Apple verifies by telephoning
+the number D&B holds for the company rather than anything typed into the form.
+
+Resuming means reading the table below and then item 3 of what is outstanding.
+Items 1 and 2 are done. The number itself is deliberately not written here, and
+neither is the headquarters address.
+
 ## What is fixed
 
 | | |
