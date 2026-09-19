@@ -323,6 +323,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         };
         
+        // Back to the title. The rain is stopped when the title screen is
+        // left, so coming back starts it again: start() measures the canvas,
+        // which needs the screen it is on to be visible first.
+        const loreTitle = document.getElementById('loreTitle');
+        if (loreTitle) {
+            loreTitle.addEventListener('click', () => {
+                loreScreen.classList.remove('active');
+                titleScreen.classList.add('active');
+                rain.start();
+            });
+        }
+
         // Function to advance from lore screen to difficulty selector
         const showDifficulty = () => {
             loreScreen.classList.remove('active');

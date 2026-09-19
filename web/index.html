@@ -41,7 +41,7 @@
     <link rel="stylesheet" href="css/container.css?v=a30fdcef">
     <link rel="stylesheet" href="css/game.css?v=3eaa3eb3">
     <link rel="stylesheet" href="css/modal-title.css?v=053e6028">
-    <link rel="stylesheet" href="css/modal-lore.css?v=11d41076">
+    <link rel="stylesheet" href="css/modal-lore.css?v=5d85f992">
     <link rel="stylesheet" href="css/modal-difficulty.css?v=2cea08f0">
     <link rel="stylesheet" href="css/modal-scoreboard.css?v=0ae5f201">
     <link rel="stylesheet" href="css/modal-settings.css?v=52d3c30a">
@@ -271,6 +271,10 @@
                  Examples are 4-bit: max 15, overflow pays 3 x 15. The Boole
                  quote that used to open this screen is still in the full rules,
                  one tap away through the link below. -->
+            <!-- Every panel in the game has a way back except this one,
+                 which is the screen they all return to. -->
+            <button class="lore-back" id="loreTitle" type="button">&larr; title</button>
+
             <h3 class="lore-title">how to play</h3>
             <p class="lore-lead"><span class="only-pointer">arrow keys or swipe</span><span class="only-touch">swipe</span> to slide every tile</p>
 
@@ -728,7 +732,7 @@
     <script src="js/math-overlay.js?v=44ff0d30"></script>
     <script src="js/codex.js?v=e5f34bee"></script>
     <script src="js/rules-pages.js?v=460908e3"></script>
-    <script src="js/main.js?v=d68dad9a"></script>
+    <script src="js/main.js?v=d7a0a6ca"></script>
 
 <link rel="stylesheet" href="../shared/chat-widget.css?v=21d22238">
 <script src="../shared/adenosine-chat.js?v=4a6b886b"></script>

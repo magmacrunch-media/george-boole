@@ -251,6 +251,34 @@
     transform: none;
 }
 
+/* Its own row above the heading rather than pinned in the corner: the
+   heading is centred across the full width, so an absolutely positioned
+   button at the top left lands underneath "how to play". */
+.lore-back {
+    display: block;
+    margin: -14px 0 4px -6px;
+    padding: 6px 8px;
+    background: none;
+    border: 0;
+    color: rgba(255, 255, 255, 0.55);
+    font-family: 'Press Start 2P', monospace;
+    font-size: 7px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    /* container.css styles every <button> with a drop shadow, a glow and a
+       hover lift; a text link wants none of them. */
+    box-shadow: none;
+    transform: none;
+}
+
+.lore-back:hover,
+.lore-back:focus-visible {
+    color: #00ffff;
+    background: none;
+    box-shadow: none;
+    transform: none;
+}
+
 /* "full rules", "gate codex" and "credits", side by side. Three of them at
    8px Press Start 2P is 302px of the 343 a phone leaves, so they fit in a
    row -- but only if each label is kept whole: without nowrap the words
