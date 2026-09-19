@@ -111,7 +111,16 @@
    */
   function showQuickButton() {
     var btn = document.getElementById('quickHighScores');
-    if (btn) btn.style.display = hasBests() ? '' : 'none';
+    if (!btn) return;
+    var show = hasBests();
+    btn.style.display = show ? '' : 'none';
+
+    // `.lore-action-btn` is `flex: 1`, so the survivor stretches to the whole
+    // row and SETTINGS ends up as wide and as loud as SELECT MODE below it.
+    // Left to size itself while it is alone, and handed back when the pair
+    // returns.
+    var other = document.getElementById('quickSettings');
+    if (other) other.style.flex = show ? '' : '0 0 auto';
   }
 
   document.addEventListener('boole:game-over', function (e) {
