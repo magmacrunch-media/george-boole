@@ -15,7 +15,14 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
+    /* `safe` is the whole point: centre when the layout fits, and behave as
+       flex-start when it does not, so a viewport shorter than the game can
+       still reach the top of it. Without it, a tall iPad pins the game to the
+       top with 600px of gradient under it, and plain `center` would trade that
+       for a board whose header is unreachable on a short window. A browser
+       that does not know `safe` drops the declaration and keeps flex-start,
+       which is where this started. */
+    align-items: safe center;
     padding: 20px;
     padding-bottom: 40px;
     position: relative;

@@ -1,26 +1,27 @@
 /* =============================================
    SIDE PANELS — WIDESCREEN LAYOUT
    Logic gate reference (left) + quick rules (right)
-   Hidden on mobile/tablet, shown on desktop
 
-   THE BREAKPOINTS ARE THE ROW'S WIDTH, NOT A ROUND NUMBER.
+   THE BOARD SHRINKS; THE PANELS DO NOT DISAPPEAR.
 
-   .game-layout is a flex row: panel + gap + container + gap + panel. The
-   container is 600 and does not shrink, so the row needs:
+   .game-layout is a flex row: panel + gap + container + gap + panel. With
+   220-wide panels that row wants 1064, and an iPad in portrait has about 984
+   after the body padding. The first version of this file turned the panels on
+   at 960 anyway and pinned the container at 600 with flex-shrink: 0, so the
+   row overflowed and `justify-content: center` pushed the overflow out BOTH
+   sides: the left panel sat at x = -16 and 40px of it was simply off the
+   screen, with nothing to scroll because body is overflow-x: hidden.
 
-       220 panels, 12 gap   ->  1064
-       250 panels, 12 gap   ->  1124
-       270 panels, 32 gap   ->  1204
+   Hiding the panels below 1080 fixed that and was the wrong trade -- an iPad
+   has plenty of room for the reference, and losing it is a worse bug than the
+   one being fixed. So the container shrinks instead. It is a flex item with
+   max-width 600, and the board inside it is a grid of 1fr columns, so a
+   narrower container is simply a smaller board. At 1024 that is a 520 board
+   with both panels intact and readable.
 
-   They used to turn on at 960, 1100 and 1300, which are all smaller than the
-   row they switch on. `justify-content: center` on an overflowing flex row
-   pushes the overflow out BOTH sides, so the left panel simply left the
-   screen: at an iPad's 1024 it sat at x = -16 with 40px of the row gone.
-   Nothing scrolled sideways to reveal it, because body is overflow-x: hidden.
-
-   So each breakpoint is now its row plus a little, and a tablet in portrait
-   gets the layout the top of this comment always said it would. Change a panel
-   width or the gap and the matching number here has to move with it.
+   `min-width: 0` is the load-bearing line: a flex item defaults to
+   min-width: auto, which refuses to shrink below its content and is what made
+   flex-shrink useless here even without the explicit 0.
    ============================================= */
 
 .game-layout {
@@ -34,11 +35,8 @@
     padding: 0;
 }
 
-/* On narrow screens (no side panels), center the game vertically. The bound
-   tracks the panel breakpoint below: anything that does not get panels gets
-   centred, which is what puts the game in the middle of a tall iPad instead of
-   pinned to the top with 600px of gradient under it. */
-@media (max-width: 1079px) {
+/* On narrow screens (no side panels), center the game vertically. */
+@media (max-width: 899px) {
     .game-layout {
         justify-content: center;
         align-items: center;
@@ -334,22 +332,27 @@ body[data-theme="matrix"].game-active-gauntlet .rule-section-gauntlet .rule-sect
     text-shadow: 0 0 8px rgba(0, 255, 255, 0.5);
 }
 
-/* ---- Mobile/Tablet: hide panels, center game ---- */
-@media (max-width: 1079px) {
+/* ---- Mobile: no room for a reference beside a board ---- */
+@media (max-width: 899px) {
     .side-panel {
         display: none !important;
     }
 }
 
-/* ---- WIDESCREEN BREAKPOINT: 1064 of row, plus slack ---- */
-@media (min-width: 1080px) {
+/* ---- WIDESCREEN BREAKPOINT ----
+   900 rather than 1064: with a shrinking container the row no longer has to
+   fit at its ideal size, so the question is where the board stops being worth
+   playing rather than where the row stops fitting. At 900 the board is about
+   440, which is still bigger than a phone's. */
+@media (min-width: 900px) {
     .side-panel {
         display: block;
     }
 
     .game-layout .container {
         max-width: 600px;
-        flex-shrink: 0;
+        min-width: 0;
+        flex: 0 1 600px;
     }
 }
 
