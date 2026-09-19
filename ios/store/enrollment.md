@@ -14,31 +14,57 @@ Checked against Apple's own pages on 2026-09-19:
 | | |
 |---|---|
 | Legal entity name | `MAGMACRUNCH MEDIA LLC`, as registered in Pennsylvania. Exactly as the state has it, including `LLC` and its spacing. |
-| Seller name on the App Store | The legal entity name, so `MAGMACRUNCH MEDIA LLC`. This is the whole reason for enrolling as an organization: an individual enrollment lists a personal legal name instead. |
+| Seller name on the App Store | The legal entity name, so `MAGMACRUNCH MEDIA LLC`. This is the whole reason for enrolling as an organization: an individual enrollment lists a personal legal name instead, and needs neither a D-U-N-S Number nor an address on the domain. Weighed and settled on 2026-09-19: the organization route, knowing that converting afterwards means going back to Apple rather than ticking a box. |
 | Website | `https://magmacrunch.com`. Apple requires it to be publicly available, functional, and on a domain associated with the organization. It is, and it now links to the game, the privacy page and the support page. |
 | Binding authority | The owner. Apple requires whoever enrolls to be able to bind the company to agreements. |
 | Cost | The program is $99/year. A D-U-N-S Number is free. |
 
 ## What is outstanding
 
-1. **A D-U-N-S Number.** Look the company up first at
-   `developer.apple.com/enroll/duns-lookup/`: D&B may already hold a record
-   for a registered LLC. If not, the same page requests one, and asks for the
-   legal entity name, headquarters address, mailing address and work contact.
-   Have the PA registration documents to hand, since a D&B representative may
-   call to verify. Allow up to 5 business days for the number and up to 2 more
-   for Apple to see it. Paying to expedite does not shorten it.
+1. **A D-U-N-S Number.** Requested 2026-09-19 through Apple's own lookup at
+   `developer.apple.com/enroll/duns-lookup/`, which is the door to use: D&B may
+   already hold a record for a registered LLC, and the same page requests one
+   when it does not. D&B answered that the number has been sent to the contact
+   email. Allow up to 5 business days for it and up to 2 more for Apple to see
+   it; paying to expedite does not shorten it. Give Apple D&B's exact spelling
+   afterwards, including the comma D&B inserts before `LLC` that the
+   Pennsylvania registration does not have.
 
 2. **A work email address on `magmacrunch.com`.** Apple: "Your work email
    address needs to be associated with your organization's domain name." The
-   domain has **no MX records today** (checked 2026-09-19; DNS is on Google
-   Cloud DNS), so there is no mailbox to use. This is the piece most likely to
-   be discovered late, because everything else about the company is already in
-   order.
+   domain had no MX records at all (checked 2026-09-19), so there was no mailbox
+   to use. This is the piece most likely to be discovered late, because
+   everything else about the company is already in order.
 
-   Note the knock-on: `magmacrunchmedia@gmail.com` is the address on the
-   support page and in `store/metadata.md`. Once a company address exists,
-   those should change with it.
+   Forwarding rather than a mailbox: ImprovMX on its free tier, with `jake@` and
+   `info@` created 2026-09-19 and pointing at the Gmail account. That needs two
+   MX records and nothing else. The SPF record ImprovMX also shows matters for
+   *sending* as the domain, which the free tier does not do.
+
+   ```
+   @  MX  10  mx1.improvmx.com.
+   @  MX  20  mx2.improvmx.com.
+   ```
+
+   **Where to add them is the part that wasted an evening.** The domain is
+   registered with Squarespace Domains II LLC, having come from Google Domains,
+   and its nameservers are `ns-cloud-a1..a4.googledomains.com`. Those look like
+   Squarespace's own and are not: the zone is served by **Google Cloud DNS**, in
+   a Google Cloud project, and is edited at `console.cloud.google.com` under
+   Network services. Registrar and DNS host are simply two different companies
+   here, which is why the two clues disagree.
+
+   The SOA contact is the field that settles it, because both products answer
+   from nameservers named `googledomains.com`:
+
+   ```
+   responsible mail addr = cloud-dns-hostmaster.google.com   -> Google Cloud DNS
+                           dns-admin.google.com              -> Squarespace
+   ```
+
+   Note the knock-on: `magmacrunchmedia@gmail.com` is the address on the support
+   page and in `store/metadata.md`. Once forwarding works those become
+   `info@magmacrunch.com`, and `jake@` is what Apple's enrollment form wants.
 
 3. **Then enroll**, as an organization, with the number and the work address.
 
