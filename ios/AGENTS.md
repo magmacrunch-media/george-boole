@@ -293,6 +293,19 @@ The build is real and the output runs. These are the open pieces:
   entries — eight leaderboards and fifteen achievements under exactly the ids
   the shims name — both of which need the paid account.
 
+  **The art for those entries is drawn and waiting**, by
+  `tools/make-boards.py`, into `store/game-center/`: one image per
+  leaderboard and per achievement, named for the id it belongs to. They are
+  **1024 x 1024**, which is what App Store Connect asks for on both; 512 is
+  the number everybody remembers and it is wrong. An achievement image is
+  required, a leaderboard image optional.
+
+  The script reads the modes from `tui/boole/modes.py`, the discoveries from
+  `web/js/codex.js` and the ids from the achievements shim, and refuses to
+  draw if the codex and the shim disagree about what the seven discoveries
+  are. An image is not compiled and nothing else would ever notice it had
+  gone stale.
+
   **Two GameKit traps are handled, and both look like nothing is wrong.**
   `authenticateHandler` is not a completion handler: GameKit keeps it, calls
   it again on every later state change, and reports an outcome once. A
