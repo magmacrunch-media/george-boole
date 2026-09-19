@@ -1,7 +1,26 @@
 /* =============================================
    SIDE PANELS — WIDESCREEN LAYOUT
    Logic gate reference (left) + quick rules (right)
-   Hidden on mobile/tablet, shown on desktop (≥960px)
+   Hidden on mobile/tablet, shown on desktop
+
+   THE BREAKPOINTS ARE THE ROW'S WIDTH, NOT A ROUND NUMBER.
+
+   .game-layout is a flex row: panel + gap + container + gap + panel. The
+   container is 600 and does not shrink, so the row needs:
+
+       220 panels, 12 gap   ->  1064
+       250 panels, 12 gap   ->  1124
+       270 panels, 32 gap   ->  1204
+
+   They used to turn on at 960, 1100 and 1300, which are all smaller than the
+   row they switch on. `justify-content: center` on an overflowing flex row
+   pushes the overflow out BOTH sides, so the left panel simply left the
+   screen: at an iPad's 1024 it sat at x = -16 with 40px of the row gone.
+   Nothing scrolled sideways to reveal it, because body is overflow-x: hidden.
+
+   So each breakpoint is now its row plus a little, and a tablet in portrait
+   gets the layout the top of this comment always said it would. Change a panel
+   width or the gap and the matching number here has to move with it.
    ============================================= */
 
 .game-layout {
@@ -15,8 +34,11 @@
     padding: 0;
 }
 
-/* On narrow screens (no side panels), center the game vertically */
-@media (max-width: 959px) {
+/* On narrow screens (no side panels), center the game vertically. The bound
+   tracks the panel breakpoint below: anything that does not get panels gets
+   centred, which is what puts the game in the middle of a tall iPad instead of
+   pinned to the top with 600px of gradient under it. */
+@media (max-width: 1079px) {
     .game-layout {
         justify-content: center;
         align-items: center;
@@ -313,14 +335,14 @@ body[data-theme="matrix"].game-active-gauntlet .rule-section-gauntlet .rule-sect
 }
 
 /* ---- Mobile/Tablet: hide panels, center game ---- */
-@media (max-width: 959px) {
+@media (max-width: 1079px) {
     .side-panel {
         display: none !important;
     }
 }
 
-/* ---- WIDESCREEN BREAKPOINT ---- */
-@media (min-width: 960px) {
+/* ---- WIDESCREEN BREAKPOINT: 1064 of row, plus slack ---- */
+@media (min-width: 1080px) {
     .side-panel {
         display: block;
     }
@@ -331,12 +353,15 @@ body[data-theme="matrix"].game-active-gauntlet .rule-section-gauntlet .rule-sect
     }
 }
 
-@media (min-width: 1100px) {
+/* 250 panels make the row 1124. */
+@media (min-width: 1140px) {
     .side-panel {
         width: 250px;
     }
 }
 
+/* 270 panels and a 32 gap make the row 1204; 1300 has always been clear of
+   it, and is left alone so the widest layout does not move. */
 @media (min-width: 1300px) {
     .side-panel {
         width: 270px;
