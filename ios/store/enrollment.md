@@ -76,9 +76,18 @@ Checked against Apple's own pages on 2026-09-19:
    editor. Compare the panel against `nslookup` before theorising about who
    serves the zone.
 
-   Note the knock-on: `magmacrunchmedia@gmail.com` is the address on the support
-   page and in `store/metadata.md`. Once a test message arrives those become
-   `info@magmacrunch.com`, and `jake@` is what Apple's enrollment form wants.
+   Delivery verified 2026-09-19 and the site follows it: the six pages carrying
+   `magmacrunchmedia@gmail.com` now read `info@magmacrunch.com`, which is what
+   Apple's reviewers and players see. `store/metadata.md` names no address, only
+   the support URL, so it needed no change. `jake@` is the address the
+   enrollment form wants.
+
+   One trap when testing: a message sent from the same Gmail account the alias
+   forwards to is silently dropped by Gmail, which discards anything arriving
+   with a Message-ID it just sent. ImprovMX works around it by rewriting the
+   header and re-signing, which then fails DMARC alignment and lands in spam. So
+   a self-addressed test looks like a broken forwarder and is not one. Send from
+   an unrelated address instead.
 
 3. **Then enroll**, as an organization, with the number and the work address.
 
