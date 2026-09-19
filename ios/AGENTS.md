@@ -127,6 +127,30 @@ npm run sync    # web/ -> www/ -> App/  (package.mjs, then cap sync)
 `npm run sync` is the one to use. `cap copy` alone would push a stale `www/`
 into the project, which looks like the build not taking effect.
 
+**To look at the bundle without a Mac, serve `www/` and open it:**
+
+```
+npx serve ios/www
+```
+
+That is the whole recipe, and it is deliberately not a script in this repo. There
+was one, an untracked `ios/serve.js`, and it was deleted on 2026-09-18: it
+hardcoded an absolute path to this checkout, sent no `Content-Type` on anything,
+and joined the request path onto the root without a traversal check. `npx serve`
+does the job with correct MIME types and nothing to keep working. `9ffff21` had
+already generalised the reference in `shim/haptics.js` from that file to "any
+static server pointed at `ios/www`", so this only finishes that thought.
+
+Open `/`, not `/index.html`: `serve` does clean URLs, so the full filename 301s to
+`/index`, which reads like a misconfiguration and is not one. Verified 2026-09-18
+that it types everything this bundle loads correctly, `text/html` on `/` through
+to `font/woff2` on the Press Start face.
+
+Pick a port nobody else is on, and note that a browser is where the shims are
+*supposed* to do nothing: Capacitor injects `window.Capacitor.Plugins.*` from the
+native side, so haptics and Game Center are no-ops here by design. What this
+does catch is everything else, which is most of it.
+
 | | |
 |---|---|
 | Bundle id | `com.magmacrunch.georgeboole` |
