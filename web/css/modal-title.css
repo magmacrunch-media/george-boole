@@ -83,10 +83,21 @@
     right: 0;
     bottom: calc(var(--safe-bottom, 0px) + 16px);
     z-index: 1;
+    /* Stacked here as well as on the link, and that is not redundant: the
+       two builds have different flex parents. On the website the <a> below
+       wraps the mark and the name, so it is the container that matters.
+       package.mjs UNWRAPS that <a> for the app -- dropping the element, not
+       just the href -- so in the bundle the image and the span are direct
+       children of this rule and it is the one doing the laying out. A rule
+       written only on .title-publisher-link changes the website and leaves
+       the app alone, silently, because the selector matches nothing there.
+       (makemecookies keeps the class on a span and does not have this
+       trap; the two pipelines differ on exactly this line.) */
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 9px;
+    gap: 6px;
     font-family: 'Press Start 2P', monospace;
     font-size: 7px;
     letter-spacing: 2px;
@@ -108,11 +119,18 @@
 }
 
 /* On the website this is a link home. package.mjs unwraps it for the app,
-   where the credits carry the links instead. */
+   where the credits carry the links instead.
+
+   The mark sits ABOVE the name rather than beside it: stacked, it reads as
+   a signature block rather than as a line of text with a bullet in front of
+   it, and the logo gets room to be a shape instead of sharing 32px of
+   height with the words. makemecookies carries the same mark and was
+   changed to match on the same day. */
 .title-publisher-link {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 9px;
+    gap: 6px;
     color: inherit;
     text-decoration: none;
     pointer-events: auto;
