@@ -25,6 +25,26 @@ Read its AGENTS.md before changing any of the following.
 | `App/App/App/GameViewController.swift` | the same |
 | the metadata checker | **moved.** Run `node ../../../engines/hypnopompia/tools/check-metadata.mjs .` from this folder, or give it this folder's path from there. `tools/check-metadata.mjs` is gone. |
 
+**`ios build` now checks that the plugin survived into the app**, which it did
+not before 2026-09-23: it compiled the app and stopped, so its green said the
+project builds and said nothing about whether `GameCenterPlugin` was in it.
+That gap mattered most for exactly the file above, vendored from another repo
+where a change arrives without anyone here looking at it.
+
+The check reads `App.debug.dylib` as well as `App`, and that is not belt and
+braces. **Since Xcode 16 a Debug build is split in two**: this project's code
+compiles into `App.debug.dylib` while `App` is a ~70KB launcher stub carrying
+none of these classes, `AppDelegate` and `SceneDelegate` included. makemecookies
+has the same step and checked only `App`, and spent four days calling a
+correctly wired project broken. To look yourself, on the Mac:
+
+```
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer   # Xcode is
+                                    # installed but xcode-select points at CLT
+nm -a <derived>/Build/Products/Debug-iphonesimulator/App.app/App.debug.dylib \
+  | grep '_OBJC_CLASS_\$_GameCenterPlugin'
+```
+
 **Editing a vendored Swift file here is the drift this arrangement is designed
 to catch, and it is caught from the other end.** `node tools/sync.mjs --check`
 in hypnopompia hash-compares both files against every consumer in its

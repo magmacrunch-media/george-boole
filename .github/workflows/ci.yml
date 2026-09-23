@@ -284,3 +284,43 @@ jobs:
 
       - name: The app was produced
         run: test -d "$RUNNER_TEMP/derived/Build/Products/Debug-iphonesimulator/App.app"
+
+      # Two things a successful compile does not prove on its own: that the
+      # plugin's class survived into the binary, and that the privacy manifest
+      # is in the bundle rather than only in the repo. Until now this job
+      # compiled the app and stopped, so its green said the project builds and
+      # said nothing about either -- and GameCenterPlugin.swift is vendored
+      # from engines/hypnopompia, where a change arrives without anyone here
+      # looking at it.
+      #
+      # App.debug.dylib is read as well as App, and that is not defensive:
+      # since Xcode 16 a Debug build is split, the project's code going into
+      # App.debug.dylib while App is a ~70KB launcher stub carrying none of
+      # these classes. Checking App alone is how makemecookies' copy of this
+      # step spent four days reporting a correctly wired project broken, which
+      # is the worse failure of the two, because it sends you editing
+      # project.pbxproj by hand.
+      #
+      # Matching the ObjC class symbol rather than the bare name is the other
+      # half: registration goes through the ObjC runtime, so the class existing
+      # is the thing worth asserting.
+      #
+      # Verified on the Mac before being added, rather than added and hoped
+      # for: the plugin is in App.debug.dylib here too.
+      - name: GameCenterPlugin and the privacy manifest are in the app
+        run: |
+          APP="$RUNNER_TEMP/derived/Build/Products/Debug-iphonesimulator/App.app"
+          test -f "$APP/PrivacyInfo.xcprivacy" || { echo "PrivacyInfo.xcprivacy missing from the bundle"; exit 1; }
+          found=""
+          for bin in "$APP/App" "$APP/App.debug.dylib"; do
+            [ -f "$bin" ] || continue
+            if nm -a "$bin" 2>/dev/null | grep -qF '_OBJC_CLASS_$_GameCenterPlugin'; then
+              found="$bin"; break
+            fi
+          done
+          if [ -z "$found" ]; then
+            echo "GameCenterPlugin not in the binary; looked in:"
+            ls -la "$APP"/App "$APP"/App.debug.dylib 2>/dev/null
+            exit 1
+          fi
+          echo "both present (plugin in $(basename "$found"))"
