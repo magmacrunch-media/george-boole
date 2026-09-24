@@ -199,6 +199,14 @@ jobs:
       - name: Store metadata fits App Store Connect's limits
         run: node engines/hypnopompia/tools/check-metadata.mjs games/george-boole/ios
 
+      # HOUSE.md has always said to check the ids against the shim before
+      # creating anything in App Store Connect, because each one is permanent
+      # and a deleted one cannot be reused. Nothing implemented that until now.
+      # It exits 2 when there is nothing to check, so a missing art directory
+      # cannot read as a clean result.
+      - name: The Game Center ids and art are fit to create
+        run: node engines/hypnopompia/tools/check-game-center.mjs games/george-boole/ios
+
   # The App Store build, and the first thing that runs package.mjs automatically.
   #
   # That is the real point of this job, more than the compile. package.mjs is 583
