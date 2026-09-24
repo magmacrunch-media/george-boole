@@ -9,6 +9,11 @@ Checked against Apple's own pages on 2026-09-19:
 `developer.apple.com/support/D-U-N-S/` and
 `developer.apple.com/help/account/membership/program-enrollment`.
 
+This file records an **account-level** fact and happens to live in one game's
+repo. hypnopompia's `HOUSE.md` carries the seller name alongside the other
+three spellings of the publisher, and points back here for the enrolment
+itself. If the entity name changes, both move.
+
 ## Paused on purpose, 2026-09-19
 
 The D-U-N-S Number arrived and enrollment was **not** started. That is a
