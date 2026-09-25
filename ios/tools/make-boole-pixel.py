@@ -43,7 +43,7 @@ how two scripts came to write the same file.
 import argparse
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 IOS = Path(__file__).resolve().parent.parent
 REPO = IOS.parent
@@ -378,10 +378,36 @@ def build_touch_icon(size=180):
     return out.convert("RGB")
 
 
+def stale(path, fresh):
+    """Is the committed PNG at `path` not the image `fresh`? Pixels, not bytes.
+
+    A pixel comparison is safe here and is NOT safe in make-boards.py, and the
+    difference is worth stating because the two files sit side by side. This
+    icon is pixel art: a 32x32 sprite scaled with NEAREST, a gradient laid down
+    as single-pixel rows, no font anywhere. It comes out identical on any
+    machine. make-boards.py's cards are Press Start 2P through FreeType, which
+    does not rasterise identically across versions or platforms, so the same
+    check there failed on every image the first time CI ran it. See its header.
+
+    Bytes would still be the wrong thing to compare: a re-encode by a different
+    Pillow moves no pixel and is not drift.
+    """
+    if not path.exists():
+        print(f"MISS  {path.relative_to(REPO)}")
+        return True
+    current = Image.open(path).convert("RGB")
+    if current.size != fresh.size or ImageChops.difference(current, fresh.convert("RGB")).getbbox():
+        print(f"WRONG {path.relative_to(REPO)} does not match the sprite table in web/js/pixels.js")
+        return True
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser(description="Draw George Boole: the app icon, and optionally the web portrait.")
     ap.add_argument("--web", action="store_true", help="also write the web portrait files")
     ap.add_argument("--sheet", metavar="PNG", help="write a 60/120/180px preview sheet here")
+    ap.add_argument("--check", action="store_true",
+                    help="exit 1 if the committed icons do not match the sprite")
     args = ap.parse_args()
 
     icon_dir = ASSETS / "AppIcon.appiconset"
@@ -390,21 +416,34 @@ def main():
 
     icon = build_icon()
     icon_path = icon_dir / "AppIcon-512@2x.png"
-    icon.save(icon_path)
-    print(f"icon     {icon_path.relative_to(REPO)}  {icon.size[0]}x{icon.size[1]}")
 
     # The dark-appearance variant. Contents.json carries the appearances entry
     # that pairs it with the one above; the system derives the tinted icon
     # itself, so there is no third file.
     dark_icon = build_icon(dark=True)
     dark_path = icon_dir / "AppIcon-512@2x-dark.png"
+
+    assets = IOS / "assets"
+    touch = icon.resize((180, 180), Image.LANCZOS)
+    touch_path = assets / "apple-touch-icon.png"
+
+    # The PNGs are committed, so drawing them and committing them are two acts
+    # where this script makes it look like one. This is what notices the second
+    # being skipped, and apple-touch-icon.png is in it because the build
+    # refuses to run without that file and nothing else checks it is current.
+    if args.check:
+        if stale(icon_path, icon) | stale(dark_path, dark_icon) | stale(touch_path, touch):
+            raise SystemExit("run: python ios/tools/make-boole-pixel.py   and commit the result")
+        print("icon, dark icon and apple-touch-icon match web/js/pixels.js")
+        return
+
+    icon.save(icon_path)
+    print(f"icon     {icon_path.relative_to(REPO)}  {icon.size[0]}x{icon.size[1]}")
+
     dark_icon.save(dark_path)
     print(f"dark     {dark_path.relative_to(REPO)}  {dark_icon.size[0]}x{dark_icon.size[1]}")
 
-    assets = IOS / "assets"
     assets.mkdir(exist_ok=True)
-    touch = icon.resize((180, 180), Image.LANCZOS)
-    touch_path = assets / "apple-touch-icon.png"
     touch.save(touch_path)
     print(f"touch    {touch_path.relative_to(REPO)}  {touch.size[0]}x{touch.size[1]}")
 

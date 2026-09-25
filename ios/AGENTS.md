@@ -593,6 +593,30 @@ The build is real and the output runs. These are the open pieces:
   `apple-touch-icon.png` and the title screen's `img/boole-pixel.png` from
   `PORTRAIT`, which is a decision about the website rather than the app.
 
+  **Both gained a `--check` on 2026-09-24, and they check different things
+  because the art is different in kind.** Until then nothing noticed either
+  going stale: a PNG is not compiled, and both are committed, so drawing and
+  committing are two acts this script makes look like one.
+
+  | | What `--check` does |
+  |---|---|
+  | `make-boole-pixel.py` | compares **pixels** against a fresh draw, for the icon, the dark icon and `assets/apple-touch-icon.png` |
+  | `make-art.py` | redraws the launch image for its crop assertions and throws it away, then checks the three files exist, are 2732x2732, and are one image |
+
+  The asymmetry is the font. The icon is pixel art, a 32x32 sprite scaled with
+  NEAREST, identical on any machine. The launch image is Press Start 2P through
+  FreeType, which does not rasterise identically across versions or platforms,
+  so a pixel comparison there is true only on whichever machine drew it last.
+  `make-boards.py` learned that the expensive way, in CI; its header has the
+  detail.
+
+  Redrawing the splash is the point rather than a cost. It sizes every line
+  from `SAFE_WIDTH` and then measures the laid-out result against the band a
+  phone shows, and the font it measures lives in the **website** repo, so a
+  font swapped there could crop the wordmark with nothing in this repo looking.
+  That is also why the `ios-art` job checks the website out and the other two
+  checks do not need it.
+
   **The launch image is good** and needs nothing: cyan wordmark, magenta
   subtitle, the same gradient and scanlines as the title screen. Apple's HIG
   advises against text on a launch screen; plenty of games ship a wordmark and

@@ -171,20 +171,52 @@ jobs:
     name: ios art
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      # The flat layout, which is make-art.py's first font candidate
+      # (../website from the game root) and the one ios-build already uses.
+      # Only the launch image needs the website; it measures Press Start 2P to
+      # size its own lines, and the font lives over there.
+      - name: Check out the game
+        uses: actions/checkout@v7
+        with:
+          path: george-boole
+
+      - name: Check out the website beside it
+        uses: actions/checkout@v7
+        with:
+          repository: magmacrunch-media/magmacrunch.com
+          path: website
+
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
       - name: Pillow
         run: pip install --quiet pillow
 
+      # Pixel art, no font, so the committed PNGs can be compared pixel for
+      # pixel against a fresh draw. apple-touch-icon.png is in this check
+      # because package.mjs refuses to run without it and nothing else checks
+      # it is current.
+      - name: The icons still match web/js/pixels.js
+        working-directory: george-boole
+        run: python ios/tools/make-boole-pixel.py --check
+
+      # Draws the launch image for its assertions and throws it away. The
+      # wordmark is sized from SAFE_WIDTH and then checked against the band a
+      # phone actually shows, and the font it measures comes from the website
+      # repo -- so a font swapped there could crop the wordmark with nothing
+      # here looking. This is what looks. It cannot compare the result to the
+      # committed PNGs, because FreeType does not rasterise identically across
+      # platforms; it checks they exist, are 2732x2732, and are one image.
+      - name: The launch image still fits the crop
+        working-directory: george-boole
+        run: python ios/tools/make-art.py --check
+
       # Checks the ids and formulas against tui/boole/modes.py, web/js/codex.js
       # and the achievements shim, the points table against what the script
       # actually builds, and then that an image exists for each id at 1024x1024
-      # with no alpha. It draws nothing, so it needs no font and no website
-      # checkout -- and it cannot compare pixels, because FreeType does not
-      # rasterise identically across platforms. The header says why at length.
+      # with no alpha. It draws nothing, so it needs no font of its own.
       - name: The Game Center art still matches the game
+        working-directory: george-boole
         run: python ios/tools/make-boards.py --check
 
   ios-shared:
