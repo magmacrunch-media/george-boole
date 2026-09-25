@@ -26,7 +26,7 @@ command rather than somebody's memory of an image editor.
 import argparse
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageChops
 
 IOS = Path(__file__).resolve().parent.parent
 REPO = IOS.parent
@@ -72,14 +72,54 @@ def build(source, height=HEIGHT):
     return out
 
 
+def stale(path, fresh):
+    """Is the committed mark not the image `fresh`? Pixels, and all four channels.
+
+    **RGBA, not RGB, and that is the whole check.** This mark is uniform white
+    with the drawing carried entirely in the alpha channel, so a comparison
+    that dropped alpha would be white against white: it could never fail, for
+    any possible difference, while looking exactly like a working check. That
+    is the failure mode this repo keeps meeting, and here it is one
+    `.convert("RGB")` away.
+
+    Comparing pixels at all is safe because there is no font in this file, only
+    an alpha crop and a LANCZOS resize, both of which come out the same on any
+    machine -- confirmed in CI, where `apple-touch-icon.png` is LANCZOS too.
+    `make-boards.py`'s cards are Press Start 2P through FreeType and cannot be
+    checked this way; see its header.
+    """
+    if not path.exists():
+        print(f"MISS  {path.relative_to(REPO)}")
+        return True
+    current = Image.open(path).convert("RGBA")
+    if current.size != fresh.size or ImageChops.difference(current, fresh).getbbox():
+        print(f"WRONG {path.relative_to(REPO)} is not what the website's logo derives to")
+        return True
+    return False
+
+
 def main():
     ap = argparse.ArgumentParser(description="Derive the magmacrunch media mark.")
     ap.add_argument("--height", type=int, default=HEIGHT, help=f"pixels tall (default {HEIGHT})")
+    ap.add_argument("--check", action="store_true",
+                    help="exit 1 if the committed mark is not what the source derives to")
     args = ap.parse_args()
 
     source = find_source()
     mark = build(source, args.height)
     out = WEB / "img" / "mc-logo.png"
+
+    # The one check here that crosses a repository boundary. The source lives
+    # in the website repo and the result is committed in this one, so a logo
+    # redrawn over there leaves this stale with nothing on either side looking:
+    # the website does not know this file exists, and this repo does not watch
+    # the website. The same shape as the launch image's font.
+    if args.check:
+        if stale(out, mark):
+            raise SystemExit("run: python ios/tools/make-logo.py   and commit the result")
+        print(f"mark matches {source}")
+        return
+
     out.parent.mkdir(exist_ok=True)
     mark.save(out, optimize=True)
     print(f"mark   {out.relative_to(REPO)}  {mark.size[0]}x{mark.size[1]}  "

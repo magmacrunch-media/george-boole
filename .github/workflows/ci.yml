@@ -219,6 +219,16 @@ jobs:
         working-directory: george-boole
         run: python ios/tools/make-boards.py --check
 
+      # The one check here that crosses a repository boundary: the source is
+      # the website's MClogoNoText.png and the result is committed in this
+      # repo, so a logo redrawn over there leaves web/img/mc-logo.png stale
+      # with nothing on either side looking. Note the mark it compares is
+      # uniform white with the drawing in its alpha channel, so the comparison
+      # is RGBA; an RGB one would be white against white and could never fail.
+      - name: The publisher's mark still derives from the website's logo
+        working-directory: george-boole
+        run: python ios/tools/make-logo.py --check
+
   ios-shared:
     name: ios shared half
     runs-on: ubuntu-latest

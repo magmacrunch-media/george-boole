@@ -593,15 +593,29 @@ The build is real and the output runs. These are the open pieces:
   `apple-touch-icon.png` and the title screen's `img/boole-pixel.png` from
   `PORTRAIT`, which is a decision about the website rather than the app.
 
-  **Both gained a `--check` on 2026-09-24, and they check different things
-  because the art is different in kind.** Until then nothing noticed either
-  going stale: a PNG is not compiled, and both are committed, so drawing and
-  committing are two acts this script makes look like one.
+  **Every generator here gained a `--check` on 2026-09-24, and they check
+  different things because the art is different in kind.** Until then nothing
+  noticed any of it going stale: a PNG is not compiled, and all of it is
+  committed, so drawing and committing are two acts these scripts make look
+  like one.
 
   | | What `--check` does |
   |---|---|
   | `make-boole-pixel.py` | compares **pixels** against a fresh draw, for the icon, the dark icon and `assets/apple-touch-icon.png` |
   | `make-art.py` | redraws the launch image for its crop assertions and throws it away, then checks the three files exist, are 2732x2732, and are one image |
+  | `make-boards.py` | every cross-check against the modes, the codex and the shim, then that each id has a 1024x1024 image with no alpha |
+  | `make-logo.py` | compares **RGBA** pixels against what the website's logo derives to |
+
+  `make-logo.py`'s is the only one that crosses a repository boundary. Its
+  source is the website's `MClogoNoText.png` and its result is committed here,
+  so a logo redrawn over there leaves `web/img/mc-logo.png` stale with nothing
+  on either side looking: the website does not know the file exists, and this
+  repo does not watch the website.
+
+  **RGBA rather than RGB, and that is the whole check.** The mark is uniform
+  white with the drawing carried entirely in its alpha channel, so a comparison
+  that dropped alpha would be white against white. It could never fail, for any
+  possible difference, while looking exactly like a working check.
 
   The asymmetry is the font. The icon is pixel art, a 32x32 sprite scaled with
   NEAREST, identical on any machine. The launch image is Press Start 2P through
