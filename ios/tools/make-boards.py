@@ -50,6 +50,10 @@ _spec.loader.exec_module(art)
 
 WHITE = (240, 238, 250)
 DIM = (150, 142, 176)
+# #ffd700, the NOT gate's colour in web/css/codex.css and the game's third
+# accent after cyan and magenta. Only the achievement cards use it: a
+# leaderboard has no points.
+GOLD = (255, 215, 0)
 
 
 # ── what the game says ──────────────────────────────────────────────────────
@@ -88,6 +92,64 @@ def read_achievement_ids():
     if len(ids) != 7:
         raise SystemExit(f"expected 7 learn ids in the shim, found {len(ids)}")
     return prefix.group(1), ids
+
+
+# App Store Connect's two hard limits, which the shim's header quotes and an
+# earlier plan of 300 for the Gauntlet clear would have broken.
+MAX_PER_ACHIEVEMENT = 100
+MAX_TOTAL = 1000
+
+
+def read_points(achievement_ids):
+    """{id: points}, from the budget table in the achievements shim's header.
+
+    The table is by pattern rather than by id -- `overflow.<n>bit  x7  50 each
+    350` -- so the counts are part of what is checked: a row claiming seven of
+    something the shim does not build seven of is caught here rather than
+    discovered on the form.
+    """
+    text = (IOS / "shim" / "gamekit-achievements.js").read_bytes().decode()
+
+    rows = re.findall(r"^ \*   (\S+)\s+x(\d+)\s+(\d+)(?: each)?\s+(\d+)\s*$", text, re.M)
+    if not rows:
+        raise SystemExit("could not read the points table from gamekit-achievements.js")
+
+    stated = re.search(r"^ \*\s+(\d+), leaving (\d+)", text, re.M)
+    if not stated:
+        raise SystemExit("the points table has no total line")
+
+    def bucket(ident):
+        if ident.startswith("overflow."):
+            return "overflow.<n>bit"
+        if ident.startswith("learn."):
+            return "learn.<id>"
+        return ident
+
+    points = {}
+    for pattern, count, each, subtotal in rows:
+        count, each, subtotal = int(count), int(each), int(subtotal)
+        if each > MAX_PER_ACHIEVEMENT:
+            raise SystemExit(f"{pattern}: {each} points, over Apple's {MAX_PER_ACHIEVEMENT} per achievement")
+        if count * each != subtotal:
+            raise SystemExit(f"{pattern}: {count} x {each} is {count * each}, not the {subtotal} stated")
+        matched = [i for i in achievement_ids if bucket(i) == pattern]
+        if len(matched) != count:
+            raise SystemExit(
+                f"{pattern}: the table says x{count}, the shim builds {len(matched)}"
+            )
+        for i in matched:
+            points[i] = each
+
+    missing = [i for i in achievement_ids if i not in points]
+    if missing:
+        raise SystemExit(f"no points row covers {missing}")
+
+    total = sum(points.values())
+    if total != int(stated.group(1)):
+        raise SystemExit(f"the rows total {total}, the table says {stated.group(1)}")
+    if total > MAX_TOTAL:
+        raise SystemExit(f"the achievements total {total}, over Apple's {MAX_TOTAL}")
+    return points, total, int(stated.group(2))
 
 
 # ── the gate symbols, drawn ─────────────────────────────────────────────────
@@ -211,11 +273,17 @@ def fit_formula(d, formula, start, minimum=24):
     return art.load_font(minimum), minimum
 
 
-def card(title, subtitle, formula):
-    """One 1024 square: title, subtitle, formula, and the publisher's mark.
+# The publisher's mark is composited at this y, so nothing drawn may reach it.
+MARK_TOP = 760
+
+
+def card(title, subtitle, formula, badge=""):
+    """One 1024 square: title, subtitle, formula, points, the publisher's mark.
 
     Everything sits inside the middle 80%: Game Center rounds these corners
     and crops at several sizes, and the asset catalog is not what shows them.
+
+    `badge` is the points line, and only achievements have one.
     """
     out = art.gradient(SIZE)
     layer = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
@@ -227,13 +295,30 @@ def card(title, subtitle, formula):
     w = d.textlength(title, font=title_font)
     d.text(((SIZE - w) / 2, 300), title, font=title_font, fill=art.CYAN)
 
+    sub_top = 300 + title_font.size + 56
     w = d.textlength(subtitle, font=sub_font)
-    d.text(((SIZE - w) / 2, 300 + title_font.size + 56), subtitle, font=sub_font, fill=art.MAGENTA)
+    d.text(((SIZE - w) / 2, sub_top), subtitle, font=sub_font, fill=art.MAGENTA)
 
+    bottom = sub_top + sub_font.size
     if formula:
+        formula_top = bottom + 70
         formula_font, formula_size = fit_formula(d, formula, 54)
-        draw_formula(d, formula, formula_font, WHITE, SIZE / 2,
-                     300 + title_font.size + 56 + sub_font.size + 70, formula_size)
+        draw_formula(d, formula, formula_font, WHITE, SIZE / 2, formula_top, formula_size)
+        bottom = formula_top + formula_size
+
+    if badge:
+        badge_font = fit_text(d, badge, 32)
+        badge_top = bottom + 56
+        # A long title shrinks its font and pulls everything up, so this cannot
+        # be checked by arithmetic on the defaults alone. The mark is composited
+        # after the bloom and would simply be drawn over.
+        if badge_top + badge_font.size > MARK_TOP - 16:
+            raise SystemExit(
+                f"the points line on {title!r} reaches {badge_top + badge_font.size}px, "
+                f"into the publisher's mark at {MARK_TOP}px"
+            )
+        w = d.textlength(badge, font=badge_font)
+        d.text(((SIZE - w) / 2, badge_top), badge, font=badge_font, fill=GOLD)
 
     out = art.screen(out, art.bloom(layer, radius=SIZE // 90, strength=0.8))
     out = art.screen(out, art.bloom(layer, radius=SIZE // 320, strength=1.0))
@@ -247,7 +332,7 @@ def card(title, subtitle, formula):
         )
         faded = scaled.copy()
         faded.putalpha(scaled.getchannel("A").point(lambda v: round(v * 0.5)))
-        out.alpha_composite(faded, ((SIZE - scaled.width) // 2, 760))
+        out.alpha_composite(faded, ((SIZE - scaled.width) // 2, MARK_TOP))
 
     # RGB, as the spec asks: an alpha channel here is a rejected upload.
     return out.convert("RGB")
@@ -265,8 +350,20 @@ def build_all():
             f"  codex: {codex_ids}\n  shim:  {learn_ids}"
         )
 
+    # The ids in the order they are drawn, so the points table is checked
+    # against what this script actually builds rather than against itself.
+    overflow_bits = [bits for _k, _n, bits, gauntlet in modes if not gauntlet]
+    achievement_ids = (
+        [f"overflow.{b}bit" for b in overflow_bits]
+        + ["gauntlet.clear"]
+        + [f"learn.{i}" for i in learn_ids]
+    )
+    points, total, spare = read_points(achievement_ids)
+    pts = lambda ident: f"{points[ident]} POINTS"  # noqa: E731
+
     images = []
 
+    # A leaderboard has no points, so it gets no badge.
     for key, name, bits, gauntlet in modes:
         if gauntlet:
             images.append((f"leaderboards/{key}", card("GAUNTLET", name.upper(), "2 -> 8 BIT")))
@@ -276,22 +373,27 @@ def build_all():
                 (f"leaderboards/{key}", card(f"{bits}-BIT", name.upper(), f"MAX {ones}"))
             )
 
-    for _key, _name, bits, gauntlet in modes:
-        if gauntlet:
-            continue
+    for bits in overflow_bits:
+        ident = f"overflow.{bits}bit"
         images.append(
             (
-                f"achievements/overflow.{bits}bit",
-                card("OVERFLOW", f"{bits}-BIT", f"¬{'1' * bits} = {'0' * bits}"),
+                f"achievements/{ident}",
+                card("OVERFLOW", f"{bits}-BIT", f"¬{'1' * bits} = {'0' * bits}", pts(ident)),
             )
         )
 
-    images.append(("achievements/gauntlet.clear", card("GAUNTLET", "CLEARED", "2 -> 8 BIT")))
+    images.append(
+        (
+            "achievements/gauntlet.clear",
+            card("GAUNTLET", "CLEARED", "2 -> 8 BIT", pts("gauntlet.clear")),
+        )
+    )
 
     for ident, title, formula in discoveries:
-        images.append((f"achievements/learn.{ident}", card(title.upper(), "DISCOVERY", formula)))
+        aid = f"learn.{ident}"
+        images.append((f"achievements/{aid}", card(title.upper(), "DISCOVERY", formula, pts(aid))))
 
-    return prefix, images
+    return prefix, images, total, spare
 
 
 def contact_sheet(images, columns=6):
@@ -309,7 +411,7 @@ def main():
     ap.add_argument("--sheet", metavar="PNG", help="also write a contact sheet here")
     args = ap.parse_args()
 
-    prefix, images = build_all()
+    prefix, images, total, spare = build_all()
     for folder in ("leaderboards", "achievements"):
         (OUT / folder).mkdir(parents=True, exist_ok=True)
 
@@ -318,6 +420,7 @@ def main():
         image.save(path)
     print(f"wrote {len(images)} images to {OUT.relative_to(REPO)}")
     print(f"  ids carry the prefix {prefix}")
+    print(f"  points {total} of {MAX_TOTAL}, leaving {spare}, as the shim's table has it")
 
     if args.sheet:
         contact_sheet(images).save(args.sheet)
