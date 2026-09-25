@@ -3,6 +3,7 @@
 
     python ios/tools/make-boards.py                 # needs Pillow
     python ios/tools/make-boards.py --sheet out.png # a contact sheet to judge
+    python ios/tools/make-boards.py --check         # CI: art still matches
 
 App Store Connect wants **1024 x 1024**, PNG or JPEG, at least 72 ppi, RGB.
 An achievement image is required; a leaderboard image is optional and worth
@@ -26,6 +27,23 @@ all four as the same .notdef box -- the same reason the icon's gates were
 drawn from primitives. So a formula is laid out token by token: text runs go
 through the font, gate symbols are drawn with lines and arcs, and the two are
 measured against each other so the row stays centred.
+
+## What --check checks, and the one thing it deliberately does not
+
+It re-runs every cross-check above -- the codex against the shim, the points
+table against what this script builds -- and then asserts an image exists for
+each id at 1024x1024 with no alpha. All of that is portable, so CI can hold it.
+
+**It does not compare pixels.** These cards are Press Start 2P through
+FreeType, which does not rasterise identically across versions or platforms, so
+"the committed PNG is not what I would draw now" is true on any machine but the
+one that drew them. makemecookies' equivalent did compare pixels at first and
+failed on every image the first time CI ran it while passing locally.
+
+That leaves editing the drawing code without regenerating uncaught, which is
+stated rather than papered over. What is caught is the failure that matters:
+art promising a formula or a points value the game no longer uses, invisible to
+everything else because an image is not compiled and an id is permanent.
 """
 
 import argparse
@@ -338,7 +356,12 @@ def card(title, subtitle, formula, badge=""):
     return out.convert("RGB")
 
 
-def build_all():
+def plan():
+    """(prefix, [(path, title, subtitle, formula, badge)], total, spare).
+
+    All the parsing and every cross-check, and no drawing, so --check can run
+    them without loading a font.
+    """
     modes = read_modes()
     discoveries = read_discoveries()
     prefix, learn_ids = read_achievement_ids()
@@ -361,39 +384,70 @@ def build_all():
     points, total, spare = read_points(achievement_ids)
     pts = lambda ident: f"{points[ident]} POINTS"  # noqa: E731
 
-    images = []
+    items = []
 
     # A leaderboard has no points, so it gets no badge.
     for key, name, bits, gauntlet in modes:
         if gauntlet:
-            images.append((f"leaderboards/{key}", card("GAUNTLET", name.upper(), "2 -> 8 BIT")))
+            items.append((f"leaderboards/{key}", "GAUNTLET", name.upper(), "2 -> 8 BIT", ""))
         else:
             ones = "1" * bits
-            images.append(
-                (f"leaderboards/{key}", card(f"{bits}-BIT", name.upper(), f"MAX {ones}"))
-            )
+            items.append((f"leaderboards/{key}", f"{bits}-BIT", name.upper(), f"MAX {ones}", ""))
 
     for bits in overflow_bits:
         ident = f"overflow.{bits}bit"
-        images.append(
+        items.append(
             (
                 f"achievements/{ident}",
-                card("OVERFLOW", f"{bits}-BIT", f"¬{'1' * bits} = {'0' * bits}", pts(ident)),
+                "OVERFLOW",
+                f"{bits}-BIT",
+                f"¬{'1' * bits} = {'0' * bits}",
+                pts(ident),
             )
         )
 
-    images.append(
-        (
-            "achievements/gauntlet.clear",
-            card("GAUNTLET", "CLEARED", "2 -> 8 BIT", pts("gauntlet.clear")),
-        )
+    items.append(
+        ("achievements/gauntlet.clear", "GAUNTLET", "CLEARED", "2 -> 8 BIT", pts("gauntlet.clear"))
     )
 
     for ident, title, formula in discoveries:
         aid = f"learn.{ident}"
-        images.append((f"achievements/{aid}", card(title.upper(), "DISCOVERY", formula, pts(aid))))
+        items.append((f"achievements/{aid}", title.upper(), "DISCOVERY", formula, pts(aid)))
 
-    return prefix, images, total, spare
+    return prefix, items, total, spare
+
+
+def draw(items):
+    return [(name, card(title, sub, formula, badge)) for name, title, sub, formula, badge in items]
+
+
+def unusable(path):
+    """Is the committed image missing, or not what App Store Connect accepts?
+
+    Deliberately not a pixel comparison. These cards are Press Start 2P through
+    FreeType, which does not rasterise identically across versions or
+    platforms, so "not what I would draw now" is true on any machine but the
+    one that drew them. makemecookies' equivalent tried it and failed on every
+    image the first time CI ran while passing locally.
+
+    What that leaves uncaught is editing the drawing code without regenerating.
+    What it does catch is the failure that matters, because an id is permanent
+    and an image is not compiled: `plan()` runs every cross-check above before
+    this is reached, so art promising a formula or a points value the game no
+    longer uses fails by name.
+    """
+    if not path.exists():
+        print(f"MISS  {path.relative_to(REPO)}")
+        return True
+    with Image.open(path) as im:
+        if im.size != (SIZE, SIZE):
+            print(f"WRONG {path.relative_to(REPO)} is {im.size[0]}x{im.size[1]}, not {SIZE}x{SIZE}")
+            return True
+        # Apple rejects an upload carrying an alpha channel.
+        if "A" in im.getbands():
+            print(f"WRONG {path.relative_to(REPO)} has an alpha channel")
+            return True
+    return False
 
 
 def contact_sheet(images, columns=6):
@@ -409,9 +463,24 @@ def contact_sheet(images, columns=6):
 def main():
     ap = argparse.ArgumentParser(description="Draw the Game Center leaderboard and achievement art.")
     ap.add_argument("--sheet", metavar="PNG", help="also write a contact sheet here")
+    ap.add_argument("--check", action="store_true",
+                    help="exit 1 if the committed art does not match the game")
     args = ap.parse_args()
 
-    prefix, images, total, spare = build_all()
+    # plan() is where every cross-check lives, so reaching past it at all means
+    # the codex agrees with the shim and the points table agrees with both.
+    prefix, items, total, spare = plan()
+
+    if args.check:
+        bad = sum(unusable(OUT / f"{name}.png") for name, *_rest in items)
+        if bad:
+            raise SystemExit("run: python ios/tools/make-boards.py   and commit the result")
+        print(f"{len(items)} Game Center images present, {SIZE}x{SIZE}, no alpha")
+        print("  ids and formulas agree with tui/boole/modes.py, web/js/codex.js and the shim")
+        print(f"  points {total} of {MAX_TOTAL}, leaving {spare}, as the shim's table has it")
+        return
+
+    images = draw(items)
     for folder in ("leaderboards", "achievements"):
         (OUT / folder).mkdir(parents=True, exist_ok=True)
 

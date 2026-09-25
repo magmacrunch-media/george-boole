@@ -321,10 +321,20 @@ The build is real and the output runs. These are the open pieces:
   required, a leaderboard image optional.
 
   The script reads the modes from `tui/boole/modes.py`, the discoveries from
-  `web/js/codex.js` and the ids from the achievements shim, and refuses to
-  draw if the codex and the shim disagree about what the seven discoveries
-  are. An image is not compiled and nothing else would ever notice it had
-  gone stale.
+  `web/js/codex.js`, and the ids and the points budget from the achievements
+  shim. It refuses to draw if the codex and the shim disagree about what the
+  seven discoveries are, or if the points table disagrees with what it builds
+  -- a row claiming seven of something there are six of, a subtotal that does
+  not multiply, or the Gauntlet clear back at the 300 App Store Connect would
+  refuse.
+
+  `--check` runs all of that without drawing, plus that an image exists for
+  every id at 1024 x 1024 with no alpha, and the `ios-art` job runs it on every
+  push. Until 2026-09-24 there was no art job here at all: an image is not
+  compiled, so nothing noticed one going stale. What `--check` still cannot
+  catch is the drawing code changing without a regeneration, because these
+  cards are FreeType text and a pixel comparison is not portable: makemecookies
+  tried one and it failed on every image in CI while passing locally.
 
   **Two GameKit traps are handled, and both look like nothing is wrong.**
   `authenticateHandler` is not a completion handler: GameKit keeps it, calls

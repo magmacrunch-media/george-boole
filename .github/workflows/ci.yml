@@ -164,6 +164,29 @@ jobs:
   # Same layout as wii-build above: the shell is checked out beside this game so
   # its consumers.json resolves through the grouped path it already names,
   # rather than through a path this workflow would have to keep correct.
+  # The art is committed, so drawing it and committing it are two acts and
+  # nothing was checking the second had happened. makemecookies has had this
+  # job since its art landed; this repo had no art job at all.
+  ios-art:
+    name: ios art
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Pillow
+        run: pip install --quiet pillow
+
+      # Checks the ids and formulas against tui/boole/modes.py, web/js/codex.js
+      # and the achievements shim, the points table against what the script
+      # actually builds, and then that an image exists for each id at 1024x1024
+      # with no alpha. It draws nothing, so it needs no font and no website
+      # checkout -- and it cannot compare pixels, because FreeType does not
+      # rasterise identically across platforms. The header says why at length.
+      - name: The Game Center art still matches the game
+        run: python ios/tools/make-boards.py --check
+
   ios-shared:
     name: ios shared half
     runs-on: ubuntu-latest
