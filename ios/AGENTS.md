@@ -49,18 +49,35 @@ nm -a <derived>/Build/Products/Debug-iphonesimulator/App.app/App.debug.dylib \
 to catch, and it is caught from the other end.** `node tools/sync.mjs --check`
 in hypnopompia hash-compares both files against every consumer in its
 `consumers.json`, which lists this repo. A change belongs upstream, followed by
-`node tools/sync.mjs ../../games/george-boole` to bring it back down. Nothing in
-this repo notices on its own yet; wiring that check into this game's CI is
-listed as outstanding in hypnopompia's AGENTS.md.
+`node tools/sync.mjs ../../games/george-boole` to bring it back down.
+
+**This repo does notice on its own now**, which it did not when the paragraph
+above was written: the `ios-shared` job checks this game out beside the shell
+and runs that command, in its strict form, so an edit here reddens this repo
+rather than only hypnopompia's. The mirror case, a change in the shell that
+leaves this game stale, is caught by the same command in hypnopompia's own CI.
+That job also runs the two shell checks that take a path:
+`check-metadata.mjs` for the App Store Connect field limits, and
+`check-game-center.mjs` for the ids and their art.
 
 `store/metadata.md` gained a `<!-- forbid-keywords: 2048 -->` line, which is how
 the moved checker learns a fact it used to hardcode. The prose above it explains
 why "2048" must not be a keyword; that line is what enforces it.
 
-Everything else here is still this game's own, and the pipeline, the four shims
-and the safe-area CSS deliberately have **not** moved. They wait for a second
-iOS game, because with one example there is no way to tell which of
-`package.mjs`'s fourteen transforms are arcade-wide and which are george-boole's.
+The four shims and the safe-area CSS deliberately have **not** moved. They hold
+this game's facts, and a shared file carrying one game's facts is the design
+going wrong. `shim/` is still four files here, and `css/ios.css` is still
+written by `package.mjs`.
+
+**The pipeline did move**, on 2026-09-18, and this paragraph claimed otherwise
+until 2026-09-24. `package.mjs` resolves `pipeline/index.mjs` out of a
+hypnopompia checkout and refuses to run without one. The wait it described is
+over as well: `games/makemecookies/ios/` is the second iOS game, and having two
+is exactly what made it possible to tell an arcade-wide transform from one of
+this game's. Five went up: `loadShims`, `pointSharedAssets`, `stripStamps`,
+`viewportNotch` and `outboundLinks`, along with `createBuild` and the
+self-contained sweep. Everything in the table above that is not one of those
+five is this game's own and stays here.
 
 ## Why a derivation and not a fourth version
 
