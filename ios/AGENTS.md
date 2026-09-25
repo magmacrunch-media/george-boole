@@ -69,7 +69,7 @@ this game's facts, and a shared file carrying one game's facts is the design
 going wrong. `shim/` is still four files here, and `css/ios.css` is still
 written by `package.mjs`.
 
-**The pipeline did move**, on 2026-09-18, and this paragraph claimed otherwise
+**The pipeline did move**, on 2026-09-19, and this paragraph claimed otherwise
 until 2026-09-24. `package.mjs` resolves `pipeline/index.mjs` out of a
 hypnopompia checkout and refuses to run without one. The wait it described is
 over as well: `games/makemecookies/ios/` is the second iOS game, and having two
