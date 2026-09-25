@@ -272,6 +272,14 @@ jobs:
       - name: The Game Center ids and art are fit to create
         run: node engines/hypnopompia/tools/check-game-center.mjs games/george-boole/ios
 
+      # The launch image's crop limits against the orientations Info.plist
+      # actually declares. They were hand-written and correct, and nothing tied
+      # them to the thing they are derived from: flipping an orientation would
+      # have silently pointed a guard at an axis that is never cropped.
+      # makemecookies shipped exactly that for five days, green throughout.
+      - name: The launch-image crop limits match the declared orientations
+        run: node engines/hypnopompia/tools/check-launch-crop.mjs games/george-boole/ios
+
   # The App Store build, and the first thing that runs package.mjs automatically.
   #
   # That is the real point of this job, more than the compile. package.mjs is 583

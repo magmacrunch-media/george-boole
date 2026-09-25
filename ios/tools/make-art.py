@@ -104,7 +104,26 @@ def load_font(px):
 # and the first draft of this file put the wordmark at 52%, which would have
 # clipped "GEORGE" on every modern iPhone while looking perfect in the asset
 # catalog. 38% leaves a margin inside the narrowest band.
+#
+# Note this one is a SIZING fraction: the lines below are built from it. The
+# limits the art is then checked against are the two below, and they are
+# separate numbers. makemecookies calls its limits SAFE_WIDTH/SAFE_HEIGHT,
+# which is the same name for a different thing, and confusing the two is how
+# its guards ended up on the wrong axes.
 SAFE_WIDTH = 0.38
+
+# The crop limits, checked after layout. Named because a shared tool reads
+# them: `hypnopompia/tools/check-launch-crop.mjs` derives what each supported
+# orientation actually shows from Info.plist and fails if either of these
+# allows more than that. Both games declare these two names, in whichever file
+# draws their launch image.
+#
+# Which axis each one guards is decided by Info.plist, NOT by copying the other
+# game. This app's iPhone is portrait, so `scaleAspectFill` crops the WIDTH at
+# 46%; the height is cropped only by a landscape iPad, at about 75%.
+# makemecookies is landscape and has these two figures the other way round.
+CROP_WIDTH = 0.44
+CROP_HEIGHT = 0.70
 
 
 def load_mark():
@@ -182,20 +201,20 @@ def build_splash(size=2732):
     # The check that the constant above is actually being honoured. 0.46 is the
     # narrowest band any current iPhone shows; refuse to write art that would
     # be cropped, since the asset catalog will happily preview it intact.
-    if widest > size * 0.44:
+    if widest > size * CROP_WIDTH:
         raise SystemExit(
             f"splash wordmark is {widest / size:.0%} of the square, past the "
-            f"{0.44:.0%} safe width. scaleAspectFill would crop it on a phone."
+            f"{CROP_WIDTH:.0%} safe width. scaleAspectFill would crop it on a phone."
         )
     print(f"  wordmark {widest / size:.0%} of the square (safe band is 46%)")
 
     # The same check on the other axis, which only started to matter with a
     # fourth line. A landscape iPad fills the width and crops the top and
     # bottom, showing about the middle 75% of the square's height.
-    if total > size * 0.70:
+    if total > size * CROP_HEIGHT:
         raise SystemExit(
             f"splash block is {total / size:.0%} of the square's height, past "
-            f"{0.70:.0%}. A landscape iPad shows about the middle 75%."
+            f"{CROP_HEIGHT:.0%}. A landscape iPad shows about the middle 75%."
         )
     print(f"  block    {total / size:.0%} of the height (safe band is 75%)")
 
