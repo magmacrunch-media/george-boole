@@ -405,3 +405,35 @@ jobs:
             exit 1
           fi
           echo "both present (plugin in $(basename "$found"))"
+
+      # THE ZIP A TESTER INSTALLS, and the manifest describing it. This is the
+      # same App.app the two checks above just read rather than a second build
+      # of it, so what someone installs is what passed them.
+      #
+      # Packaged by the shell rather than here: hypnopompia is already checked
+      # out beside this repo, four projects need the identical archive, naming
+      # and manifest, and its header explains the ditto-not-zip and
+      # read-it-out-of-the-bundle decisions. The build id carries this repo's
+      # sha AND the shell's, because the vendored plugin and the bundle pipeline
+      # both come from there.
+      - name: Package the simulator app
+        run: |
+          node hypnopompia/tools/package-sim.mjs \
+            --app "$RUNNER_TEMP/derived/Build/Products/Debug-iphonesimulator/App.app" \
+            --out "$RUNNER_TEMP/sim" \
+            --repo george-boole \
+            --name george-boole
+
+      # The zip and build.json together: hypnopompia's deploy-sim.mjs reads the
+      # manifest to build the download page and neither file is much use to it
+      # alone. 14 days, the same retention as the block-island-simulator
+      # packages.
+      - name: Upload the simulator app
+        uses: actions/upload-artifact@v7
+        with:
+          name: george-boole-sim
+          path: ${{ runner.temp }}/sim
+          if-no-files-found: error
+          retention-days: 14
+          # Already compressed; compressing it again only costs time.
+          compression-level: 0
